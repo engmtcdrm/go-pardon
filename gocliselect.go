@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/engmtcdrm/go-ansi"
 	"golang.org/x/term"
 )
 
@@ -71,7 +72,8 @@ func (s *Select) renderSelectItems(redraw bool) {
 		//
 		// This is done by sending a VT100 escape code to the terminal
 		// @see http://www.climagic.org/mirrors/VT100_Escape_Codes.html
-		fmt.Printf(CursorUpFormat, min(selectSize, termHeight))
+		// fmt.Printf(CursorUpFormat, min(selectSize, termHeight))
+		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
 	// Render only visible select items
@@ -79,7 +81,7 @@ func (s *Select) renderSelectItems(redraw bool) {
 		selectItem := s.SelectItems[i]
 		cursor := "  "
 
-		fmt.Print(ClearLine)
+		fmt.Print(ansi.ClearLine)
 
 		if i == s.CursorPos {
 			cursor = s.ItemSelectColor("> ")
@@ -101,7 +103,7 @@ func min(a, b int) int {
 // It returns the users selected choice
 func (s *Select) Display() (interface{}, error) {
 	defer func() {
-		fmt.Print(ShowCursor)
+		fmt.Print(ansi.ShowCursor)
 	}()
 
 	if len(s.SelectItems) == 0 {
@@ -112,7 +114,7 @@ func (s *Select) Display() (interface{}, error) {
 
 	s.renderSelectItems(false)
 
-	fmt.Print(HideCursor)
+	fmt.Print(ansi.HideCursor)
 
 	for {
 		keyCode := getInput()
