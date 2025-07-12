@@ -72,7 +72,6 @@ func (s *Select) renderSelectItems(redraw bool) {
 		//
 		// This is done by sending a VT100 escape code to the terminal
 		// @see http://www.climagic.org/mirrors/VT100_Escape_Codes.html
-		// fmt.Printf(CursorUpFormat, min(selectSize, termHeight))
 		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
