@@ -3,60 +3,66 @@ package gocliselect
 import (
 	"errors"
 	"fmt"
-	"github.com/buger/goterm"
-	"github.com/pkg/term"
-	"log"
 	"os"
-	"os/signal"
-	"syscall"
+
+	"golang.org/x/term"
 )
 
 var (
-	ErrNoMenuItems = errors.New("menu has no items to display")
+	ErrNoSelectItems = errors.New("select has no items to display")
+	ErrUserAborted   = errors.New("user aborted")
 )
 
-type Menu struct {
-	Prompt       string
-	CursorPos    int
-	ScrollOffset int
-	MenuItems    []*MenuItem
+type Select struct {
+	Prompt          string
+	CursorPos       int
+	ScrollOffset    int
+	SelectItems     []*SelectItem
+	ItemSelectColor func(...any) string
 }
 
-type MenuItem struct {
-	Text    string
-	ID      interface{}
-	SubMenu *Menu
+type SelectItem struct {
+	Text      string
+	ID        any
+	SubSelect *Select
 }
 
-func NewMenu(prompt string) *Menu {
-	return &Menu{
-		Prompt:    prompt,
-		MenuItems: make([]*MenuItem, 0),
+func NewSelect(prompt string) *Select {
+	return &Select{
+		Prompt:      prompt,
+		SelectItems: make([]*SelectItem, 0),
 	}
 }
 
-// AddItem will add a new menu option to the menu list
-func (m *Menu) AddItem(option string, id interface{}) *Menu {
-	menuItem := &MenuItem{
-		Text: fmt.Sprintf("%d: %s", len(m.MenuItems)+1, option),
+// AddItem will add a new select option to the select list
+func (s *Select) AddItem(option string, id any) *Select {
+	selectItem := &SelectItem{
+		Text: fmt.Sprintf("%d: %s", len(s.SelectItems)+1, option),
 		ID:   id,
 	}
 
-	m.MenuItems = append(m.MenuItems, menuItem)
-	return m
+	s.SelectItems = append(s.SelectItems, selectItem)
+	return s
 }
 
-// renderMenuItems prints the menu item list.
+// renderSelectItems prints the select item list.
 // Setting redraw to true will re-render the options list with updated current selection.
-func (m *Menu) renderMenuItems(redraw bool) {
-	termHeight := goterm.Height() - 3 // Space for prompt and cursor movement
-	menuSize := len(m.MenuItems)
+func (s *Select) renderSelectItems(redraw bool) {
+	termHeight := 25 // Default height
+
+	// Try to get terminal size, but don't fail if we can't
+	if _, height, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
+		termHeight = height
+	}
+
+	termHeight = termHeight - 3 // Space for prompt and cursor movement
+	selectSize := len(s.SelectItems)
 
 	// Ensure scroll offset follows cursor movement
-	if m.CursorPos < m.ScrollOffset {
-		m.ScrollOffset = m.CursorPos
-	} else if m.CursorPos >= m.ScrollOffset+termHeight {
-		m.ScrollOffset = m.CursorPos - termHeight + 1
+	if s.CursorPos < s.ScrollOffset {
+		s.ScrollOffset = s.CursorPos
+	} else if s.CursorPos >= s.ScrollOffset+termHeight {
+		s.ScrollOffset = s.CursorPos - termHeight + 1
 	}
 
 	if redraw {
@@ -65,21 +71,21 @@ func (m *Menu) renderMenuItems(redraw bool) {
 		//
 		// This is done by sending a VT100 escape code to the terminal
 		// @see http://www.climagic.org/mirrors/VT100_Escape_Codes.html
-		fmt.Printf(CursorUpFormat, min(menuSize, termHeight))
+		fmt.Printf(CursorUpFormat, min(selectSize, termHeight))
 	}
 
-	// Render only visible menu items
-	for i := m.ScrollOffset; i < min(m.ScrollOffset+termHeight, menuSize); i++ {
-		menuItem := m.MenuItems[i]
+	// Render only visible select items
+	for i := s.ScrollOffset; i < min(s.ScrollOffset+termHeight, selectSize); i++ {
+		selectItem := s.SelectItems[i]
 		cursor := "  "
 
 		fmt.Print(ClearLine)
 
-		if i == m.CursorPos {
-			cursor = goterm.Color("> ", goterm.YELLOW)
-			fmt.Printf("\r%s %s\n", cursor, goterm.Color(menuItem.Text, goterm.YELLOW))
+		if i == s.CursorPos {
+			cursor = s.ItemSelectColor("> ")
+			fmt.Printf("\r%s%s\n", cursor, s.ItemSelectColor(selectItem.Text))
 		} else {
-			fmt.Printf("\r%s %s\n", cursor, menuItem.Text)
+			fmt.Printf("\r%s%s\n", cursor, selectItem.Text)
 		}
 	}
 }
@@ -91,44 +97,41 @@ func min(a, b int) int {
 	return b
 }
 
-// Display will display the current menu options and awaits user selection
+// Display will display the current select options and awaits user selection
 // It returns the users selected choice
-func (m *Menu) Display() (interface{}, error) {
+func (s *Select) Display() (interface{}, error) {
 	defer func() {
-		// Show cursor again.
-		fmt.Printf(ShowCursor)
+		fmt.Print(ShowCursor)
 	}()
 
-	if len(m.MenuItems) == 0 {
-		return nil, ErrNoMenuItems
+	if len(s.SelectItems) == 0 {
+		return nil, ErrNoSelectItems
 	}
 
-	fmt.Printf("%s\n", goterm.Color(goterm.Bold(m.Prompt)+":", goterm.CYAN))
+	fmt.Println(s.Prompt)
 
-	m.renderMenuItems(false)
+	s.renderSelectItems(false)
 
-	// Turn the terminal cursor off
-	fmt.Printf(HideCursor)
-
-	// Channel to signal interrupt
-	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
+	fmt.Print(HideCursor)
 
 	for {
 		keyCode := getInput()
+
 		switch keyCode {
 		case KeyEscape:
 			return "", nil
-		case KeyEnter:
-			menuItem := m.MenuItems[m.CursorPos]
+		case KeyCtrlC:
+			return "", ErrUserAborted
+		case KeyEnter, KeyCarriageReturn:
+			selectItem := s.SelectItems[s.CursorPos]
 			fmt.Println("\r")
-			return menuItem.ID, nil
+			return selectItem.ID, nil
 		case KeyUp:
-			m.CursorPos = (m.CursorPos + len(m.MenuItems) - 1) % len(m.MenuItems)
-			m.renderMenuItems(true)
+			s.CursorPos = (s.CursorPos + len(s.SelectItems) - 1) % len(s.SelectItems)
+			s.renderSelectItems(true)
 		case KeyDown:
-			m.CursorPos = (m.CursorPos + 1) % len(m.MenuItems)
-			m.renderMenuItems(true)
+			s.CursorPos = (s.CursorPos + 1) % len(s.SelectItems)
+			s.renderSelectItems(true)
 		}
 	}
 }
@@ -136,23 +139,29 @@ func (m *Menu) Display() (interface{}, error) {
 // getInput will read raw input from the terminal
 // It returns the raw ASCII value inputted
 func getInput() byte {
-	t, _ := term.Open("/dev/tty")
-	defer t.Close()
+	// Use stdin file descriptor for cross-platform compatibility
+	fd := int(os.Stdin.Fd())
 
-	err := term.RawMode(t)
+	// Save the original terminal state
+	oldState, err := term.MakeRaw(fd)
 	if err != nil {
-		log.Fatal(err)
+		// Fallback if raw mode fails - read normally
+		readBytes := make([]byte, 1)
+		_, readErr := os.Stdin.Read(readBytes)
+		if readErr != nil {
+			return 0
+		}
+		return readBytes[0]
 	}
+	defer term.Restore(fd, oldState)
 
-	var read int
+	// Read input
 	readBytes := make([]byte, 3)
-	read, err = t.Read(readBytes)
+	read, err := os.Stdin.Read(readBytes)
 	if err != nil {
 		// Handle read error, it might be due to signal interruption
-		return 0 // Or some other value indicating error/interruption if needed
+		return 0
 	}
-
-	defer t.Restore() // Restore terminal mode in defer
 
 	// Arrow keys are prefixed with the ANSI escape code which take up the first two bytes.
 	// The third byte is the key specific value we are looking for.
