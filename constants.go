@@ -7,10 +7,14 @@ const (
 	// CursorUpFormat Requires formatting with number of lines
 	CursorUpFormat = "\033[%dA"
 	ClearLine      = "\r\033[K"
-	KeyUp          = byte(65)
-	KeyDown        = byte(66)
-	KeyEscape      = byte(27)
-	KeyEnter       = byte(13)
+
+	// Key codes for navigation and actions
+	KeyUp             = byte(65)
+	KeyDown           = byte(66)
+	KeyEscape         = byte(27)
+	KeyEnter          = byte(13)
+	KeyCarriageReturn = byte(10) // Additional for cross-platform compatibility
+	KeyCtrlC          = byte(3)  // Ctrl+C generates ASCII 3 in raw mode
 )
 
 // NavigationKeys defines a map of specific byte keycodes related to
