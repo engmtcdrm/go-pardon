@@ -2,31 +2,35 @@ package main
 
 import (
 	"fmt"
-	"github.com/nexidian/gocliselect"
+
+	pp "github.com/engmtcdrm/go-prettyprint"
+	"github.com/engmtcdrm/gocliselect"
 )
 
-func main() {
-	menu := gocliselect.NewMenu("Chose a colour")
+type Color struct {
+	Name string
+	ID   int
+}
 
-	menu.AddItem("Red", 1)
-	menu.AddItem("Blue", 2)
-	menu.AddItem("Green", 3)
-	menu.AddItem("Yellow", 4)
-	menu.AddItem("Red", 5)
-	menu.AddItem("Blue", 6)
-	menu.AddItem("Green", 7)
-	menu.AddItem("Yellow", 8)
+func main() {
+	menu := gocliselect.NewSelect(pp.Cyan("Choose a color:"))
+
+	menu.ItemSelectColor = pp.Yellow
+
+	menu.AddItem("Red", Color{Name: "Red", ID: 1})
+	menu.AddItem("Blue", Color{Name: "Blue", ID: 2})
+	menu.AddItem("Green", Color{Name: "Green", ID: 3})
+	menu.AddItem("Yellow", Color{Name: "Yellow", ID: 4})
+	menu.AddItem("Red", Color{Name: "Red", ID: 5})
+	menu.AddItem("Blue", Color{Name: "Blue", ID: 6})
+	menu.AddItem("Green", Color{Name: "Green", ID: 7})
+	menu.AddItem("Yellow", Color{Name: "Yellow", ID: 8})
 
 	result, err := menu.Display()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
+		return
 	}
 
-	if _, ok := result.(int); ok {
-		fmt.Printf("Selected option: %d\n", result)
-	} else if _, ok := result.(string); ok {
-		fmt.Printf("Selected option: %s\n", result)
-	} else {
-		fmt.Printf("Selected option of unexpected type: %T with value: %v\n", result, result)
-	}
+	fmt.Printf("Selected option: %v\n", result)
 }
