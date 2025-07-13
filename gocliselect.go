@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"golang.org/x/term"
@@ -16,6 +17,7 @@ var (
 
 type Select struct {
 	Prompt          string
+	Cursor          string
 	CursorPos       int
 	ScrollOffset    int
 	SelectItems     []*SelectItem
@@ -31,6 +33,7 @@ type SelectItem struct {
 func NewSelect(prompt string) *Select {
 	return &Select{
 		Prompt:      prompt,
+		Cursor:      ">",
 		SelectItems: make([]*SelectItem, 0),
 	}
 }
@@ -75,15 +78,17 @@ func (s *Select) renderSelectItems(redraw bool) {
 		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
+	selectCursor := fmt.Sprintf("%s ", s.Cursor)
+
 	// Render only visible select items
 	for i := s.ScrollOffset; i < min(s.ScrollOffset+termHeight, selectSize); i++ {
 		selectItem := s.SelectItems[i]
-		cursor := "  "
+		cursor := strings.Repeat(" ", len(selectCursor))
 
 		fmt.Print(ansi.ClearLine)
 
 		if i == s.CursorPos {
-			cursor = s.ItemSelectColor("> ")
+			cursor = s.ItemSelectColor(selectCursor)
 			fmt.Printf("\r%s%s\n", cursor, s.ItemSelectColor(selectItem.Text))
 		} else {
 			fmt.Printf("\r%s%s\n", cursor, selectItem.Text)
