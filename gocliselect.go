@@ -25,8 +25,8 @@ type Select struct {
 }
 
 type SelectItem struct {
-	Text      string
-	ID        any
+	Key       string
+	Value     any
 	SubSelect *Select
 }
 
@@ -41,8 +41,8 @@ func NewSelect(prompt string) *Select {
 // AddItem will add a new select option to the select list
 func (s *Select) AddItem(option string, id any) *Select {
 	selectItem := &SelectItem{
-		Text: fmt.Sprintf("%d: %s", len(s.SelectItems)+1, option),
-		ID:   id,
+		Key:   option,
+		Value: id,
 	}
 
 	s.SelectItems = append(s.SelectItems, selectItem)
@@ -89,9 +89,9 @@ func (s *Select) renderSelectItems(redraw bool) {
 
 		if i == s.CursorPos {
 			cursor = s.ItemSelectColor(selectCursor)
-			fmt.Printf("\r%s%s\n", cursor, s.ItemSelectColor(selectItem.Text))
+			fmt.Printf("\r%s%s\n", cursor, s.ItemSelectColor(selectItem.Key))
 		} else {
-			fmt.Printf("\r%s%s\n", cursor, selectItem.Text)
+			fmt.Printf("\r%s%s\n", cursor, selectItem.Key)
 		}
 	}
 }
@@ -131,7 +131,7 @@ func (s *Select) Display() (interface{}, error) {
 		case KeyEnter, KeyCarriageReturn:
 			selectItem := s.SelectItems[s.CursorPos]
 			fmt.Println("\r")
-			return selectItem.ID, nil
+			return selectItem.Value, nil
 		case KeyUp:
 			s.CursorPos = (s.CursorPos + len(s.SelectItems) - 1) % len(s.SelectItems)
 			s.renderSelectItems(true)
