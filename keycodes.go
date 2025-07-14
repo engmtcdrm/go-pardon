@@ -8,11 +8,8 @@ const (
 	KeyEscape         = byte(27)
 	KeyUp             = byte(65)
 	KeyDown           = byte(66)
+	KeyNoUpper        = byte(78)
+	KeyYesUpper       = byte(89)
+	KeyNo             = byte(110)
+	KeyYes            = byte(121)
 )
-
-// NavigationKeys defines a map of specific byte keycodes related to
-// navigation functionality, such as up or down actions.
-var NavigationKeys = map[byte]bool{
-	KeyUp:   true,
-	KeyDown: true,
-}
