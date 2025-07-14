@@ -20,18 +20,19 @@ var (
 
 type Select[T comparable] struct {
 	title           EvalVal[string]
-	cursor          string
+	cursor          EvalVal[string]
 	cursorPos       int
 	scrollOffset    int
-	items           []SelectItem[T]
+	items           []Item[T]
 	ItemSelectColor func(...any) string
+	value           *T
 }
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
 		title:  EvalVal[string]{val: "", fn: nil},
-		cursor: ">",
-		items:  make([]SelectItem[T], 0),
+		cursor: EvalVal[string]{val: ">", fn: nil},
+		items:  make([]Item[T], 0),
 	}
 }
 
@@ -47,26 +48,44 @@ func (s *Select[T]) TitleFunc(fn func() string) *Select[T] {
 }
 
 func (s *Select[T]) Cursor(cursor string) *Select[T] {
-	s.cursor = cursor
+	s.cursor.val = cursor
+	s.cursor.fn = nil
 	return s
 }
 
-func (s *Select[T]) Items(items ...SelectItem[T]) *Select[T] {
+func (s *Select[T]) CursorFunc(fn func() string) *Select[T] {
+	s.cursor.fn = fn
+	return s
+}
+
+func (s *Select[T]) Items(items ...Item[T]) *Select[T] {
 	s.items = items
+	return s
+}
+
+func (s *Select[T]) Value(value *T) *Select[T] {
+	s.value = value
 	return s
 }
 
 // Ask will display the current select options and awaits user selection
 // It returns the users selected choice
-func (s *Select[T]) Ask() (T, error) {
+func (s *Select[T]) Ask() error {
+	if s.title.val == "" && s.title.fn == nil {
+		return ErrNoTitle
+	}
+
+	if s.value == nil {
+		return ErrNoValue
+	}
+
+	if len(s.items) == 0 {
+		return ErrNoSelectItems
+	}
+
 	defer func() {
 		fmt.Print(ansi.ShowCursor)
 	}()
-
-	if len(s.items) == 0 {
-		var zero T
-		return zero, ErrNoSelectItems
-	}
 
 	fmt.Println(s.title.Get())
 
@@ -79,15 +98,13 @@ func (s *Select[T]) Ask() (T, error) {
 
 		switch keyCode {
 		case KeyEscape:
-			var zero T
-			return zero, nil
+			return nil
 		case KeyCtrlC:
-			var zero T
-			return zero, ErrUserAborted
+			return ErrUserAborted
 		case KeyEnter, KeyCarriageReturn:
-			selectItem := s.items[s.cursorPos]
+			*s.value = s.items[s.cursorPos].Value
 			fmt.Println("\r")
-			return selectItem.Value, nil
+			return nil
 		case KeyUp:
 			s.cursorPos = (s.cursorPos + len(s.items) - 1) % len(s.items)
 			s.renderSelectItems(true)
@@ -127,7 +144,7 @@ func (s *Select[T]) renderSelectItems(redraw bool) {
 		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
-	selectCursor := fmt.Sprintf("%s ", s.cursor)
+	selectCursor := fmt.Sprintf("%s ", s.cursor.Get())
 
 	// Render only visible select items
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
@@ -142,18 +159,5 @@ func (s *Select[T]) renderSelectItems(redraw bool) {
 		} else {
 			fmt.Printf("\r%s%s\n", cursor, selectItem.Key)
 		}
-	}
-}
-
-type SelectItem[T comparable] struct {
-	Key       string
-	Value     T
-	SubSelect *Select[T]
-}
-
-func NewSelectItem[T comparable](key string, value T) SelectItem[T] {
-	return SelectItem[T]{
-		Key:   key,
-		Value: value,
 	}
 }
