@@ -1,7 +1,6 @@
 package gocliselect
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -11,47 +10,97 @@ import (
 )
 
 var (
-	ErrNoSelectItems = errors.New("select has no items to display")
-	ErrUserAborted   = errors.New("user aborted")
+	// NavigationKeys defines a map of specific byte keycodes related to
+	// navigation functionality, such as up or down actions.
+	NavigationKeys = map[byte]bool{
+		KeyUp:   true,
+		KeyDown: true,
+	}
 )
 
-type Select struct {
-	Prompt          string
-	Cursor          string
-	CursorPos       int
-	ScrollOffset    int
-	SelectItems     []*SelectItem
+type Select[T comparable] struct {
+	title           EvalVal[string]
+	cursor          string
+	cursorPos       int
+	scrollOffset    int
+	items           []SelectItem[T]
 	ItemSelectColor func(...any) string
 }
 
-type SelectItem struct {
-	Key       string
-	Value     any
-	SubSelect *Select
-}
-
-func NewSelect(prompt string) *Select {
-	return &Select{
-		Prompt:      prompt,
-		Cursor:      ">",
-		SelectItems: make([]*SelectItem, 0),
+func NewSelect[T comparable]() *Select[T] {
+	return &Select[T]{
+		title:  EvalVal[string]{val: "", fn: nil},
+		cursor: ">",
+		items:  make([]SelectItem[T], 0),
 	}
 }
 
-// AddItem will add a new select option to the select list
-func (s *Select) AddItem(option string, id any) *Select {
-	selectItem := &SelectItem{
-		Key:   option,
-		Value: id,
-	}
-
-	s.SelectItems = append(s.SelectItems, selectItem)
+func (s *Select[T]) Title(title string) *Select[T] {
+	s.title.val = title
+	s.title.fn = nil
 	return s
+}
+
+func (s *Select[T]) TitleFunc(fn func() string) *Select[T] {
+	s.title.fn = fn
+	return s
+}
+
+func (s *Select[T]) Cursor(cursor string) *Select[T] {
+	s.cursor = cursor
+	return s
+}
+
+func (s *Select[T]) Items(items ...SelectItem[T]) *Select[T] {
+	s.items = items
+	return s
+}
+
+// Ask will display the current select options and awaits user selection
+// It returns the users selected choice
+func (s *Select[T]) Ask() (T, error) {
+	defer func() {
+		fmt.Print(ansi.ShowCursor)
+	}()
+
+	if len(s.items) == 0 {
+		var zero T
+		return zero, ErrNoSelectItems
+	}
+
+	fmt.Println(s.title.Get())
+
+	s.renderSelectItems(false)
+
+	fmt.Print(ansi.HideCursor)
+
+	for {
+		keyCode := getInput()
+
+		switch keyCode {
+		case KeyEscape:
+			var zero T
+			return zero, nil
+		case KeyCtrlC:
+			var zero T
+			return zero, ErrUserAborted
+		case KeyEnter, KeyCarriageReturn:
+			selectItem := s.items[s.cursorPos]
+			fmt.Println("\r")
+			return selectItem.Value, nil
+		case KeyUp:
+			s.cursorPos = (s.cursorPos + len(s.items) - 1) % len(s.items)
+			s.renderSelectItems(true)
+		case KeyDown:
+			s.cursorPos = (s.cursorPos + 1) % len(s.items)
+			s.renderSelectItems(true)
+		}
+	}
 }
 
 // renderSelectItems prints the select item list.
 // Setting redraw to true will re-render the options list with updated current selection.
-func (s *Select) renderSelectItems(redraw bool) {
+func (s *Select[T]) renderSelectItems(redraw bool) {
 	termHeight := 25 // Default height
 
 	// Try to get terminal size, but don't fail if we can't
@@ -60,13 +109,13 @@ func (s *Select) renderSelectItems(redraw bool) {
 	}
 
 	termHeight = termHeight - 3 // Space for prompt and cursor movement
-	selectSize := len(s.SelectItems)
+	selectSize := len(s.items)
 
 	// Ensure scroll offset follows cursor movement
-	if s.CursorPos < s.ScrollOffset {
-		s.ScrollOffset = s.CursorPos
-	} else if s.CursorPos >= s.ScrollOffset+termHeight {
-		s.ScrollOffset = s.CursorPos - termHeight + 1
+	if s.cursorPos < s.scrollOffset {
+		s.scrollOffset = s.cursorPos
+	} else if s.cursorPos >= s.scrollOffset+termHeight {
+		s.scrollOffset = s.cursorPos - termHeight + 1
 	}
 
 	if redraw {
@@ -78,16 +127,16 @@ func (s *Select) renderSelectItems(redraw bool) {
 		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
-	selectCursor := fmt.Sprintf("%s ", s.Cursor)
+	selectCursor := fmt.Sprintf("%s ", s.cursor)
 
 	// Render only visible select items
-	for i := s.ScrollOffset; i < min(s.ScrollOffset+termHeight, selectSize); i++ {
-		selectItem := s.SelectItems[i]
+	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
+		selectItem := s.items[i]
 		cursor := strings.Repeat(" ", len(selectCursor))
 
 		fmt.Print(ansi.ClearLine)
 
-		if i == s.CursorPos {
+		if i == s.cursorPos {
 			cursor = s.ItemSelectColor(selectCursor)
 			fmt.Printf("\r%s%s\n", cursor, s.ItemSelectColor(selectItem.Key))
 		} else {
@@ -96,90 +145,15 @@ func (s *Select) renderSelectItems(redraw bool) {
 	}
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+type SelectItem[T comparable] struct {
+	Key       string
+	Value     T
+	SubSelect *Select[T]
 }
 
-// Display will display the current select options and awaits user selection
-// It returns the users selected choice
-func (s *Select) Display() (interface{}, error) {
-	defer func() {
-		fmt.Print(ansi.ShowCursor)
-	}()
-
-	if len(s.SelectItems) == 0 {
-		return nil, ErrNoSelectItems
+func NewSelectItem[T comparable](key string, value T) SelectItem[T] {
+	return SelectItem[T]{
+		Key:   key,
+		Value: value,
 	}
-
-	fmt.Println(s.Prompt)
-
-	s.renderSelectItems(false)
-
-	fmt.Print(ansi.HideCursor)
-
-	for {
-		keyCode := getInput()
-
-		switch keyCode {
-		case KeyEscape:
-			return "", nil
-		case KeyCtrlC:
-			return "", ErrUserAborted
-		case KeyEnter, KeyCarriageReturn:
-			selectItem := s.SelectItems[s.CursorPos]
-			fmt.Println("\r")
-			return selectItem.Value, nil
-		case KeyUp:
-			s.CursorPos = (s.CursorPos + len(s.SelectItems) - 1) % len(s.SelectItems)
-			s.renderSelectItems(true)
-		case KeyDown:
-			s.CursorPos = (s.CursorPos + 1) % len(s.SelectItems)
-			s.renderSelectItems(true)
-		}
-	}
-}
-
-// getInput will read raw input from the terminal
-// It returns the raw ASCII value inputted
-func getInput() byte {
-	// Use stdin file descriptor for cross-platform compatibility
-	fd := int(os.Stdin.Fd())
-
-	// Save the original terminal state
-	oldState, err := term.MakeRaw(fd)
-	if err != nil {
-		// Fallback if raw mode fails - read normally
-		readBytes := make([]byte, 1)
-		_, readErr := os.Stdin.Read(readBytes)
-		if readErr != nil {
-			return 0
-		}
-		return readBytes[0]
-	}
-	defer term.Restore(fd, oldState)
-
-	// Read input
-	readBytes := make([]byte, 3)
-	read, err := os.Stdin.Read(readBytes)
-	if err != nil {
-		// Handle read error, it might be due to signal interruption
-		return 0
-	}
-
-	// Arrow keys are prefixed with the ANSI escape code which take up the first two bytes.
-	// The third byte is the key specific value we are looking for.
-	// For example the left arrow key is '<esc>[A' while the right is '<esc>[C'
-	// See: https://en.wikipedia.org/wiki/ANSI_escape_code
-	if read == 3 {
-		if _, ok := NavigationKeys[readBytes[2]]; ok {
-			return readBytes[2]
-		}
-	} else {
-		return readBytes[0]
-	}
-
-	return 0
 }
