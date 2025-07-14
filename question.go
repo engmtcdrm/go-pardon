@@ -70,7 +70,7 @@ func (q *Question) Ask() error {
 	signal.Notify(sigChan, syscall.SIGINT)
 	defer signal.Stop(sigChan)
 
-	fmt.Printf("%s %s: ", q.questionMark.Get(), q.title.Get())
+	fmt.Printf("%s %s ", q.questionMark.Get(), q.title.Get())
 
 	answerChan := make(chan string, 1)
 	go func() {
