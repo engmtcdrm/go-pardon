@@ -107,6 +107,18 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Your favorite color is: %s\n", favColor)
+	fmt.Printf("Your favorite color is: %s\n\n", favColor)
+
+	password := []byte{}
+	passwordQuestion := gocliselect.NewPassword().
+		Title("Enter your password:").
+		Value(&password)
+
+	if err := passwordQuestion.Ask(); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Your password is: %s\n\n", string(password))
 
 }
