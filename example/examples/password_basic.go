@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/gocliselect"
+	"github.com/engmtcdrm/pardon"
 )
 
 func PasswordBasic() {
 	password := []byte{}
-	passwordQuestion := gocliselect.NewPassword().
+	passwordQuestion := pardon.NewPassword().
 		Title("Enter your password:").
 		Value(&password)
 

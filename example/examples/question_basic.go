@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/gocliselect"
+	"github.com/engmtcdrm/pardon"
 )
 
 func QuestionBasic() {
 	favColor := ""
-	question := gocliselect.NewQuestion().
+	question := pardon.NewQuestion().
 		Title("What is your favorite color?").
 		Value(&favColor)
 

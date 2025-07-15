@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/gocliselect"
+	"github.com/engmtcdrm/pardon"
 )
 
 func SelectBasic() {
 	var selectedColor int
-	colors := []gocliselect.Option[int]{}
-	colors = append(colors, gocliselect.Option[int]{Key: "Red", Value: 1})
-	colors = append(colors, gocliselect.Option[int]{Key: "Blue", Value: 2})
-	colors = append(colors, gocliselect.Option[int]{Key: "Green", Value: 3})
-	colors = append(colors, gocliselect.Option[int]{Key: "Yellow", Value: 4})
+	colors := []pardon.Option[int]{}
+	colors = append(colors, pardon.Option[int]{Key: "Red", Value: 1})
+	colors = append(colors, pardon.Option[int]{Key: "Blue", Value: 2})
+	colors = append(colors, pardon.Option[int]{Key: "Green", Value: 3})
+	colors = append(colors, pardon.Option[int]{Key: "Yellow", Value: 4})
 
-	selectPrompt := gocliselect.NewSelect[int]().
+	selectPrompt := pardon.NewSelect[int]().
 		Title("Choose a color:").
 		Options(colors...).
 		Value(&selectedColor)

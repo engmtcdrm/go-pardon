@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/gocliselect"
-	"github.com/engmtcdrm/gocliselect/example/examples"
+	"github.com/engmtcdrm/pardon"
+	"github.com/engmtcdrm/pardon/example/examples"
 )
 
 type Color2 struct {
@@ -16,16 +16,16 @@ type Color2 struct {
 
 func main() {
 	funcMap := map[string]func(){}
-	names := make([]gocliselect.Option[string], len(examples.AllExamples))
+	names := make([]pardon.Option[string], len(examples.AllExamples))
 
 	for i, ex := range examples.AllExamples {
 		funcMap[ex.Name] = ex.Fn
-		names[i] = gocliselect.NewOption(ex.Name, ex.Name)
+		names[i] = pardon.NewOption(ex.Name, ex.Name)
 	}
 
 	var selectedName string
 
-	selectPrompt := gocliselect.NewSelect[string]().
+	selectPrompt := pardon.NewSelect[string]().
 		Title("Select an example:").
 		Options(names...).
 		Value(&selectedName).

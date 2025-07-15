@@ -1,4 +1,4 @@
-package gocliselect
+package pardon
 
 type PromptInterface[T any] interface {
 	Title(title T) PromptInterface[T]

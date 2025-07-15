@@ -1,4 +1,4 @@
-package gocliselect
+package pardon
 
 type Option[T comparable] struct {
 	Key   string

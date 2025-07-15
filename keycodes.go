@@ -1,4 +1,4 @@
-package gocliselect
+package pardon
 
 const (
 	// Key codes for navigation and actions

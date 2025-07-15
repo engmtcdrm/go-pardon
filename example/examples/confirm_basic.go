@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/gocliselect"
+	"github.com/engmtcdrm/pardon"
 )
 
 func ConfirmBasic() {
 	continueFlag := true
 
-	confirm := gocliselect.NewConfirm().
+	confirm := pardon.NewConfirm().
 		Title("Are you sure you want to proceed?").
 		Value(&continueFlag)
 

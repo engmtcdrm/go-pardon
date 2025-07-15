@@ -1,4 +1,4 @@
-module github.com/engmtcdrm/gocliselect
+module github.com/engmtcdrm/pardon
 
 go 1.23.0
 

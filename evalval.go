@@ -1,4 +1,4 @@
-package gocliselect
+package pardon
 
 // EvalVal is a struct that holds a value and an optional function to retrieve it dynamically.
 type EvalVal[T any] struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/gocliselect"
+	"github.com/engmtcdrm/pardon"
 )
 
 func SelectStruct() {
@@ -14,13 +14,13 @@ func SelectStruct() {
 	}
 
 	selectedColor := Color{}
-	colors := []gocliselect.Option[Color]{}
-	colors = append(colors, gocliselect.Option[Color]{Key: "Red", Value: Color{Name: "Red", ID: 1}})
-	colors = append(colors, gocliselect.Option[Color]{Key: "Blue", Value: Color{Name: "Blue", ID: 2}})
-	colors = append(colors, gocliselect.Option[Color]{Key: "Green", Value: Color{Name: "Green", ID: 3}})
-	colors = append(colors, gocliselect.Option[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 4}})
+	colors := []pardon.Option[Color]{}
+	colors = append(colors, pardon.Option[Color]{Key: "Red", Value: Color{Name: "Red", ID: 1}})
+	colors = append(colors, pardon.Option[Color]{Key: "Blue", Value: Color{Name: "Blue", ID: 2}})
+	colors = append(colors, pardon.Option[Color]{Key: "Green", Value: Color{Name: "Green", ID: 3}})
+	colors = append(colors, pardon.Option[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 4}})
 
-	menu := gocliselect.NewSelect[Color]().
+	menu := pardon.NewSelect[Color]().
 		Title("Choose a color:").
 		Options(colors...).
 		Value(&selectedColor)
