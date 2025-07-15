@@ -60,6 +60,10 @@ func (s *Select[T]) CursorFunc(fn func() string) *Select[T] {
 }
 
 func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
+	if len(options) == 0 {
+		return s
+	}
+
 	s.options = options
 	return s
 }
@@ -97,6 +101,7 @@ func (s *Select[T]) Ask() error {
 	}()
 
 	fmt.Println(s.title.Get())
+	fmt.Println("")
 
 	s.renderOptions(false)
 
