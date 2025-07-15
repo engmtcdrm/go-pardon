@@ -19,20 +19,20 @@ var (
 )
 
 type Select[T comparable] struct {
-	title           EvalVal[string]
-	cursor          EvalVal[string]
-	cursorPos       int
-	scrollOffset    int
-	items           []Item[T]
-	ItemSelectColor func(...any) string
-	value           *T
+	title             EvalVal[string]
+	cursor            EvalVal[string]
+	cursorPos         int
+	scrollOffset      int
+	options           []Option[T]
+	OptionSelectColor func(...any) string
+	value             *T
 }
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		title:  EvalVal[string]{val: "", fn: nil},
-		cursor: EvalVal[string]{val: ">", fn: nil},
-		items:  make([]Item[T], 0),
+		title:   EvalVal[string]{val: "", fn: nil},
+		cursor:  EvalVal[string]{val: ">", fn: nil},
+		options: make([]Option[T], 0),
 	}
 }
 
@@ -58,8 +58,8 @@ func (s *Select[T]) CursorFunc(fn func() string) *Select[T] {
 	return s
 }
 
-func (s *Select[T]) Items(items ...Item[T]) *Select[T] {
-	s.items = items
+func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
+	s.options = options
 	return s
 }
 
@@ -79,8 +79,8 @@ func (s *Select[T]) Ask() error {
 		return ErrNoValue
 	}
 
-	if len(s.items) == 0 {
-		return ErrNoSelectItems
+	if len(s.options) == 0 {
+		return ErrNoSelectOptions
 	}
 
 	defer func() {
@@ -89,7 +89,7 @@ func (s *Select[T]) Ask() error {
 
 	fmt.Println(s.title.Get())
 
-	s.renderSelectItems(false)
+	s.renderSelectOptions(false)
 
 	fmt.Print(ansi.HideCursor)
 
@@ -102,22 +102,22 @@ func (s *Select[T]) Ask() error {
 		case KeyCtrlC:
 			return ErrUserAborted
 		case KeyEnter, KeyCarriageReturn:
-			*s.value = s.items[s.cursorPos].Value
+			*s.value = s.options[s.cursorPos].Value
 			fmt.Println("\r")
 			return nil
 		case KeyUp:
-			s.cursorPos = (s.cursorPos + len(s.items) - 1) % len(s.items)
-			s.renderSelectItems(true)
+			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
+			s.renderSelectOptions(true)
 		case KeyDown:
-			s.cursorPos = (s.cursorPos + 1) % len(s.items)
-			s.renderSelectItems(true)
+			s.cursorPos = (s.cursorPos + 1) % len(s.options)
+			s.renderSelectOptions(true)
 		}
 	}
 }
 
-// renderSelectItems prints the select item list.
+// renderSelectOptions prints the select option list.
 // Setting redraw to true will re-render the options list with updated current selection.
-func (s *Select[T]) renderSelectItems(redraw bool) {
+func (s *Select[T]) renderSelectOptions(redraw bool) {
 	termHeight := 25 // Default height
 
 	// Try to get terminal size, but don't fail if we can't
@@ -126,7 +126,7 @@ func (s *Select[T]) renderSelectItems(redraw bool) {
 	}
 
 	termHeight = termHeight - 3 // Space for prompt and cursor movement
-	selectSize := len(s.items)
+	selectSize := len(s.options)
 
 	// Ensure scroll offset follows cursor movement
 	if s.cursorPos < s.scrollOffset {
@@ -146,18 +146,18 @@ func (s *Select[T]) renderSelectItems(redraw bool) {
 
 	selectCursor := fmt.Sprintf("%s ", s.cursor.Get())
 
-	// Render only visible select items
+	// Render only visible select options
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
-		selectItem := s.items[i]
+		selectedOption := s.options[i]
 		cursor := strings.Repeat(" ", len(selectCursor))
 
 		fmt.Print(ansi.ClearLine)
 
 		if i == s.cursorPos {
-			cursor = s.ItemSelectColor(selectCursor)
-			fmt.Printf("\r%s%s\n", cursor, s.ItemSelectColor(selectItem.Key))
+			cursor = s.OptionSelectColor(selectCursor)
+			fmt.Printf("\r%s%s\n", cursor, s.OptionSelectColor(selectedOption.Key))
 		} else {
-			fmt.Printf("\r%s%s\n", cursor, selectItem.Key)
+			fmt.Printf("\r%s%s\n", cursor, selectedOption.Key)
 		}
 	}
 }

@@ -19,52 +19,52 @@ type Color2 struct {
 }
 
 func main() {
-	selectedItem := Color{}
-	items := []gocliselect.Item[Color]{}
-	items = append(items, gocliselect.Item[Color]{Key: "Red", Value: Color{Name: "Red", ID: 1}})
-	items = append(items, gocliselect.Item[Color]{Key: "Blue", Value: Color{Name: "Blue", ID: 2}})
-	items = append(items, gocliselect.Item[Color]{Key: "Green", Value: Color{Name: "Green", ID: 3}})
-	items = append(items, gocliselect.Item[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 4}})
-	items = append(items, gocliselect.Item[Color]{Key: "Red", Value: Color{Name: "Red", ID: 5}})
-	items = append(items, gocliselect.Item[Color]{Key: "Blue", Value: Color{Name: "Blue", ID: 6}})
-	items = append(items, gocliselect.Item[Color]{Key: "Green", Value: Color{Name: "Green", ID: 7}})
-	items = append(items, gocliselect.Item[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 8}})
+	selectedColor := Color{}
+	colors := []gocliselect.Option[Color]{}
+	colors = append(colors, gocliselect.Option[Color]{Key: "Red", Value: Color{Name: "Red", ID: 1}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Blue", Value: Color{Name: "Blue", ID: 2}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Green", Value: Color{Name: "Green", ID: 3}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 4}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Red", Value: Color{Name: "Red", ID: 5}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Blue", Value: Color{Name: "Blue", ID: 6}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Green", Value: Color{Name: "Green", ID: 7}})
+	colors = append(colors, gocliselect.Option[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 8}})
 
 	menu := gocliselect.NewSelect[Color]().
 		Title(pp.Cyan("Choose a color:")).
-		Items(items...).
-		Value(&selectedItem)
+		Options(colors...).
+		Value(&selectedColor)
 
-	menu.ItemSelectColor = pp.Yellow
+	menu.OptionSelectColor = pp.Yellow
 
 	if err := menu.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
 
-	fmt.Printf("Selected option: %v\n\n", selectedItem)
+	fmt.Printf("Selected option: %v\n\n", selectedColor)
 
-	selectedItem2 := Color2{}
+	selectedColor2 := Color2{}
 
-	items2 := []gocliselect.Item[Color2]{}
-	items2 = append(items2, gocliselect.NewSelectItem("Red", Color2{Name: "Red", ID: 1, Sub: "Sub Red"}))
-	items2 = append(items2, gocliselect.NewSelectItem("Blue", Color2{Name: "Blue", ID: 2, Sub: "Sub Blue"}))
-	items2 = append(items2, gocliselect.NewSelectItem("Green", Color2{Name: "Green", ID: 3, Sub: "Sub Green"}))
-	items2 = append(items2, gocliselect.NewSelectItem("Yellow", Color2{Name: "Yellow", ID: 4, Sub: "Sub Yellow"}))
+	colors2 := []gocliselect.Option[Color2]{}
+	colors2 = append(colors2, gocliselect.NewOption("Red", Color2{Name: "Red", ID: 1, Sub: "Sub Red"}))
+	colors2 = append(colors2, gocliselect.NewOption("Blue", Color2{Name: "Blue", ID: 2, Sub: "Sub Blue"}))
+	colors2 = append(colors2, gocliselect.NewOption("Green", Color2{Name: "Green", ID: 3, Sub: "Sub Green"}))
+	colors2 = append(colors2, gocliselect.NewOption("Yellow", Color2{Name: "Yellow", ID: 4, Sub: "Sub Yellow"}))
 
 	menu2 := gocliselect.NewSelect[Color2]().
 		Title("Choose a color with sub:").
-		Items(items2...).
-		Value(&selectedItem2)
+		Options(colors2...).
+		Value(&selectedColor2)
 
-	menu2.ItemSelectColor = pp.Green
+	menu2.OptionSelectColor = pp.Green
 
 	if err := menu2.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
 
-	fmt.Printf("Selected option with sub: %v\n\n", selectedItem2)
+	fmt.Printf("Selected option with sub: %v\n\n", selectedColor2)
 
 	continueFlag := true
 
