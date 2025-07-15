@@ -18,7 +18,7 @@ type Question struct {
 
 func NewQuestion() *Question {
 	return &Question{
-		questionMark: EvalVal[string]{val: questionMark, fn: nil},
+		questionMark: EvalVal[string]{val: questionMarkIcon, fn: nil},
 		title:        EvalVal[string]{val: "", fn: nil},
 		value:        nil,
 		validate:     func(s string) error { return nil },
