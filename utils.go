@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	questionMark = "[?]"
+	questionMarkIcon = "[?] "
+	passwordIcon     = "🔒 "
 )
 
 // min returns the smaller of two integers.
