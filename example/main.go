@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	pp "github.com/engmtcdrm/go-prettyprint"
+	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/gocliselect"
 	"github.com/engmtcdrm/gocliselect/example/examples"
 )
@@ -30,7 +30,7 @@ func main() {
 		Options(names...).
 		Value(&selectedName).
 		SelectFunc(func(s string) string {
-			return pp.Green(s)
+			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
 		})
 
 	if err := selectPrompt.Ask(); err != nil {
