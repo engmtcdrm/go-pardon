@@ -33,9 +33,12 @@ func main() {
 	menu := gocliselect.NewSelect[Color]().
 		Title(pp.Cyan("Choose a color:")).
 		Options(colors...).
-		Value(&selectedColor)
+		Value(&selectedColor).
+		SelectFunc(func(s string) string {
+			return pp.Yellow(s)
+		})
 
-	menu.OptionSelectColor = pp.Yellow
+	// menu.OptionSelectColor = pp.Yellow
 
 	if err := menu.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -55,9 +58,10 @@ func main() {
 	menu2 := gocliselect.NewSelect[Color2]().
 		Title("Choose a color with sub:").
 		Options(colors2...).
-		Value(&selectedColor2)
-
-	menu2.OptionSelectColor = pp.Green
+		Value(&selectedColor2).
+		SelectFunc(func(s string) string {
+			return pp.Green(s)
+		})
 
 	if err := menu2.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)
