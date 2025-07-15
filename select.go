@@ -19,20 +19,21 @@ var (
 )
 
 type Select[T comparable] struct {
-	title             EvalVal[string]
-	cursor            EvalVal[string]
-	cursorPos         int
-	scrollOffset      int
-	options           []Option[T]
-	OptionSelectColor func(...any) string
-	value             *T
+	title        EvalVal[string]
+	cursor       EvalVal[string]
+	cursorPos    int
+	scrollOffset int
+	options      []Option[T]
+	selectFunc   func(string) string
+	value        *T
 }
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		title:   EvalVal[string]{val: "", fn: nil},
-		cursor:  EvalVal[string]{val: ">", fn: nil},
-		options: make([]Option[T], 0),
+		title:      EvalVal[string]{val: "", fn: nil},
+		cursor:     EvalVal[string]{val: "> ", fn: nil},
+		options:    make([]Option[T], 0),
+		selectFunc: func(s string) string { return s },
 	}
 }
 
@@ -68,6 +69,14 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
+// SelectFunc allows customization of the selected option's display format.
+func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
+	if fn != nil {
+		s.selectFunc = fn
+	}
+	return s
+}
+
 // Ask will display the current select options and awaits user selection
 // It returns the users selected choice
 func (s *Select[T]) Ask() error {
@@ -89,7 +98,7 @@ func (s *Select[T]) Ask() error {
 
 	fmt.Println(s.title.Get())
 
-	s.renderSelectOptions(false)
+	s.renderOptions(false)
 
 	fmt.Print(ansi.HideCursor)
 
@@ -97,8 +106,6 @@ func (s *Select[T]) Ask() error {
 		keyCode := getInput()
 
 		switch keyCode {
-		case KeyEscape:
-			return nil
 		case KeyCtrlC:
 			return ErrUserAborted
 		case KeyEnter, KeyCarriageReturn:
@@ -107,17 +114,17 @@ func (s *Select[T]) Ask() error {
 			return nil
 		case KeyUp:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
-			s.renderSelectOptions(true)
+			s.renderOptions(true)
 		case KeyDown:
 			s.cursorPos = (s.cursorPos + 1) % len(s.options)
-			s.renderSelectOptions(true)
+			s.renderOptions(true)
 		}
 	}
 }
 
-// renderSelectOptions prints the select option list.
+// renderOptions prints the select option list.
 // Setting redraw to true will re-render the options list with updated current selection.
-func (s *Select[T]) renderSelectOptions(redraw bool) {
+func (s *Select[T]) renderOptions(redraw bool) {
 	termHeight := 25 // Default height
 
 	// Try to get terminal size, but don't fail if we can't
@@ -144,7 +151,7 @@ func (s *Select[T]) renderSelectOptions(redraw bool) {
 		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
-	selectCursor := fmt.Sprintf("%s ", s.cursor.Get())
+	selectCursor := fmt.Sprintf("%s", s.cursor.Get())
 
 	// Render only visible select options
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
@@ -154,8 +161,8 @@ func (s *Select[T]) renderSelectOptions(redraw bool) {
 		fmt.Print(ansi.ClearLine)
 
 		if i == s.cursorPos {
-			cursor = s.OptionSelectColor(selectCursor)
-			fmt.Printf("\r%s%s\n", cursor, s.OptionSelectColor(selectedOption.Key))
+			cursor = s.selectFunc(selectCursor)
+			fmt.Printf("\r%s%s\n", cursor, s.selectFunc(selectedOption.Key))
 		} else {
 			fmt.Printf("\r%s%s\n", cursor, selectedOption.Key)
 		}
