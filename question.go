@@ -1,28 +1,38 @@
 package gocliselect
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
 )
 
 type Question struct {
-	questionMark EvalVal[string]
-	title        EvalVal[string]
-	value        *string
-	validate     func(string) error
+	icon     EvalVal[string]
+	title    EvalVal[string]
+	value    *string
+	validate func(string) error
+	tui      *TuiPrompt[string]
 }
 
 func NewQuestion() *Question {
-	return &Question{
-		questionMark: EvalVal[string]{val: questionMarkIcon, fn: nil},
-		title:        EvalVal[string]{val: "", fn: nil},
-		value:        nil,
-		validate:     func(s string) error { return nil },
+	q := &Question{
+		icon:     EvalVal[string]{val: questionMarkIcon, fn: nil},
+		title:    EvalVal[string]{val: "", fn: nil},
+		value:    nil,
+		validate: func(s string) error { return nil },
+		tui:      NewTuiPrompt[string](),
 	}
+
+	q.tui.Validate(q.validate).
+		DisplayInput(func(s string) string { return s }).
+		AppendInput(func(s string, b byte) string { return s + string(b) }).
+		RemoveLast(func(s string) string {
+			if len(s) > 0 {
+				return s[:len(s)-1]
+			}
+			return s
+		}).
+		ConvertInput(func(s string) string { return s })
+
+	return q
 }
 
 func (q *Question) Title(title string) *Question {
@@ -41,58 +51,25 @@ func (q *Question) Value(value *string) *Question {
 	return q
 }
 
-func (q *Question) QuestionMark(s string) *Question {
-	q.questionMark.val = s
-	q.questionMark.fn = nil
+func (q *Question) Icon(s string) *Question {
+	q.icon.val = s
+	q.icon.fn = nil
 	return q
 }
 
-func (q *Question) QuestionMarkFunc(fn func() string) *Question {
-	q.questionMark.fn = fn
+func (q *Question) IconFunc(fn func() string) *Question {
+	q.icon.fn = fn
 	return q
 }
 
 func (q *Question) Validate(fn func(string) error) *Question {
 	q.validate = fn
+	q.tui = q.tui.Validate(fn)
 	return q
 }
 
 func (q *Question) Ask() error {
-	if q.title.val == "" && q.title.fn == nil {
-		return ErrNoTitle
-	}
+	question := fmt.Sprintf("%s %s ", q.icon.Get(), q.title.Get())
 
-	if q.value == nil {
-		return ErrNoValue
-	}
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT)
-	defer signal.Stop(sigChan)
-
-	fmt.Printf("%s %s ", q.questionMark.Get(), q.title.Get())
-
-	answerChan := make(chan string, 1)
-	go func() {
-		reader := bufio.NewReader(os.Stdin)
-		for {
-			answer, _ := reader.ReadString('\n')
-			answer = strings.TrimSpace(answer)
-			if err := q.validate(answer); err != nil {
-				fmt.Printf("Error: %v\nTry again: ", err)
-				continue
-			}
-			answerChan <- answer
-			break
-		}
-	}()
-
-	select {
-	case <-sigChan:
-		fmt.Println("")
-		return ErrUserAborted
-	case answer := <-answerChan:
-		*q.value = answer
-		return nil
-	}
+	return q.tui.Display(question, q.value)
 }

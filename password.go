@@ -2,27 +2,28 @@ package gocliselect
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/engmtcdrm/go-ansi"
-	"golang.org/x/term"
+	"strings"
 )
 
 type Password struct {
-	passwordIcon EvalVal[string]
-	title        EvalVal[string]
-	value        *[]byte
-	validate     func([]byte) error
+	icon     EvalVal[string]
+	title    EvalVal[string]
+	value    *[]byte
+	validate func([]byte) error
+	tui      *TuiPrompt[[]byte]
 }
 
 func NewPassword() *Password {
 	return &Password{
-		passwordIcon: EvalVal[string]{val: passwordIcon, fn: nil},
-		title:        EvalVal[string]{val: "", fn: nil},
-		value:        nil,
-		validate:     func(s []byte) error { return nil },
+		icon:     EvalVal[string]{val: passwordIcon, fn: nil},
+		title:    EvalVal[string]{val: "", fn: nil},
+		value:    nil,
+		validate: func(s []byte) error { return nil },
+		tui: NewTuiPrompt[[]byte]().DisplayInput(
+			func(input []byte) string {
+				return strings.Repeat("", len(input))
+			},
+		),
 	}
 }
 
@@ -42,14 +43,14 @@ func (q *Password) Value(value *[]byte) *Password {
 	return q
 }
 
-func (q *Password) PasswordIcon(s string) *Password {
-	q.passwordIcon.val = s
-	q.passwordIcon.fn = nil
+func (q *Password) Icon(s string) *Password {
+	q.icon.val = s
+	q.icon.fn = nil
 	return q
 }
 
-func (q *Password) PasswordIconFunc(fn func() string) *Password {
-	q.passwordIcon.fn = fn
+func (q *Password) IconFunc(fn func() string) *Password {
+	q.icon.fn = fn
 	return q
 }
 
@@ -58,40 +59,18 @@ func (q *Password) Validate(fn func([]byte) error) *Password {
 	return q
 }
 
-func (q *Password) Ask() error {
-	if q.title.val == "" && q.title.fn == nil {
-		return ErrNoTitle
-	}
+func (p *Password) Ask() error {
+	question := fmt.Sprintf("%s %s ", p.icon.Get(), p.title.Get())
 
-	if q.value == nil {
-		return ErrNoValue
-	}
+	p.tui = p.tui.AppendInput(func(b []byte, c byte) []byte { return append(b, c) }).
+		Validate(p.validate).
+		RemoveLast(func(b []byte) []byte {
+			if len(b) > 0 {
+				return b[:len(b)-1]
+			}
+			return b
+		}).
+		ConvertInput(func(b []byte) []byte { return b })
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT)
-	defer signal.Stop(sigChan)
-
-	fmt.Print(ansi.HideCursor)
-	fmt.Printf("%s%s", q.passwordIcon.Get(), q.title.Get())
-
-	answerChan := make(chan []byte, 1)
-	go func() {
-		answer, _ := term.ReadPassword(int(syscall.Stdin))
-		if err := q.validate(answer); err != nil {
-			fmt.Printf("Error: %v\nTry again: ", err)
-		}
-		answerChan <- answer
-	}()
-
-	select {
-	case <-sigChan:
-		fmt.Print(ansi.ShowCursor)
-		fmt.Println("")
-		return ErrUserAborted
-	case answer := <-answerChan:
-		fmt.Print(ansi.ShowCursor)
-		fmt.Println("")
-		*q.value = answer
-		return nil
-	}
+	return p.tui.Display(question, p.value)
 }
