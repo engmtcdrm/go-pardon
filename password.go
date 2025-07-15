@@ -6,11 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/engmtcdrm/go-ansi"
 	"golang.org/x/term"
 )
 
 type Password struct {
-	questionMark EvalVal[string]
+	passwordIcon EvalVal[string]
 	title        EvalVal[string]
 	value        *[]byte
 	validate     func([]byte) error
@@ -18,7 +19,7 @@ type Password struct {
 
 func NewPassword() *Password {
 	return &Password{
-		questionMark: EvalVal[string]{val: questionMark, fn: nil},
+		passwordIcon: EvalVal[string]{val: passwordIcon, fn: nil},
 		title:        EvalVal[string]{val: "", fn: nil},
 		value:        nil,
 		validate:     func(s []byte) error { return nil },
@@ -41,14 +42,14 @@ func (q *Password) Value(value *[]byte) *Password {
 	return q
 }
 
-func (q *Password) QuestionMark(s string) *Password {
-	q.questionMark.val = s
-	q.questionMark.fn = nil
+func (q *Password) PasswordIcon(s string) *Password {
+	q.passwordIcon.val = s
+	q.passwordIcon.fn = nil
 	return q
 }
 
-func (q *Password) QuestionMarkFunc(fn func() string) *Password {
-	q.questionMark.fn = fn
+func (q *Password) PasswordIconFunc(fn func() string) *Password {
+	q.passwordIcon.fn = fn
 	return q
 }
 
@@ -70,7 +71,8 @@ func (q *Password) Ask() error {
 	signal.Notify(sigChan, syscall.SIGINT)
 	defer signal.Stop(sigChan)
 
-	fmt.Printf("%s %s ", q.questionMark.Get(), q.title.Get())
+	fmt.Print(ansi.HideCursor)
+	fmt.Printf("%s%s", q.passwordIcon.Get(), q.title.Get())
 
 	answerChan := make(chan []byte, 1)
 	go func() {
@@ -83,9 +85,11 @@ func (q *Password) Ask() error {
 
 	select {
 	case <-sigChan:
+		fmt.Print(ansi.ShowCursor)
 		fmt.Println("")
 		return ErrUserAborted
 	case answer := <-answerChan:
+		fmt.Print(ansi.ShowCursor)
 		fmt.Println("")
 		*q.value = answer
 		return nil
