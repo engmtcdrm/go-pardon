@@ -151,7 +151,7 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
 	}
 
-	selectCursor := fmt.Sprintf("%s", s.cursor.Get())
+	selectCursor := s.cursor.Get()
 
 	// Render only visible select options
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
