@@ -2,31 +2,45 @@ package main
 
 import (
 	"fmt"
-	"github.com/nexidian/gocliselect"
+
+	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/pardon"
+	"github.com/engmtcdrm/pardon/example/examples"
 )
 
+type Color2 struct {
+	Name string
+	ID   int
+	Sub  string
+}
+
 func main() {
-	menu := gocliselect.NewMenu("Chose a colour")
+	funcMap := map[string]func(){}
+	names := make([]pardon.Option[string], len(examples.AllExamples))
 
-	menu.AddItem("Red", 1)
-	menu.AddItem("Blue", 2)
-	menu.AddItem("Green", 3)
-	menu.AddItem("Yellow", 4)
-	menu.AddItem("Red", 5)
-	menu.AddItem("Blue", 6)
-	menu.AddItem("Green", 7)
-	menu.AddItem("Yellow", 8)
-
-	result, err := menu.Display()
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+	for i, ex := range examples.AllExamples {
+		funcMap[ex.Name] = ex.Fn
+		names[i] = pardon.NewOption(ex.Name, ex.Name)
 	}
 
-	if _, ok := result.(int); ok {
-		fmt.Printf("Selected option: %d\n", result)
-	} else if _, ok := result.(string); ok {
-		fmt.Printf("Selected option: %s\n", result)
+	var selectedName string
+
+	selectPrompt := pardon.NewSelect[string]().
+		Title("Select an example:").
+		Options(names...).
+		Value(&selectedName).
+		SelectFunc(func(s string) string {
+			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
+		})
+
+	if err := selectPrompt.Ask(); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	if fn, ok := funcMap[selectedName]; ok {
+		fn()
 	} else {
-		fmt.Printf("Selected option of unexpected type: %T with value: %v\n", result, result)
+		fmt.Println("No function found for selection.")
 	}
 }

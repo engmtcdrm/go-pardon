@@ -1,60 +1,86 @@
-# Golang CLI Select
-Lightweight interactive CLI selection library 
+
+# go-pardon
+Lightweight interactive CLI prompt library for Go
 
 ![](https://media.giphy.com/media/Nmc3muJhaCfPe2LWd9/giphy.gif)
 
-
 ## Import the package
 ```go
-import "github.com/nexidian/gocliselect"
+import "github.com/engmtcdrm/pardon"
 ```
 
 ## Usage
-Create a new menu, supplying the question as a parameter
 
-```go
-menu := gocliselect.NewMenu("Chose a colour")
-```
-
-Add any number of options by calling `AddItem()` supplying the display text of the option
-as well as the id
-```go
-menu.AddItem("Red", "red")
-menu.AddItem("Blue", "blue")
-menu.AddItem("Green", "green")
-menu.AddItem("Yellow", "yellow")
-menu.AddItem("Cyan", "cyan")
-```
-
-To display the menu and away the user choice call `Display()`
-
-```go
-choice := menu.Display()
-```
-
-## Example
+### Select Prompt
 ```go
 package main
 
 import (
     "fmt"
-    "github.com/nexidian/gocliselect"
+    "github.com/engmtcdrm/pardon"
 )
 
 func main() {
-    menu := gocliselect.NewMenu("Chose a colour")
-
-    menu.AddItem("Red", "red")
-    menu.AddItem("Blue", "blue")
-    menu.AddItem("Green", "green")
-    menu.AddItem("Yellow", "yellow")
-    menu.AddItem("Cyan", "cyan")
-
-    choice, err := menu.Display()
-    if err != nil {
-        fmt.Printf("Error: %v\n", err)
+    var selectedColor int
+    colors := []pardon.Option[int]{
+        {Key: "Red", Value: 1},
+        {Key: "Blue", Value: 2},
+        {Key: "Green", Value: 3},
+        {Key: "Yellow", Value: 4},
     }
 
-    fmt.Printf("Choice: %s\n", choice)
+    selectPrompt := pardon.NewSelect[int]().
+        Title("Choose a color:").
+        Options(colors...).
+        Value(&selectedColor)
+
+    if err := selectPrompt.Ask(); err != nil {
+        fmt.Printf("Error: %v\n", err)
+        return
+    }
+    fmt.Printf("Selected option: %v\n", selectedColor)
+}
+```
+
+### Question Prompt
+```go
+favColor := ""
+question := pardon.NewQuestion().
+    Title("What is your favorite color?").
+    Value(&favColor)
+
+if err := question.Ask(); err != nil {
+    fmt.Printf("Error: %v\n", err)
+}
+fmt.Printf("Entered favorite color is '%s'\n", favColor)
+```
+
+### Password Prompt
+```go
+password := []byte{}
+passwordPrompt := pardon.NewPassword().
+    Title("Enter your password:").
+    Value(&password)
+
+if err := passwordPrompt.Ask(); err != nil {
+    fmt.Printf("Error: %v\n", err)
+}
+fmt.Printf("Entered password is '%s'\n", string(password))
+```
+
+### Confirm Prompt
+```go
+continueFlag := true
+confirm := pardon.NewConfirm().
+    Title("Are you sure you want to proceed?").
+    Value(&continueFlag)
+
+if err := confirm.Ask(); err != nil {
+    fmt.Printf("Error: %v\n", err)
+}
+if continueFlag {
+    fmt.Println("Proceeding!")
+} else {
+    fmt.Println("Stopping!")
 }
 ```
