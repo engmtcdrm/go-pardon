@@ -69,7 +69,7 @@ func (q *Question) Validate(fn func(string) error) *Question {
 }
 
 func (q *Question) Ask() error {
-	question := fmt.Sprintf("%s %s ", q.icon.Get(), q.title.Get())
+	question := fmt.Sprintf("%s%s ", q.icon.Get(), q.title.Get())
 
 	return q.tui.Display(question, q.value)
 }
