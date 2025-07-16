@@ -8,7 +8,7 @@ import (
 
 // Confirm is a struct that represents a confirmation prompt.
 type Confirm struct {
-	questionMark EvalVal[string]
+	icon         EvalVal[string]
 	title        EvalVal[string]
 	confirm      string
 	confirmChars []byte
@@ -21,10 +21,10 @@ type Confirm struct {
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		questionMark: EvalVal[string]{val: questionMarkIcon, fn: nil},
-		title:        EvalVal[string]{val: "", fn: nil},
-		confirm:      "Y",
-		deny:         "N",
+		icon:    EvalVal[string]{val: questionMarkIcon, fn: nil},
+		title:   EvalVal[string]{val: "", fn: nil},
+		confirm: "Y",
+		deny:    "N",
 
 		confirmChars: []byte{KeyYesUpper, KeyYes},
 		denyChars:    []byte{KeyNoUpper, KeyNo},
@@ -45,14 +45,14 @@ func (c *Confirm) TitleFunc(fn func() string) *Confirm {
 	return c
 }
 
-func (c *Confirm) QuestionMark(s string) *Confirm {
-	c.questionMark.val = s
-	c.questionMark.fn = nil
+func (c *Confirm) Icon(s string) *Confirm {
+	c.icon.val = s
+	c.icon.fn = nil
 	return c
 }
 
-func (c *Confirm) QuestionMarkFunc(fn func() string) *Confirm {
-	c.questionMark.fn = fn
+func (c *Confirm) IconFunc(fn func() string) *Confirm {
+	c.icon.fn = fn
 	return c
 }
 
@@ -80,7 +80,7 @@ func (c *Confirm) Ask() error {
 		options = "(Y/n)"
 	}
 
-	question := fmt.Sprintf("%s %s", c.questionMark.Get(), c.title.Get())
+	question := fmt.Sprintf("%s%s", c.icon.Get(), c.title.Get())
 	question_opt := fmt.Sprintf("%s %s ", question, options)
 
 	// Display the confirmation prompt
