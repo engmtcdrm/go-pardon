@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/pardon"
-	"github.com/engmtcdrm/pardon/example/examples"
+	"github.com/engmtcdrm/go-pardon"
+	"github.com/engmtcdrm/go-pardon/example/examples"
 )
 
 type Color2 struct {

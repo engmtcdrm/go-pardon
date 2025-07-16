@@ -1,4 +1,4 @@
-module github.com/engmtcdrm/pardon
+module github.com/engmtcdrm/go-pardon
 
 go 1.23.0
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/pardon"
+	"github.com/engmtcdrm/go-pardon"
 )
 
 func SelectStruct() {
