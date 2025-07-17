@@ -6,7 +6,7 @@ import (
 	"github.com/engmtcdrm/go-ansi"
 )
 
-type TuiPrompt[T any] struct {
+type tuiPrompt[T any] struct {
 	Question       string
 	Value          *T
 	validateFn     func(T) error
@@ -16,8 +16,8 @@ type TuiPrompt[T any] struct {
 	convertInputFn func(T) T
 }
 
-func NewTuiPrompt[T any]() *TuiPrompt[T] {
-	return &TuiPrompt[T]{
+func newTuiPrompt[T any]() *tuiPrompt[T] {
+	return &tuiPrompt[T]{
 		validateFn:     func(input T) error { return nil },
 		displayInputFn: func(input T) string { return fmt.Sprintf("%v", input) },
 		appendInputFn:  func(input T, key byte) T { return input },
@@ -26,42 +26,42 @@ func NewTuiPrompt[T any]() *TuiPrompt[T] {
 	}
 }
 
-func (t *TuiPrompt[T]) Validate(fn func(T) error) *TuiPrompt[T] {
+func (t *tuiPrompt[T]) Validate(fn func(T) error) *tuiPrompt[T] {
 	if fn != nil {
 		t.validateFn = fn
 	}
 	return t
 }
 
-func (t *TuiPrompt[T]) DisplayInput(fn func(T) string) *TuiPrompt[T] {
+func (t *tuiPrompt[T]) DisplayInput(fn func(T) string) *tuiPrompt[T] {
 	if fn != nil {
 		t.displayInputFn = fn
 	}
 	return t
 }
 
-func (t *TuiPrompt[T]) AppendInput(fn func(T, byte) T) *TuiPrompt[T] {
+func (t *tuiPrompt[T]) AppendInput(fn func(T, byte) T) *tuiPrompt[T] {
 	if fn != nil {
 		t.appendInputFn = fn
 	}
 	return t
 }
 
-func (t *TuiPrompt[T]) RemoveLast(fn func(T) T) *TuiPrompt[T] {
+func (t *tuiPrompt[T]) RemoveLast(fn func(T) T) *tuiPrompt[T] {
 	if fn != nil {
 		t.removeLastFn = fn
 	}
 	return t
 }
 
-func (t *TuiPrompt[T]) ConvertInput(fn func(T) T) *TuiPrompt[T] {
+func (t *tuiPrompt[T]) ConvertInput(fn func(T) T) *tuiPrompt[T] {
 	if fn != nil {
 		t.convertInputFn = fn
 	}
 	return t
 }
 
-func (t *TuiPrompt[T]) Display(prompt string, value *T) error {
+func (t *tuiPrompt[T]) Display(prompt string, value *T) error {
 	input := *value
 	var lastError string
 	showError := false
@@ -90,7 +90,7 @@ func (t *TuiPrompt[T]) Display(prompt string, value *T) error {
 	for {
 		keyCode := getInput()
 		switch keyCode {
-		case KeyEnter, KeyCarriageReturn:
+		case keyEnter, keyCarriageReturn:
 			val := t.convertInputFn(input)
 			if err := t.validateFn(val); err != nil {
 				lastError = err.Error()
@@ -101,13 +101,13 @@ func (t *TuiPrompt[T]) Display(prompt string, value *T) error {
 			*value = val
 			fmt.Printf("\r%s%s\n%s", prompt, t.displayInputFn(input), ansi.ClearLine)
 			return nil
-		case KeyCtrlC:
+		case keyCtrlC:
 			fmt.Printf("\n%s", ansi.ClearLine)
 			return ErrUserAborted
-		case KeyBackspace:
+		case keyBackspace:
 			input = t.removeLastFn(input)
 			showError = false
-		case KeyUp, KeyDown:
+		case keyUp, keyDown:
 			showError = false
 		default:
 			input = t.appendInputFn(input, keyCode)

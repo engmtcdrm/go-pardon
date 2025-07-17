@@ -51,7 +51,7 @@ func getInput() byte {
 	// For example the left arrow key is '<esc>[A' while the right is '<esc>[C'
 	// See: https://en.wikipedia.org/wiki/ANSI_escape_code
 	if read == 3 {
-		if _, ok := NavigationKeys[readBytes[2]]; ok {
+		if _, ok := navigationKeys[readBytes[2]]; ok {
 			return readBytes[2]
 		}
 	} else {

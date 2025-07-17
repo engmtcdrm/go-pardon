@@ -5,20 +5,20 @@ import (
 )
 
 type Question struct {
-	icon     EvalVal[string]
-	title    EvalVal[string]
+	icon     evalVal[string]
+	title    evalVal[string]
 	value    *string
 	validate func(string) error
-	tui      *TuiPrompt[string]
+	tui      *tuiPrompt[string]
 }
 
 func NewQuestion() *Question {
 	q := &Question{
-		icon:     EvalVal[string]{val: questionMarkIcon, fn: nil},
-		title:    EvalVal[string]{val: "", fn: nil},
+		icon:     evalVal[string]{val: questionMarkIcon, fn: nil},
+		title:    evalVal[string]{val: "", fn: nil},
 		value:    nil,
 		validate: func(s string) error { return nil },
-		tui:      NewTuiPrompt[string](),
+		tui:      newTuiPrompt[string](),
 	}
 
 	q.tui.Validate(q.validate).
