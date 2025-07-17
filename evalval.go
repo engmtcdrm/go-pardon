@@ -1,7 +1,7 @@
 package pardon
 
-// EvalVal is a struct that holds a value and an optional function to retrieve it dynamically.
-type EvalVal[T any] struct {
+// evalVal is a struct that holds a value and an optional function to retrieve it dynamically.
+type evalVal[T any] struct {
 	val T
 	fn  func() T
 }
@@ -9,7 +9,7 @@ type EvalVal[T any] struct {
 // Get retrieves the value.
 // If a function is set, it calls that function to get the value; otherwise, it
 // returns the stored value.
-func (d *EvalVal[T]) Get() T {
+func (d *evalVal[T]) Get() T {
 	if d.fn != nil {
 		return d.fn()
 	}

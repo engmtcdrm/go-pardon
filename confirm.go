@@ -8,8 +8,8 @@ import (
 
 // Confirm is a struct that represents a confirmation prompt.
 type Confirm struct {
-	icon         EvalVal[string]
-	title        EvalVal[string]
+	icon         evalVal[string]
+	title        evalVal[string]
 	confirm      string
 	confirmChars []byte
 	deny         string
@@ -21,15 +21,15 @@ type Confirm struct {
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		icon:    EvalVal[string]{val: questionMarkIcon, fn: nil},
-		title:   EvalVal[string]{val: "", fn: nil},
+		icon:    evalVal[string]{val: Icons.QuestionMark, fn: nil},
+		title:   evalVal[string]{val: "", fn: nil},
 		confirm: "Y",
 		deny:    "N",
 
-		confirmChars: []byte{KeyYesUpper, KeyYes},
-		denyChars:    []byte{KeyNoUpper, KeyNo},
-		enterChars:   []byte{KeyEnter, KeyCarriageReturn},
-		exitChars:    []byte{KeyCtrlC, KeyEscape},
+		confirmChars: []byte{keyYesUpper, keyYes},
+		denyChars:    []byte{keyNoUpper, keyNo},
+		enterChars:   []byte{keyEnter, keyCarriageReturn},
+		exitChars:    []byte{keyCtrlC, keyEscape},
 	}
 }
 

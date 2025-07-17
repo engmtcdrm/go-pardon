@@ -10,18 +10,18 @@ import (
 )
 
 var (
-	// NavigationKeys defines a map of specific byte keycodes related to
+	// navigationKeys defines a map of specific byte keycodes related to
 	// navigation functionality, such as up or down actions.
-	NavigationKeys = map[byte]bool{
-		KeyUp:   true,
-		KeyDown: true,
+	navigationKeys = map[byte]bool{
+		keyUp:   true,
+		keyDown: true,
 	}
 )
 
 type Select[T comparable] struct {
-	icon         EvalVal[string]
-	title        EvalVal[string]
-	cursor       EvalVal[string]
+	icon         evalVal[string]
+	title        evalVal[string]
+	cursor       evalVal[string]
 	cursorPos    int
 	scrollOffset int
 	options      []Option[T]
@@ -31,9 +31,9 @@ type Select[T comparable] struct {
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		icon:       EvalVal[string]{val: questionMarkIcon, fn: nil},
-		title:      EvalVal[string]{val: "", fn: nil},
-		cursor:     EvalVal[string]{val: "> ", fn: nil},
+		icon:       evalVal[string]{val: Icons.QuestionMark, fn: nil},
+		title:      evalVal[string]{val: "", fn: nil},
+		cursor:     evalVal[string]{val: "> ", fn: nil},
 		options:    make([]Option[T], 0),
 		selectFunc: func(s string) string { return s },
 	}
@@ -124,16 +124,16 @@ func (s *Select[T]) Ask() error {
 		keyCode := getInput()
 
 		switch keyCode {
-		case KeyCtrlC:
+		case keyCtrlC:
 			return ErrUserAborted
-		case KeyEnter, KeyCarriageReturn:
+		case keyEnter, keyCarriageReturn:
 			*s.value = s.options[s.cursorPos].Value
 			fmt.Println("\r")
 			return nil
-		case KeyUp:
+		case keyUp:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 			s.renderOptions(true)
-		case KeyDown:
+		case keyDown:
 			s.cursorPos = (s.cursorPos + 1) % len(s.options)
 			s.renderOptions(true)
 		}

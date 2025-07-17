@@ -6,20 +6,20 @@ import (
 )
 
 type Password struct {
-	icon     EvalVal[string]
-	title    EvalVal[string]
+	icon     evalVal[string]
+	title    evalVal[string]
 	value    *[]byte
 	validate func([]byte) error
-	tui      *TuiPrompt[[]byte]
+	tui      *tuiPrompt[[]byte]
 }
 
 func NewPassword() *Password {
 	return &Password{
-		icon:     EvalVal[string]{val: passwordIcon, fn: nil},
-		title:    EvalVal[string]{val: "", fn: nil},
+		icon:     evalVal[string]{val: Icons.Password, fn: nil},
+		title:    evalVal[string]{val: "", fn: nil},
 		value:    nil,
 		validate: func(s []byte) error { return nil },
-		tui: NewTuiPrompt[[]byte]().DisplayInput(
+		tui: newTuiPrompt[[]byte]().DisplayInput(
 			func(input []byte) string {
 				return strings.Repeat("", len(input))
 			},
