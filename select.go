@@ -19,6 +19,7 @@ var (
 )
 
 type Select[T comparable] struct {
+	icon         EvalVal[string]
 	title        EvalVal[string]
 	cursor       EvalVal[string]
 	cursorPos    int
@@ -30,6 +31,7 @@ type Select[T comparable] struct {
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
+		icon:       EvalVal[string]{val: questionMarkIcon, fn: nil},
 		title:      EvalVal[string]{val: "", fn: nil},
 		cursor:     EvalVal[string]{val: "> ", fn: nil},
 		options:    make([]Option[T], 0),
@@ -73,6 +75,17 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
+func (ss *Select[T]) Icon(s string) *Select[T] {
+	ss.icon.val = s
+	ss.icon.fn = nil
+	return ss
+}
+
+func (ss *Select[T]) IconFunc(fn func() string) *Select[T] {
+	ss.icon.fn = fn
+	return ss
+}
+
 // SelectFunc allows customization of the selected option's display format.
 func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
 	if fn != nil {
@@ -100,7 +113,7 @@ func (s *Select[T]) Ask() error {
 		fmt.Print(ansi.ShowCursor)
 	}()
 
-	fmt.Println(s.title.Get())
+	fmt.Printf("%s%s\n", s.icon.Get(), s.title.Get())
 	fmt.Println("")
 
 	s.renderOptions(false)

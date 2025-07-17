@@ -27,40 +27,40 @@ func NewPassword() *Password {
 	}
 }
 
-func (q *Password) Title(title string) *Password {
-	q.title.val = title
-	q.title.fn = nil
-	return q
+func (p *Password) Title(title string) *Password {
+	p.title.val = title
+	p.title.fn = nil
+	return p
 }
 
-func (q *Password) TitleFunc(fn func() string) *Password {
-	q.title.fn = fn
-	return q
+func (p *Password) TitleFunc(fn func() string) *Password {
+	p.title.fn = fn
+	return p
 }
 
-func (q *Password) Value(value *[]byte) *Password {
-	q.value = value
-	return q
+func (p *Password) Value(value *[]byte) *Password {
+	p.value = value
+	return p
 }
 
-func (q *Password) Icon(s string) *Password {
-	q.icon.val = s
-	q.icon.fn = nil
-	return q
+func (p *Password) Icon(s string) *Password {
+	p.icon.val = s
+	p.icon.fn = nil
+	return p
 }
 
-func (q *Password) IconFunc(fn func() string) *Password {
-	q.icon.fn = fn
-	return q
+func (p *Password) IconFunc(fn func() string) *Password {
+	p.icon.fn = fn
+	return p
 }
 
-func (q *Password) Validate(fn func([]byte) error) *Password {
-	q.validate = fn
-	return q
+func (p *Password) Validate(fn func([]byte) error) *Password {
+	p.validate = fn
+	return p
 }
 
 func (p *Password) Ask() error {
-	question := fmt.Sprintf("%s %s ", p.icon.Get(), p.title.Get())
+	question := fmt.Sprintf("%s%s ", p.icon.Get(), p.title.Get())
 
 	p.tui = p.tui.AppendInput(func(b []byte, c byte) []byte { return append(b, c) }).
 		Validate(p.validate).
