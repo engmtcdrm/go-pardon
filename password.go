@@ -15,7 +15,7 @@ type Password struct {
 
 func NewPassword() *Password {
 	return &Password{
-		icon:     evalVal[string]{val: passwordIcon, fn: nil},
+		icon:     evalVal[string]{val: Icons.Password, fn: nil},
 		title:    evalVal[string]{val: "", fn: nil},
 		value:    nil,
 		validate: func(s []byte) error { return nil },

@@ -11,7 +11,13 @@ func QuestionBasic() {
 	favColor := ""
 	question := pardon.NewQuestion().
 		Title("What is your favorite color?").
-		Value(&favColor)
+		Value(&favColor).
+		Validate(func(input string) error {
+			if input == "" {
+				return fmt.Errorf("color cannot be empty")
+			}
+			return nil
+		})
 
 	if err := question.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

@@ -21,7 +21,7 @@ type Confirm struct {
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		icon:    evalVal[string]{val: questionMarkIcon, fn: nil},
+		icon:    evalVal[string]{val: Icons.QuestionMark, fn: nil},
 		title:   evalVal[string]{val: "", fn: nil},
 		confirm: "Y",
 		deny:    "N",

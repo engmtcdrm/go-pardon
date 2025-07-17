@@ -31,7 +31,7 @@ type Select[T comparable] struct {
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		icon:       evalVal[string]{val: questionMarkIcon, fn: nil},
+		icon:       evalVal[string]{val: Icons.QuestionMark, fn: nil},
 		title:      evalVal[string]{val: "", fn: nil},
 		cursor:     evalVal[string]{val: "> ", fn: nil},
 		options:    make([]Option[T], 0),

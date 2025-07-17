@@ -6,10 +6,15 @@ import (
 	"golang.org/x/term"
 )
 
-const (
-	questionMarkIcon = "[?] "
-	passwordIcon     = "🔒 "
-)
+type icons struct {
+	QuestionMark string
+	Password     string
+}
+
+var Icons = icons{
+	QuestionMark: "[?] ",
+	Password:     "🔒 ",
+}
 
 // min returns the smaller of two integers.
 func min(a, b int) int {
