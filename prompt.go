@@ -7,5 +7,6 @@ type promptInterface[T any] interface {
 	Icon(value *T) promptInterface[T]
 	IconFunc(fn func() T) promptInterface[T]
 	Validate(fn func(T) error) promptInterface[T]
+	AnswerFunc(fn func(T) T) promptInterface[T]
 	Ask() error
 }
