@@ -25,17 +25,17 @@ type Select[T comparable] struct {
 	cursorPos    int
 	scrollOffset int
 	options      []Option[T]
-	selectFunc   func(string) string
+	answerFn     func(string) string
+	selectFn     func(string) string
 	value        *T
 }
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		icon:       evalVal[string]{val: Icons.QuestionMark, fn: nil},
-		title:      evalVal[string]{val: "", fn: nil},
-		cursor:     evalVal[string]{val: "> ", fn: nil},
-		options:    make([]Option[T], 0),
-		selectFunc: func(s string) string { return s },
+		icon:    evalVal[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title:   evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		cursor:  evalVal[string]{val: "> ", fn: nil, defaultFn: defaultFuncs.cursorFn},
+		options: make([]Option[T], 0),
 	}
 }
 
@@ -45,7 +45,7 @@ func (s *Select[T]) Title(title string) *Select[T] {
 	return s
 }
 
-func (s *Select[T]) TitleFunc(fn func() string) *Select[T] {
+func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
 	s.title.fn = fn
 	return s
 }
@@ -56,7 +56,7 @@ func (s *Select[T]) Cursor(cursor string) *Select[T] {
 	return s
 }
 
-func (s *Select[T]) CursorFunc(fn func() string) *Select[T] {
+func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T] {
 	s.cursor.fn = fn
 	return s
 }
@@ -75,23 +75,45 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
-func (ss *Select[T]) Icon(s string) *Select[T] {
-	ss.icon.val = s
-	ss.icon.fn = nil
-	return ss
-}
-
-func (ss *Select[T]) IconFunc(fn func() string) *Select[T] {
-	ss.icon.fn = fn
-	return ss
-}
-
-// SelectFunc allows customization of the selected option's display format.
-func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
-	if fn != nil {
-		s.selectFunc = fn
-	}
+func (s *Select[T]) Icon(icon string) *Select[T] {
+	s.icon.val = icon
+	s.icon.fn = nil
 	return s
+}
+
+func (s *Select[T]) IconFunc(fn func(string) string) *Select[T] {
+	s.icon.fn = fn
+	return s
+}
+
+// AnswerFunc allows customization of the selected option's display format.
+func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
+	s.answerFn = fn
+	return s
+}
+
+func (s *Select[T]) getSelectFunc(text string) string {
+	if s.selectFn != nil {
+		return s.selectFn(text)
+	}
+
+	if defaultFuncs.selectFn != nil {
+		return defaultFuncs.selectFn(text)
+	}
+
+	return text
+}
+
+func (s *Select[T]) getAnswerFunc(answer string) string {
+	if s.answerFn != nil {
+		return s.answerFn(answer)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(answer)
+	}
+
+	return answer
 }
 
 // Ask will display the current select options and awaits user selection
@@ -113,11 +135,10 @@ func (s *Select[T]) Ask() error {
 		fmt.Print(ansi.ShowCursor)
 	}()
 
+	// Print the question
 	fmt.Printf("%s%s\n", s.icon.Get(), s.title.Get())
-	fmt.Println("")
 
 	s.renderOptions(false)
-
 	fmt.Print(ansi.HideCursor)
 
 	for {
@@ -128,7 +149,18 @@ func (s *Select[T]) Ask() error {
 			return ErrUserAborted
 		case keyEnter, keyCarriageReturn:
 			*s.value = s.options[s.cursorPos].Value
-			fmt.Println("\r")
+			// Erase all options and display answer next to question
+			// Move cursor up to question line
+			linesToErase := min(len(s.options), 25-3)
+			fmt.Print(ansi.CursorUp(linesToErase + 2)) // +2 for question and blank line
+			for i := 0; i < linesToErase+2; i++ {
+				fmt.Printf("%s\r\n", ansi.ClearLine)
+			}
+			// Move cursor up again to question line
+			fmt.Print(ansi.CursorUp(linesToErase + 2))
+			// Print question and answer
+			fmt.Printf("%s%s %s\n", s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
+			fmt.Print(ansi.ShowCursor)
 			return nil
 		case keyUp:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
@@ -140,7 +172,6 @@ func (s *Select[T]) Ask() error {
 	}
 }
 
-// renderOptions prints the select option list.
 // Setting redraw to true will re-render the options list with updated current selection.
 func (s *Select[T]) renderOptions(redraw bool) {
 	termHeight := 25 // Default height
@@ -174,13 +205,13 @@ func (s *Select[T]) renderOptions(redraw bool) {
 	// Render only visible select options
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
 		selectedOption := s.options[i]
-		cursor := strings.Repeat(" ", len(selectCursor))
+		cursor := strings.Repeat(" ", len(ansi.StripCodes(selectCursor)))
 
 		fmt.Print(ansi.ClearLine)
 
 		if i == s.cursorPos {
-			cursor = s.selectFunc(selectCursor)
-			fmt.Printf("\r%s%s\n", cursor, s.selectFunc(selectedOption.Key))
+			cursor = s.getSelectFunc(selectCursor)
+			fmt.Printf("\r%s%s\n", cursor, s.getSelectFunc(selectedOption.Key))
 		} else {
 			fmt.Printf("\r%s%s\n", cursor, selectedOption.Key)
 		}
