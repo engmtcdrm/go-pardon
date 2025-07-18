@@ -8,20 +8,19 @@ type Question struct {
 	icon     evalVal[string]
 	title    evalVal[string]
 	value    *string
-	validate func(string) error
+	answerFn func(string) string
 	tui      *tuiPrompt[string]
 }
 
 func NewQuestion() *Question {
 	q := &Question{
-		icon:     evalVal[string]{val: Icons.QuestionMark, fn: nil},
-		title:    evalVal[string]{val: "", fn: nil},
-		value:    nil,
-		validate: func(s string) error { return nil },
-		tui:      newTuiPrompt[string](),
+		icon:  evalVal[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title: evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		value: nil,
+		tui:   newTuiPrompt[string](),
 	}
 
-	q.tui.Validate(q.validate).
+	q.tui.Validate(func(s string) error { return nil }).
 		DisplayInput(func(s string) string { return s }).
 		AppendInput(func(s string, b byte) string { return s + string(b) }).
 		RemoveLast(func(s string) string {
@@ -41,7 +40,7 @@ func (q *Question) Title(title string) *Question {
 	return q
 }
 
-func (q *Question) TitleFunc(fn func() string) *Question {
+func (q *Question) TitleFunc(fn func(string) string) *Question {
 	q.title.fn = fn
 	return q
 }
@@ -57,19 +56,38 @@ func (q *Question) Icon(s string) *Question {
 	return q
 }
 
-func (q *Question) IconFunc(fn func() string) *Question {
+func (q *Question) IconFunc(fn func(string) string) *Question {
 	q.icon.fn = fn
 	return q
 }
 
+func (q *Question) AnswerFunc(fn func(string) string) *Question {
+	q.answerFn = fn
+	return q
+}
+
 func (q *Question) Validate(fn func(string) error) *Question {
-	q.validate = fn
 	q.tui = q.tui.Validate(fn)
 	return q
 }
 
+func (q *Question) setAnswerFunc() {
+	if q.answerFn != nil {
+		q.tui.AnswerFunc(q.answerFn)
+		return
+	}
+
+	if defaultFuncs.answerFn != nil {
+		q.tui.AnswerFunc(defaultFuncs.answerFn)
+		return
+	}
+
+	q.tui.AnswerFunc(func(input string) string { return input })
+}
+
 func (q *Question) Ask() error {
 	question := fmt.Sprintf("%s%s ", q.icon.Get(), q.title.Get())
+	q.setAnswerFunc()
 
 	return q.tui.Display(question, q.value)
 }
