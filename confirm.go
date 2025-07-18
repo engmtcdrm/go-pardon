@@ -17,15 +17,15 @@ type Confirm struct {
 	enterChars   []byte
 	exitChars    []byte
 	value        *bool
+	answerFn     func(string) string
 }
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		icon:    evalVal[string]{val: Icons.QuestionMark, fn: nil},
-		title:   evalVal[string]{val: "", fn: nil},
-		confirm: "Y",
-		deny:    "N",
-
+		icon:         evalVal[string]{val: Icons.Alert, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title:        evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		confirm:      "Y",
+		deny:         "N",
 		confirmChars: []byte{keyYesUpper, keyYes},
 		denyChars:    []byte{keyNoUpper, keyNo},
 		enterChars:   []byte{keyEnter, keyCarriageReturn},
@@ -40,7 +40,7 @@ func (c *Confirm) Title(title string) *Confirm {
 	return c
 }
 
-func (c *Confirm) TitleFunc(fn func() string) *Confirm {
+func (c *Confirm) TitleFunc(fn func(string) string) *Confirm {
 	c.title.fn = fn
 	return c
 }
@@ -51,7 +51,7 @@ func (c *Confirm) Icon(s string) *Confirm {
 	return c
 }
 
-func (c *Confirm) IconFunc(fn func() string) *Confirm {
+func (c *Confirm) IconFunc(fn func(string) string) *Confirm {
 	c.icon.fn = fn
 	return c
 }
@@ -63,7 +63,24 @@ func (c *Confirm) Value(value *bool) *Confirm {
 }
 
 func (c *Confirm) formatFinalOutput(question string, result string) string {
-	return fmt.Sprintf("%s\r%s %s\n", ansi.ClearToBegin, question, result)
+	return fmt.Sprintf("%s\r%s %s\n", ansi.ClearToBegin, question, c.getAnswerFunc(result))
+}
+
+func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
+	c.answerFn = fn
+	return c
+}
+
+func (c *Confirm) getAnswerFunc(text string) string {
+	if c.answerFn != nil {
+		return c.answerFn(text)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(text)
+	}
+
+	return text
 }
 
 func (c *Confirm) Ask() error {
