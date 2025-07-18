@@ -14,6 +14,7 @@ type tuiPrompt[T any] struct {
 	appendInputFn  func(T, byte) T
 	removeLastFn   func(T) T
 	convertInputFn func(T) T
+	answerFn       func(string) string
 }
 
 func newTuiPrompt[T any]() *tuiPrompt[T] {
@@ -23,6 +24,7 @@ func newTuiPrompt[T any]() *tuiPrompt[T] {
 		appendInputFn:  func(input T, key byte) T { return input },
 		removeLastFn:   func(input T) T { return input },
 		convertInputFn: func(input T) T { return input },
+		answerFn:       func(input string) string { return input },
 	}
 }
 
@@ -57,6 +59,13 @@ func (t *tuiPrompt[T]) RemoveLast(fn func(T) T) *tuiPrompt[T] {
 func (t *tuiPrompt[T]) ConvertInput(fn func(T) T) *tuiPrompt[T] {
 	if fn != nil {
 		t.convertInputFn = fn
+	}
+	return t
+}
+
+func (t *tuiPrompt[T]) AnswerFunc(fn func(string) string) *tuiPrompt[T] {
+	if fn != nil {
+		t.answerFn = fn
 	}
 	return t
 }
@@ -99,7 +108,7 @@ func (t *tuiPrompt[T]) Display(prompt string, value *T) error {
 				continue
 			}
 			*value = val
-			fmt.Printf("\r%s%s\n%s", prompt, t.displayInputFn(input), ansi.ClearLine)
+			fmt.Printf("\r%s%s\n%s", prompt, t.answerFn(t.displayInputFn(input)), ansi.ClearLine)
 			return nil
 		case keyCtrlC:
 			fmt.Printf("\n%s", ansi.ClearLine)
