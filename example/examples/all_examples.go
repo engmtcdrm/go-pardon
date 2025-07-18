@@ -6,9 +6,9 @@ type Example struct {
 }
 
 var AllExamples = []Example{
-	{"1. Select - Basic", SelectBasic},
-	{"2. Select - Struct", SelectStruct},
-	{"3. Confirm - Basic", ConfirmBasic},
-	{"4. Question - Basic", QuestionBasic},
-	{"5. Password - Basic", PasswordBasic},
+	{"1. Confirm - Basic", ConfirmBasic},
+	{"2. Password - Basic", PasswordBasic},
+	{"3. Question - Basic", QuestionBasic},
+	{"4. Select - Basic", SelectBasic},
+	{"5. Select - Struct", SelectStruct},
 }
