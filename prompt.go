@@ -1,11 +1,12 @@
 package pardon
 
-type promptInterface[T any] interface {
-	Title(title T) promptInterface[T]
-	TitleFunc(fn func() T) promptInterface[T]
-	Value(value *T) promptInterface[T]
-	Icon(value *T) promptInterface[T]
-	IconFunc(fn func() T) promptInterface[T]
-	Validate(fn func(T) error) promptInterface[T]
+type PromptInterface[T any] interface {
+	Title(title T) PromptInterface[T]
+	TitleFunc(fn func() T) PromptInterface[T]
+	Value(value *T) PromptInterface[T]
+	Icon(value *T) PromptInterface[T]
+	IconFunc(fn func() T) PromptInterface[T]
+	Validate(fn func(T) error) PromptInterface[T]
+	AnswerFunc(fn func(T) T) PromptInterface[T]
 	Ask() error
 }

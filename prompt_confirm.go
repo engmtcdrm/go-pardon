@@ -3,33 +3,26 @@ package pardon
 import (
 	"fmt"
 
-	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/engmtcdrm/go-pardon/tui"
 )
 
 // Confirm is a struct that represents a confirmation prompt.
 type Confirm struct {
-	icon         evalVal[string]
-	title        evalVal[string]
-	confirm      string
-	confirmChars []byte
-	deny         string
-	denyChars    []byte
-	enterChars   []byte
-	exitChars    []byte
-	value        *bool
+	icon     eval[string]
+	title    eval[string]
+	confirm  string
+	deny     string
+	value    *bool
+	answerFn func(string) string
 }
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		icon:    evalVal[string]{val: Icons.QuestionMark, fn: nil},
-		title:   evalVal[string]{val: "", fn: nil},
+		icon:    eval[string]{val: Icons.Alert, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title:   eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		confirm: "Y",
 		deny:    "N",
-
-		confirmChars: []byte{keyYesUpper, keyYes},
-		denyChars:    []byte{keyNoUpper, keyNo},
-		enterChars:   []byte{keyEnter, keyCarriageReturn},
-		exitChars:    []byte{keyCtrlC, keyEscape},
 	}
 }
 
@@ -40,7 +33,7 @@ func (c *Confirm) Title(title string) *Confirm {
 	return c
 }
 
-func (c *Confirm) TitleFunc(fn func() string) *Confirm {
+func (c *Confirm) TitleFunc(fn func(string) string) *Confirm {
 	c.title.fn = fn
 	return c
 }
@@ -51,7 +44,7 @@ func (c *Confirm) Icon(s string) *Confirm {
 	return c
 }
 
-func (c *Confirm) IconFunc(fn func() string) *Confirm {
+func (c *Confirm) IconFunc(fn func(string) string) *Confirm {
 	c.icon.fn = fn
 	return c
 }
@@ -62,8 +55,25 @@ func (c *Confirm) Value(value *bool) *Confirm {
 	return c
 }
 
-func (c *Confirm) formatFinalOutput(question string, result string) string {
-	return fmt.Sprintf("%s\r%s %s\n", ansi.ClearToBegin, question, result)
+func (c *Confirm) formatFinalOutput(question string, answer string) string {
+	return tui.RenderFormattedOutput(question, c.getAnswerFunc(answer))
+}
+
+func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
+	c.answerFn = fn
+	return c
+}
+
+func (c *Confirm) getAnswerFunc(s string) string {
+	if c.answerFn != nil {
+		return c.answerFn(s)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(s)
+	}
+
+	return s
 }
 
 func (c *Confirm) Ask() error {
@@ -88,25 +98,25 @@ func (c *Confirm) Ask() error {
 
 	// Capture user input
 	for {
-		keyCode := getInput()
+		keyCode := tui.GetInput()
 
-		switch {
-		case containsChar(c.confirmChars, keyCode):
+		switch keyCode {
+		case keys.KeyYesUpper, keys.KeyYes:
 			*c.value = true
 			fmt.Print(c.formatFinalOutput(question, c.confirm))
 			return nil
-		case containsChar(c.denyChars, keyCode):
+		case keys.KeyNoUpper, keys.KeyNo:
 			*c.value = false
 			fmt.Print(c.formatFinalOutput(question, c.deny))
 			return nil
-		case containsChar(c.enterChars, keyCode):
+		case keys.KeyEnter, keys.KeyCarriageReturn:
 			if *c.value {
 				fmt.Print(c.formatFinalOutput(question, c.confirm))
 			} else {
 				fmt.Print(c.formatFinalOutput(question, c.deny))
 			}
 			return nil
-		case containsChar(c.exitChars, keyCode):
+		case keys.KeyCtrlC, keys.KeyEscape:
 			fmt.Println("")
 			return ErrUserAborted
 		}

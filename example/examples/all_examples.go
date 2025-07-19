@@ -6,9 +6,15 @@ type Example struct {
 }
 
 var AllExamples = []Example{
-	{"1. Select - Basic", SelectBasic},
-	{"2. Select - Struct", SelectStruct},
-	{"3. Confirm - Basic", ConfirmBasic},
-	{"4. Question - Basic", QuestionBasic},
-	{"5. Password - Basic", PasswordBasic},
+	{"Confirm - Basic", ConfirmBasic},
+	{"Confirm - Kitchen Sink", ConfirmKitchensink},
+	{"Password - Basic", PasswordBasic},
+	{"Password - Validate", PasswordValidate},
+	{"Password - Kitchen Sink", PasswordKitchesink},
+	{"Question - Basic", QuestionBasic},
+	{"Question - Validate", QuestionValidate},
+	{"Question - Kitchen Sink", QuestionKitchensink},
+	{"Select - Basic", SelectBasic},
+	{"Select - Struct", SelectStruct},
+	{"Select - Kitchen Sink", SelectKitchensink},
 }
