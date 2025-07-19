@@ -13,6 +13,7 @@ const (
 	KeyLeft           = byte(68)
 	KeyNoUpper        = byte(78)
 	KeyYesUpper       = byte(89)
+	KeyLeftBracket    = byte(91)
 	KeyNo             = byte(110)
 	KeyYes            = byte(121)
 	KeyBackspace      = byte(127)
