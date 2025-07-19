@@ -3,6 +3,7 @@ package pardon
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/keys"
@@ -181,7 +182,7 @@ func (s *Select[T]) renderOptions(redraw bool) {
 	// Render only visible select options
 	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
 		selectedOption := s.options[i]
-		cursor := strings.Repeat(" ", len(ansi.StripCodes(selectCursor)))
+		cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
 
 		fmt.Print(ansi.ClearLine)
 
