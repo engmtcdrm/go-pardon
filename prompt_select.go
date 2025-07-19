@@ -141,9 +141,8 @@ func (s *Select[T]) Ask() error {
 			return ErrUserAborted
 		case keys.KeyEnter, keys.KeyCarriageReturn:
 			*s.value = s.options[s.cursorPos].Value
-			// Use shared TUI rendering for final output
-			linesToErase := tui.Min(len(s.options), 25-3) + 2 // +2 for question and blank line
-			tui.RenderClearAndReposition(linesToErase, s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
+			visibleOptions := tui.Min(len(s.options), tui.GetTerminalHeight()-3)
+			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
 			return nil
 		case keys.KeyUp:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
