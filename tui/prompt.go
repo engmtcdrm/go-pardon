@@ -1,14 +1,18 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/keys"
-	"github.com/engmtcdrm/go-pardon/prompt_errors"
 	"golang.org/x/term"
+)
+
+var (
+	ErrUserAborted = errors.New("user aborted")
 )
 
 // InputPrompt handles text-based input prompts (Question, Password, etc.)
@@ -119,7 +123,7 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 			return nil
 		case keys.KeyCtrlC:
 			fmt.Printf("\n%s", ansi.ClearLine)
-			return prompt_errors.ErrUserAborted
+			return ErrUserAborted
 		case keys.KeyBackspace:
 			input = p.removeLastFn(input)
 			showError = false
