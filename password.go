@@ -2,7 +2,8 @@ package pardon
 
 import (
 	"fmt"
-	"strings"
+
+	"github.com/engmtcdrm/go-pardon/tui"
 )
 
 type Password struct {
@@ -10,29 +11,16 @@ type Password struct {
 	title    evalVal[string]
 	value    *[]byte
 	answerFn func(string) string
-	tui      *tuiPrompt[[]byte]
+	tui      *tui.InputPrompt[[]byte]
 }
 
 func NewPassword() *Password {
-	p := &Password{
-		icon:  evalVal[string]{val: Icons.Password, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title: evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+	return &Password{
+		icon:  evalVal[string]{val: Icons.Password, defaultFn: defaultFuncs.iconFn},
+		title: evalVal[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		value: nil,
-		tui:   newTuiPrompt[[]byte](),
+		tui:   tui.NewPasswordPrompt(),
 	}
-
-	p.tui.Validate(func(s []byte) error { return nil }).
-		DisplayInput(func(input []byte) string { return strings.Repeat("", len(input)) }).
-		AppendInput(func(b []byte, c byte) []byte { return append(b, c) }).
-		RemoveLast(func(b []byte) []byte {
-			if len(b) > 0 {
-				return b[:len(b)-1]
-			}
-			return b
-		}).
-		ConvertInput(func(b []byte) []byte { return b })
-
-	return p
 }
 
 func (p *Password) Title(title string) *Password {

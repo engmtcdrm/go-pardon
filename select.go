@@ -2,20 +2,11 @@ package pardon
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"golang.org/x/term"
-)
-
-var (
-	// navigationKeys defines a map of specific byte keycodes related to
-	// navigation functionality, such as up or down actions.
-	navigationKeys = map[byte]bool{
-		keyUp:   true,
-		keyDown: true,
-	}
+	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/engmtcdrm/go-pardon/tui"
 )
 
 type Select[T comparable] struct {
@@ -32,9 +23,9 @@ type Select[T comparable] struct {
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		icon:    evalVal[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title:   evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
-		cursor:  evalVal[string]{val: "> ", fn: nil, defaultFn: defaultFuncs.cursorFn},
+		icon:    evalVal[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title:   evalVal[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		cursor:  evalVal[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
 		options: make([]Option[T], 0),
 	}
 }
@@ -142,30 +133,21 @@ func (s *Select[T]) Ask() error {
 	fmt.Print(ansi.HideCursor)
 
 	for {
-		keyCode := getInput()
+		keyCode := tui.GetInput()
 
 		switch keyCode {
-		case keyCtrlC:
+		case keys.KeyCtrlC:
 			return ErrUserAborted
-		case keyEnter, keyCarriageReturn:
+		case keys.KeyEnter, keys.KeyCarriageReturn:
 			*s.value = s.options[s.cursorPos].Value
-			// Erase all options and display answer next to question
-			// Move cursor up to question line
-			linesToErase := min(len(s.options), 25-3)
-			fmt.Print(ansi.CursorUp(linesToErase + 2)) // +2 for question and blank line
-			for i := 0; i < linesToErase+2; i++ {
-				fmt.Printf("%s\r\n", ansi.ClearLine)
-			}
-			// Move cursor up again to question line
-			fmt.Print(ansi.CursorUp(linesToErase + 2))
-			// Print question and answer
-			fmt.Printf("%s%s %s\n", s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
-			fmt.Print(ansi.ShowCursor)
+			// Use shared TUI rendering for final output
+			linesToErase := tui.Min(len(s.options), 25-3) + 2 // +2 for question and blank line
+			tui.RenderClearAndReposition(linesToErase, s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
 			return nil
-		case keyUp:
+		case keys.KeyUp:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 			s.renderOptions(true)
-		case keyDown:
+		case keys.KeyDown:
 			s.cursorPos = (s.cursorPos + 1) % len(s.options)
 			s.renderOptions(true)
 		}
@@ -174,13 +156,7 @@ func (s *Select[T]) Ask() error {
 
 // Setting redraw to true will re-render the options list with updated current selection.
 func (s *Select[T]) renderOptions(redraw bool) {
-	termHeight := 25 // Default height
-
-	// Try to get terminal size, but don't fail if we can't
-	if _, height, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
-		termHeight = height
-	}
-
+	termHeight := tui.GetTerminalHeight()
 	termHeight = termHeight - 3 // Space for prompt and cursor movement
 	selectSize := len(s.options)
 
@@ -197,13 +173,13 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		//
 		// This is done by sending a VT100 escape code to the terminal
 		// @see http://www.climagic.org/mirrors/VT100_Escape_Codes.html
-		fmt.Print(ansi.CursorUp(min(selectSize, termHeight)))
+		fmt.Print(ansi.CursorUp(tui.Min(selectSize, termHeight)))
 	}
 
 	selectCursor := s.cursor.Get()
 
 	// Render only visible select options
-	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
+	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
 		selectedOption := s.options[i]
 		cursor := strings.Repeat(" ", len(ansi.StripCodes(selectCursor)))
 

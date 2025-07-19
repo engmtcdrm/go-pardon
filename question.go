@@ -2,6 +2,8 @@ package pardon
 
 import (
 	"fmt"
+
+	"github.com/engmtcdrm/go-pardon/tui"
 )
 
 type Question struct {
@@ -9,29 +11,16 @@ type Question struct {
 	title    evalVal[string]
 	value    *string
 	answerFn func(string) string
-	tui      *tuiPrompt[string]
+	tui      *tui.InputPrompt[string]
 }
 
 func NewQuestion() *Question {
-	q := &Question{
-		icon:  evalVal[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title: evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+	return &Question{
+		icon:  evalVal[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title: evalVal[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		value: nil,
-		tui:   newTuiPrompt[string](),
+		tui:   tui.NewStringPrompt(),
 	}
-
-	q.tui.Validate(func(s string) error { return nil }).
-		DisplayInput(func(s string) string { return s }).
-		AppendInput(func(s string, b byte) string { return s + string(b) }).
-		RemoveLast(func(s string) string {
-			if len(s) > 0 {
-				return s[:len(s)-1]
-			}
-			return s
-		}).
-		ConvertInput(func(s string) string { return s })
-
-	return q
 }
 
 func (q *Question) Title(title string) *Question {
@@ -67,7 +56,7 @@ func (q *Question) AnswerFunc(fn func(string) string) *Question {
 }
 
 func (q *Question) Validate(fn func(string) error) *Question {
-	q.tui = q.tui.Validate(fn)
+	q.tui.Validate(fn)
 	return q
 }
 
