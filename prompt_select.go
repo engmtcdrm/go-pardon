@@ -10,9 +10,9 @@ import (
 )
 
 type Select[T comparable] struct {
-	icon         evalVal[string]
-	title        evalVal[string]
-	cursor       evalVal[string]
+	icon         eval[string]
+	title        eval[string]
+	cursor       eval[string]
 	cursorPos    int
 	scrollOffset int
 	options      []Option[T]
@@ -23,9 +23,9 @@ type Select[T comparable] struct {
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		icon:    evalVal[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title:   evalVal[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		cursor:  evalVal[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
+		icon:    eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title:   eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		cursor:  eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
 		options: make([]Option[T], 0),
 	}
 }

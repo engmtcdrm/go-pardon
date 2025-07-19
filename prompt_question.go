@@ -7,8 +7,8 @@ import (
 )
 
 type Question struct {
-	icon     evalVal[string]
-	title    evalVal[string]
+	icon     eval[string]
+	title    eval[string]
 	value    *string
 	answerFn func(string) string
 	tui      *tui.InputPrompt[string]
@@ -16,8 +16,8 @@ type Question struct {
 
 func NewQuestion() *Question {
 	return &Question{
-		icon:  evalVal[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title: evalVal[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		icon:  eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title: eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		value: nil,
 		tui:   tui.NewStringPrompt(),
 	}

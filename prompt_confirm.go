@@ -9,8 +9,8 @@ import (
 
 // Confirm is a struct that represents a confirmation prompt.
 type Confirm struct {
-	icon     evalVal[string]
-	title    evalVal[string]
+	icon     eval[string]
+	title    eval[string]
 	confirm  string
 	deny     string
 	value    *bool
@@ -19,8 +19,8 @@ type Confirm struct {
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		icon:    evalVal[string]{val: Icons.Alert, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title:   evalVal[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		icon:    eval[string]{val: Icons.Alert, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title:   eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		confirm: "Y",
 		deny:    "N",
 	}

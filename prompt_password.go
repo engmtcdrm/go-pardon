@@ -7,8 +7,8 @@ import (
 )
 
 type Password struct {
-	icon     evalVal[string]
-	title    evalVal[string]
+	icon     eval[string]
+	title    eval[string]
 	value    *[]byte
 	answerFn func(string) string
 	tui      *tui.InputPrompt[[]byte]
@@ -16,8 +16,8 @@ type Password struct {
 
 func NewPassword() *Password {
 	return &Password{
-		icon:  evalVal[string]{val: Icons.Password, defaultFn: defaultFuncs.iconFn},
-		title: evalVal[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		icon:  eval[string]{val: Icons.Password, defaultFn: defaultFuncs.iconFn},
+		title: eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		value: nil,
 		tui:   tui.NewPasswordPrompt(),
 	}
