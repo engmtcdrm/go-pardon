@@ -25,7 +25,7 @@ func main() {
 
 	for i, ex := range examples.AllExamples {
 		funcMap[ex.Name] = ex.Fn
-		names[i] = pardon.NewOption(ex.Name, ex.Name)
+		names[i] = pardon.NewOption(fmt.Sprintf("%d. %s", i+1, ex.Name), ex.Name)
 	}
 
 	var selectedName string
@@ -36,7 +36,7 @@ func main() {
 		Options(names...).
 		Value(&selectedName).
 		AnswerFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s", ansi.Cyan, s, ansi.Reset)
+			return fmt.Sprintf("%s%s%s", ansi.Yellow, s, ansi.Reset)
 		})
 
 	if err := selectPrompt.Ask(); err != nil {
