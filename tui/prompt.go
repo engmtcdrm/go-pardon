@@ -128,7 +128,14 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 			input = p.removeLastFn(input)
 			showError = false
 		case keys.KeyUp, keys.KeyDown:
-			showError = false
+			// Only treat as navigation keys if they came from escape sequences
+			if lastInputWasEscapeSequence {
+				showError = false
+			} else {
+				// Treat as regular input (A=65, B=66)
+				input = p.appendInputFn(input, keyCode)
+				showError = false
+			}
 		default:
 			input = p.appendInputFn(input, keyCode)
 			showError = false
@@ -144,6 +151,9 @@ var (
 		keys.KeyUp:   true,
 		keys.KeyDown: true,
 	}
+
+	// Track whether the last input was from an escape sequence
+	lastInputWasEscapeSequence = false
 )
 
 // GetInput will read raw input from the terminal
@@ -177,11 +187,21 @@ func GetInput() byte {
 	// The third byte is the key specific value we are looking for.
 	// For example the left arrow key is '<esc>[A' while the right is '<esc>[C'
 	// See: https://en.wikipedia.org/wiki/ANSI_escape_code
-	if read == 3 {
+	if read == 3 && readBytes[0] == keys.KeyEscape && readBytes[1] == keys.KeyLeftBracket {
+		// This is a proper ANSI escape sequence (ESC[X)
 		if _, ok := navigationKeys[readBytes[2]]; ok {
+			lastInputWasEscapeSequence = true
 			return readBytes[2]
 		}
-	} else {
+		// If it's an escape sequence but not a navigation key, ignore it
+		lastInputWasEscapeSequence = false
+		return 0
+	}
+
+	// For any other input (1, 2, or 3 bytes that aren't escape sequences),
+	// return the first byte which contains the actual character
+	lastInputWasEscapeSequence = false
+	if read > 0 {
 		return readBytes[0]
 	}
 
