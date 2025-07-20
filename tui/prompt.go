@@ -154,11 +154,22 @@ var (
 
 	// Track whether the last input was from an escape sequence
 	lastInputWasEscapeSequence = false
+
+	// Buffer for handling paste operations
+	inputBuffer []byte
 )
 
 // GetInput will read raw input from the terminal
 // It returns the raw ASCII value inputted
 func GetInput() byte {
+	// If we have buffered input from a paste operation, return it first
+	if len(inputBuffer) > 0 {
+		result := inputBuffer[0]
+		inputBuffer = inputBuffer[1:]
+		lastInputWasEscapeSequence = false
+		return result
+	}
+
 	// Use stdin file descriptor for cross-platform compatibility
 	fd := int(os.Stdin.Fd())
 
@@ -175,18 +186,23 @@ func GetInput() byte {
 	}
 	defer term.Restore(fd, oldState)
 
-	// Read input
-	readBytes := make([]byte, 3)
+	// Read input - use a larger buffer to handle paste operations
+	readBytes := make([]byte, 4096) // Increased to 4KB to handle larger pastes
 	read, err := os.Stdin.Read(readBytes)
 	if err != nil {
 		// Handle read error, it might be due to signal interruption
 		return 0
 	}
 
-	// Arrow keys are prefixed with the ANSI escape code which take up the first two bytes.
-	// The third byte is the key specific value we are looking for.
-	// For example the left arrow key is '<esc>[A' while the right is '<esc>[C'
-	// See: https://en.wikipedia.org/wiki/ANSI_escape_code
+	// If we read more than 3 bytes, it's likely a paste operation
+	if read > 3 {
+		// Buffer all characters except the first one
+		inputBuffer = append(inputBuffer, readBytes[1:read]...)
+		lastInputWasEscapeSequence = false
+		return readBytes[0]
+	}
+
+	// Handle escape sequences (arrow keys)
 	if read == 3 && readBytes[0] == keys.KeyEscape && readBytes[1] == keys.KeyLeftBracket {
 		// This is a proper ANSI escape sequence (ESC[X)
 		if _, ok := navigationKeys[readBytes[2]]; ok {
