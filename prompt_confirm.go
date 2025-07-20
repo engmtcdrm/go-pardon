@@ -19,7 +19,7 @@ type Confirm struct {
 
 func NewConfirm() *Confirm {
 	return &Confirm{
-		icon:    eval[string]{val: Icons.Alert, fn: nil, defaultFn: defaultFuncs.iconFn},
+		icon:    eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:   eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		confirm: "Y",
 		deny:    "N",
