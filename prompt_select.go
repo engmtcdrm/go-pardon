@@ -167,29 +167,50 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		s.scrollOffset = s.cursorPos - termHeight + 1
 	}
 
-	if redraw {
-		// Move the cursor up n lines where n is the number of options, setting the new
-		// location to start printing from, effectively redrawing the option list
-		//
-		// This is done by sending a VT100 escape code to the terminal
-		// @see http://www.climagic.org/mirrors/VT100_Escape_Codes.html
-		fmt.Print(ansi.CursorUp(tui.Min(selectSize, termHeight)))
-	}
-
 	selectCursor := s.cursor.Get()
+	visibleLines := tui.Min(selectSize, termHeight)
 
-	// Render only visible select options
-	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
-		selectedOption := s.options[i]
-		cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
+	if redraw {
+		// For terminal optimization: build entire output first, then write atomically
+		var output strings.Builder
 
-		fmt.Print(ansi.ClearLine)
+		// Move cursor up to start position
+		output.WriteString(ansi.CursorUp(visibleLines))
 
-		if i == s.cursorPos {
-			cursor = s.getSelectFunc(selectCursor)
-			fmt.Printf("\r%s%s\n", cursor, s.getSelectFunc(selectedOption.Key))
-		} else {
-			fmt.Printf("\r%s%s\n", cursor, selectedOption.Key)
+		// Build all lines in memory first
+		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
+			selectedOption := s.options[i]
+			cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
+
+			// Clear line and build content
+			output.WriteString("\r")
+			output.WriteString(ansi.ClearLine)
+
+			if i == s.cursorPos {
+				cursor = s.getSelectFunc(selectCursor)
+				output.WriteString(cursor)
+				output.WriteString(s.getSelectFunc(selectedOption.Key))
+			} else {
+				output.WriteString(cursor)
+				output.WriteString(selectedOption.Key)
+			}
+			output.WriteString("\n")
+		}
+
+		// Write everything at once to minimize flicker
+		fmt.Print(output.String())
+	} else {
+		// Initial render without redraw
+		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
+			selectedOption := s.options[i]
+			cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
+
+			if i == s.cursorPos {
+				cursor = s.getSelectFunc(selectCursor)
+				fmt.Printf("%s%s\n", cursor, s.getSelectFunc(selectedOption.Key))
+			} else {
+				fmt.Printf("%s%s\n", cursor, selectedOption.Key)
+			}
 		}
 	}
 }
