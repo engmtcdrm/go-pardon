@@ -246,9 +246,13 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 				redraw()
 			}
 		default:
-			input = p.appendInputFn(input, keyCode)
-			showError = false
-			redraw()
+			// Filter out control characters (0-31), allow all others
+			if keyCode >= 32 {
+				// Printable ASCII (32-126) and extended characters (128+)
+				input = p.appendInputFn(input, keyCode)
+				showError = false
+				redraw()
+			}
 		}
 	}
 }
