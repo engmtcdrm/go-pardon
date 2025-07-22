@@ -3,12 +3,11 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"golang.org/x/term"
 )
-
-// Shared rendering utilities
 
 // Min returns the smaller of two integers.
 func Min(a, b int) int {
@@ -18,6 +17,11 @@ func Min(a, b int) int {
 	return b
 }
 
+// ClearCurrentLine clears the current line using standard ANSI codes
+func ClearCurrentLine() {
+	fmt.Printf("\r%s", ansi.ClearLine)
+}
+
 // RenderFinalAnswer renders the final answer after a prompt is completed
 func RenderFinalAnswer(icon, title, answer string) {
 	fmt.Printf("%s%s %s\n", icon, title, answer)
@@ -25,25 +29,45 @@ func RenderFinalAnswer(icon, title, answer string) {
 
 // RenderClearLines clears a specific number of lines from the current cursor position
 func RenderClearLines(numLines int) {
-	for i := 0; i < numLines; i++ {
-		fmt.Printf("%s\r\n", ansi.ClearLine)
+	if numLines <= 0 {
+		return
 	}
+
+	sequence := ansi.ClearLine + "\r\n"
+	fmt.Print(strings.Repeat(sequence, numLines))
 }
 
 // RenderClearAndReposition clears lines and repositions cursor for final output
 func RenderClearAndReposition(linesToErase int, icon, title, answer string) {
-	// Move cursor up to question line
-	fmt.Print(ansi.CursorUp(linesToErase))
+	var output strings.Builder
 
-	// Clear lines
-	RenderClearLines(linesToErase)
+	// Move cursor up to question line
+	output.WriteString(ansi.CursorUp(linesToErase))
+
+	sequence := "\r" + ansi.ClearLine
+
+	// Clear all lines in one pass to reduce flickering
+	for i := range linesToErase {
+		output.WriteString(sequence)
+		if i < linesToErase-1 {
+			output.WriteString("\n")
+		}
+	}
 
 	// Move cursor back up to question line
-	fmt.Print(ansi.CursorUp(linesToErase))
+	output.WriteString(ansi.CursorUp(linesToErase - 1))
 
 	// Print final answer
-	RenderFinalAnswer(icon, title, answer)
-	fmt.Print(ansi.ShowCursor)
+	output.WriteString("\r")
+	output.WriteString(icon)
+	output.WriteString(title)
+	output.WriteString(" ")
+	output.WriteString(answer)
+	output.WriteString("\n")
+	output.WriteString(ansi.ShowCursor)
+
+	// Write everything at once to minimize flicker
+	fmt.Print(output.String())
 }
 
 // GetTerminalHeight gets the terminal height with a fallback default
