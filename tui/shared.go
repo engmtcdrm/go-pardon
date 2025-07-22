@@ -44,7 +44,7 @@ func RenderClearAndReposition(linesToErase int, icon, title, answer string) {
 	// Move cursor up to question line
 	output.WriteString(ansi.CursorUp(linesToErase))
 
-	sequence := ansi.ClearLine + "\r\n"
+	sequence := "\r" + ansi.ClearLine
 
 	// Clear all lines in one pass to reduce flickering
 	for i := range linesToErase {
