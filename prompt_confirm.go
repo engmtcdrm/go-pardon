@@ -85,9 +85,9 @@ func (c *Confirm) Ask() error {
 		return ErrNoValue
 	}
 
-	options := "(y/N)"
+	options := "[y/N]"
 	if *c.value {
-		options = "(Y/n)"
+		options = "[Y/n]"
 	}
 
 	question := fmt.Sprintf("%s%s", c.icon.Get(), c.title.Get())
