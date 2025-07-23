@@ -117,7 +117,7 @@ func (c *Confirm) Ask() error {
 			}
 			return nil
 		case keys.KeyCtrlC, keys.KeyEscape:
-			fmt.Println("")
+			fmt.Println()
 			return ErrUserAborted
 		}
 	}
