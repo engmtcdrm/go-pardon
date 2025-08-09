@@ -84,6 +84,11 @@ func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
 	return s
 }
 
+func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
+	s.selectFn = fn
+	return s
+}
+
 func (s *Select[T]) getSelectFunc(text string) string {
 	if s.selectFn != nil {
 		return s.selectFn(text)
