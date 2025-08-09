@@ -30,7 +30,10 @@ func SelectKitchensink() {
 		}).
 		Cursor("» ").
 		CursorFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s", ansi.YellowBg, s, ansi.Reset)
+			return fmt.Sprintf("%s%s%s%s", ansi.Magenta, ansi.YellowBg, s, ansi.Reset)
+		}).
+		SelectFunc(func(s string) string {
+			return fmt.Sprintf("%s%s%s%s", ansi.RedBg, ansi.Cyan, s, ansi.Reset)
 		}).
 		Options(colors...).
 		Value(&selectedColor)
