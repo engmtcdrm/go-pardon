@@ -12,12 +12,13 @@ import (
 )
 
 var (
+	// ErrUserAborted is returned when the user cancels a prompt operation.
 	ErrUserAborted = errors.New("user aborted")
 )
 
 var (
-	// navigationKeys defines a map of specific byte keycodes related to
-	// navigation functionality, such as up or down actions.
+	// navigationKeys defines a map of byte keycodes for navigation actions.
+	// These keys are used for cursor movement and selection in interactive prompts.
 	navigationKeys = map[byte]bool{
 		keys.KeyUp:    true,
 		keys.KeyDown:  true,
@@ -25,14 +26,15 @@ var (
 		keys.KeyRight: true,
 	}
 
-	// Track whether the last input was from an escape sequence
+	// lastInputWasEscSeq tracks whether the previous input was part of an escape sequence.
+	// This helps with proper handling of multi-byte terminal input sequences.
 	lastInputWasEscSeq = false
 
-	// Buffer for handling paste operations
+	// inputBuffer provides buffering for handling paste operations and multi-byte input.
 	inputBuffer []byte
 )
 
-// InputPrompt handles text-based input prompts (Question, Password, etc.)
+// InputPrompt provides a generic framework for text-based input prompts.
 type InputPrompt[T any] struct {
 	appendInputFn  func(T, byte) T
 	displayInputFn func(T) string
@@ -41,7 +43,7 @@ type InputPrompt[T any] struct {
 	validateFn     func(T) error
 }
 
-// NewStringPrompt creates a prompt for string input (Question type)
+// NewStringPrompt creates an InputPrompt for plaintext string input.
 func NewStringPrompt() *InputPrompt[string] {
 	return &InputPrompt[string]{
 		appendInputFn:  func(s string, b byte) string { return s + string(b) },
@@ -57,11 +59,11 @@ func NewStringPrompt() *InputPrompt[string] {
 	}
 }
 
-// NewPasswordPrompt creates a prompt for password input ([]byte type)
+// NewPasswordPrompt creates an InputPrompt for secure password input with masking.
 func NewPasswordPrompt() *InputPrompt[[]byte] {
 	return &InputPrompt[[]byte]{
 		appendInputFn:  func(b []byte, c byte) []byte { return append(b, c) },
-		displayInputFn: func(b []byte) string { return "" },
+		displayInputFn: func(b []byte) string { return "" }, // Mask all input
 		removeLastFn: func(b []byte) []byte {
 			if len(b) > 0 {
 				return b[:len(b)-1]
@@ -73,6 +75,7 @@ func NewPasswordPrompt() *InputPrompt[[]byte] {
 	}
 }
 
+// Validate sets a validation function for the input prompt.
 func (p *InputPrompt[T]) Validate(fn func(T) error) *InputPrompt[T] {
 	if fn != nil {
 		p.validateFn = fn
@@ -80,6 +83,7 @@ func (p *InputPrompt[T]) Validate(fn func(T) error) *InputPrompt[T] {
 	return p
 }
 
+// DisplayInput sets a function to customize how input is displayed during typing.
 func (p *InputPrompt[T]) DisplayInput(fn func(T) string) *InputPrompt[T] {
 	if fn != nil {
 		p.displayInputFn = fn
@@ -87,6 +91,7 @@ func (p *InputPrompt[T]) DisplayInput(fn func(T) string) *InputPrompt[T] {
 	return p
 }
 
+// AnswerFunc sets a function to transform the final answer before returning.
 func (p *InputPrompt[T]) AnswerFunc(fn func(string) string) *InputPrompt[T] {
 	if fn != nil {
 		p.answerFn = fn
@@ -257,8 +262,8 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 	}
 }
 
-// GetInput will read raw input from the terminal
-// It returns the raw ASCII value inputted
+// GetInput reads raw keyboard input from the terminal.
+// Handles buffered input, raw mode, and ANSI escape sequences.
 func GetInput() byte {
 	// If we have buffered input from a paste operation, return it first
 	if len(inputBuffer) > 0 {

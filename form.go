@@ -1,11 +1,11 @@
 package pardon
 
-// Form is a struct that holds a list of prompts and their answers.
+// Form represents a collection of prompts executed sequentially.
 type Form struct {
 	prompts []Prompt
 }
 
-// NewForm creates a new Form with the provided prompts.
+// NewForm creates a new Form with the given prompts.
 func NewForm(prompts ...Prompt) *Form {
 	f := &Form{
 		prompts: prompts,
@@ -13,7 +13,7 @@ func NewForm(prompts ...Prompt) *Form {
 	return f
 }
 
-// Ask iterates through each prompt in the form and asks for user input.
+// Ask executes all prompts in sequence, stopping on the first error.
 func (f *Form) Ask() error {
 	for _, p := range f.prompts {
 		if err := p.Ask(); err != nil {

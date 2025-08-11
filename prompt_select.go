@@ -10,6 +10,7 @@ import (
 	"github.com/engmtcdrm/go-pardon/tui"
 )
 
+// Select represents a multiple-choice selection prompt.
 type Select[T comparable] struct {
 	icon         eval[string]
 	title        eval[string]
@@ -22,6 +23,7 @@ type Select[T comparable] struct {
 	value        *T
 }
 
+// NewSelect creates a new Select prompt instance.
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
 		icon:    eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
@@ -31,79 +33,91 @@ func NewSelect[T comparable]() *Select[T] {
 	}
 }
 
-func (s *Select[T]) Title(title string) *Select[T] {
-	s.title.val = title
-	s.title.fn = nil
-	return s
+// Title sets the prompt title text that will be displayed to the user.
+func (sel *Select[T]) Title(title string) *Select[T] {
+	sel.title.val = title
+	sel.title.fn = nil
+	return sel
 }
 
-func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
-	s.title.fn = fn
-	return s
+// TitleFunc sets a function to dynamically format the prompt title.
+func (sel *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
+	sel.title.fn = fn
+	return sel
 }
 
-func (s *Select[T]) Cursor(cursor string) *Select[T] {
-	s.cursor.val = cursor
-	s.cursor.fn = nil
-	return s
+// Cursor sets the cursor symbol displayed next to the selected option.
+func (sel *Select[T]) Cursor(cursor string) *Select[T] {
+	sel.cursor.val = cursor
+	sel.cursor.fn = nil
+	return sel
 }
 
-func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T] {
-	s.cursor.fn = fn
-	return s
+// CursorFunc sets a function to dynamically format the cursor symbol.
+func (sel *Select[T]) CursorFunc(fn func(string) string) *Select[T] {
+	sel.cursor.fn = fn
+	return sel
 }
 
-func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
+// Options sets the list of available options for selection.
+func (sel *Select[T]) Options(options ...Option[T]) *Select[T] {
 	if len(options) == 0 {
-		return s
+		return sel
 	}
 
-	s.options = options
-	return s
+	sel.options = options
+	return sel
 }
 
-func (s *Select[T]) Value(value *T) *Select[T] {
-	s.value = value
-	return s
+// Value sets the pointer where the selected option's value will be stored.
+func (sel *Select[T]) Value(value *T) *Select[T] {
+	sel.value = value
+	return sel
 }
 
-func (s *Select[T]) Icon(icon string) *Select[T] {
-	s.icon.val = icon
-	s.icon.fn = nil
-	return s
+// Icon sets the icon displayed before the prompt title.
+func (sel *Select[T]) Icon(icon string) *Select[T] {
+	sel.icon.val = icon
+	sel.icon.fn = nil
+	return sel
 }
 
-func (s *Select[T]) IconFunc(fn func(string) string) *Select[T] {
-	s.icon.fn = fn
-	return s
+// IconFunc sets a function to dynamically format the prompt icon.
+func (sel *Select[T]) IconFunc(fn func(string) string) *Select[T] {
+	sel.icon.fn = fn
+	return sel
 }
 
-// AnswerFunc allows customization of the selected option's display format.
-func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
-	s.answerFn = fn
-	return s
+// AnswerFunc sets a function to format the final answer display.
+func (sel *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
+	sel.answerFn = fn
+	return sel
 }
 
-func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
-	s.selectFn = fn
-	return s
+// SelectFunc sets a function to format option text during selection.
+func (sel *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
+	sel.selectFn = fn
+	return sel
 }
 
-func (s *Select[T]) getSelectFunc(text string) string {
-	if s.selectFn != nil {
-		return s.selectFn(text)
+// setAnswerFunc configures the answer transformation priority:
+// prompt-specific, global default, or the string itself.
+func (sel *Select[T]) getSelectFunc(s string) string {
+	if sel.selectFn != nil {
+		return sel.selectFn(s)
 	}
 
 	if defaultFuncs.selectFn != nil {
-		return defaultFuncs.selectFn(text)
+		return defaultFuncs.selectFn(s)
 	}
 
-	return text
+	return s
 }
 
-func (s *Select[T]) getAnswerFunc(answer string) string {
-	if s.answerFn != nil {
-		return s.answerFn(answer)
+// getAnswerFunc returns the formatted text for the final answer display.
+func (sel *Select[T]) getAnswerFunc(answer string) string {
+	if sel.answerFn != nil {
+		return sel.answerFn(answer)
 	}
 
 	if defaultFuncs.answerFn != nil {
@@ -113,18 +127,17 @@ func (s *Select[T]) getAnswerFunc(answer string) string {
 	return answer
 }
 
-// Ask will display the current select options and awaits user selection
-// It returns the users selected choice
-func (s *Select[T]) Ask() error {
-	if s.title.val == "" && s.title.fn == nil {
+// Ask displays the select prompt and waits for user selection.
+func (sel *Select[T]) Ask() error {
+	if sel.title.val == "" && sel.title.fn == nil {
 		return ErrNoTitle
 	}
 
-	if s.value == nil {
+	if sel.value == nil {
 		return ErrNoValue
 	}
 
-	if len(s.options) == 0 {
+	if len(sel.options) == 0 {
 		return ErrNoSelectOptions
 	}
 
@@ -133,9 +146,9 @@ func (s *Select[T]) Ask() error {
 	}()
 
 	// Print the question
-	fmt.Printf("%s%s\n", s.icon.Get(), s.title.Get())
+	fmt.Printf("%s%s\n", sel.icon.Get(), sel.title.Get())
 
-	s.renderOptions(false)
+	sel.renderOptions(false)
 	fmt.Print(ansi.HideCursor)
 
 	for {
@@ -145,34 +158,34 @@ func (s *Select[T]) Ask() error {
 		case keys.KeyCtrlC:
 			return ErrUserAborted
 		case keys.KeyEnter, keys.KeyCarriageReturn:
-			*s.value = s.options[s.cursorPos].Value
-			visibleOptions := tui.Min(len(s.options), tui.GetTerminalHeight()-3)
-			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
+			*sel.value = sel.options[sel.cursorPos].Value
+			visibleOptions := tui.Min(len(sel.options), tui.GetTerminalHeight()-3)
+			tui.RenderClearAndReposition(visibleOptions+1, sel.icon.Get(), sel.title.Get(), sel.getAnswerFunc(sel.options[sel.cursorPos].Key))
 			return nil
 		case keys.KeyUp:
-			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
-			s.renderOptions(true)
+			sel.cursorPos = (sel.cursorPos + len(sel.options) - 1) % len(sel.options)
+			sel.renderOptions(true)
 		case keys.KeyDown:
-			s.cursorPos = (s.cursorPos + 1) % len(s.options)
-			s.renderOptions(true)
+			sel.cursorPos = (sel.cursorPos + 1) % len(sel.options)
+			sel.renderOptions(true)
 		}
 	}
 }
 
-// Setting redraw to true will re-render the options list with updated current selection.
-func (s *Select[T]) renderOptions(redraw bool) {
+// renderOptions displays the list of available options to the user.
+func (sel *Select[T]) renderOptions(redraw bool) {
 	termHeight := tui.GetTerminalHeight()
 	termHeight = termHeight - 3 // Space for prompt and cursor movement
-	selectSize := len(s.options)
+	selectSize := len(sel.options)
 
 	// Ensure scroll offset follows cursor movement
-	if s.cursorPos < s.scrollOffset {
-		s.scrollOffset = s.cursorPos
-	} else if s.cursorPos >= s.scrollOffset+termHeight {
-		s.scrollOffset = s.cursorPos - termHeight + 1
+	if sel.cursorPos < sel.scrollOffset {
+		sel.scrollOffset = sel.cursorPos
+	} else if sel.cursorPos >= sel.scrollOffset+termHeight {
+		sel.scrollOffset = sel.cursorPos - termHeight + 1
 	}
 
-	selectCursor := s.cursor.Get()
+	selectCursor := sel.cursor.Get()
 	visibleLines := tui.Min(selectSize, termHeight)
 
 	if redraw {
@@ -183,18 +196,18 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		output.WriteString(ansi.CursorUp(visibleLines))
 
 		// Build all lines in memory first
-		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
-			selectedOption := s.options[i]
+		for i := sel.scrollOffset; i < tui.Min(sel.scrollOffset+termHeight, selectSize); i++ {
+			selectedOption := sel.options[i]
 			cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
 
 			// Clear line and build content
 			output.WriteString("\r")
 			output.WriteString(ansi.ClearLine)
 
-			if i == s.cursorPos {
-				cursor = s.getSelectFunc(selectCursor)
+			if i == sel.cursorPos {
+				cursor = sel.getSelectFunc(selectCursor)
 				output.WriteString(cursor)
-				output.WriteString(s.getSelectFunc(selectedOption.Key))
+				output.WriteString(sel.getSelectFunc(selectedOption.Key))
 			} else {
 				output.WriteString(cursor)
 				output.WriteString(selectedOption.Key)
@@ -206,13 +219,13 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		fmt.Print(output.String())
 	} else {
 		// Initial render without redraw
-		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
-			selectedOption := s.options[i]
+		for i := sel.scrollOffset; i < tui.Min(sel.scrollOffset+termHeight, selectSize); i++ {
+			selectedOption := sel.options[i]
 			cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
 
-			if i == s.cursorPos {
-				cursor = s.getSelectFunc(selectCursor)
-				fmt.Printf("%s%s\n", cursor, s.getSelectFunc(selectedOption.Key))
+			if i == sel.cursorPos {
+				cursor = sel.getSelectFunc(selectCursor)
+				fmt.Printf("%s%s\n", cursor, sel.getSelectFunc(selectedOption.Key))
 			} else {
 				fmt.Printf("%s%s\n", cursor, selectedOption.Key)
 			}
