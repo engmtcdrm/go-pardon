@@ -17,17 +17,17 @@ func Min(a, b int) int {
 	return b
 }
 
-// ClearCurrentLine clears the current line using standard ANSI codes
+// ClearCurrentLine clears the current terminal line.
 func ClearCurrentLine() {
 	fmt.Printf("\r%s", ansi.ClearLine)
 }
 
-// RenderFinalAnswer renders the final answer after a prompt is completed
+// RenderFinalAnswer displays the final formatted prompt result.
 func RenderFinalAnswer(icon, title, answer string) {
 	fmt.Printf("%s%s %s\n", icon, title, answer)
 }
 
-// RenderClearLines clears a specific number of lines from the current cursor position
+// RenderClearLines clears multiple lines from the cursor position.
 func RenderClearLines(numLines int) {
 	if numLines <= 0 {
 		return
@@ -37,7 +37,8 @@ func RenderClearLines(numLines int) {
 	fmt.Print(strings.Repeat(sequence, numLines))
 }
 
-// RenderClearAndReposition clears lines and repositions cursor for final output
+// RenderClearAndReposition clears lines and renders final answer.
+// Minimizes screen flicker by batching terminal operations.
 func RenderClearAndReposition(linesToErase int, icon, title, answer string) {
 	var output strings.Builder
 
@@ -70,7 +71,7 @@ func RenderClearAndReposition(linesToErase int, icon, title, answer string) {
 	fmt.Print(output.String())
 }
 
-// GetTerminalHeight gets the terminal height with a fallback default
+// GetTerminalHeight returns the terminal height, defaulting to 25.
 func GetTerminalHeight() int {
 	termHeight := 25 // Default height
 	if _, height, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
@@ -79,7 +80,7 @@ func GetTerminalHeight() int {
 	return termHeight
 }
 
-// RenderFormattedOutput formats and renders output with ANSI clear
+// RenderFormattedOutput creates formatted output with ANSI clear sequences.
 func RenderFormattedOutput(question, result string) string {
 	return fmt.Sprintf("%s\r%s %s\n", ansi.ClearToBegin, question, result)
 }
