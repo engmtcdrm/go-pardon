@@ -8,7 +8,7 @@
 
 - [X] Refactor `Select` to erase options onces a select is made and display the selected option next to the title.
 - [X] Fix Windows flickering
-- [ ] Add `Form` functionality, i.e. being able to group multiple prompts together.
+- [X] Add `Form` functionality, i.e. being able to group multiple prompts together.
 - [X] Add more examples for various ways the package can be used
 
 ## Last Tasks
