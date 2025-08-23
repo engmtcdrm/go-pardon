@@ -10,6 +10,7 @@
 - [X] Fix Windows flickering
 - [X] Add `Form` functionality, i.e. being able to group multiple prompts together.
 - [X] Add more examples for various ways the package can be used
+- [ ] Add `MultiSelect` prompt allowing a user to select multiple options in a select prompt.
 
 ## Last Tasks
 
