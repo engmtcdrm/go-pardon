@@ -30,11 +30,10 @@ func main() {
 
 	var selectedName string
 
-	selectPrompt := pardon.NewSelect[string]().
+	selectPrompt := pardon.NewSelect(&selectedName).
 		Title("Select an example:").
 		Icon("").
 		Options(names...).
-		Value(&selectedName).
 		AnswerFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Yellow, s, ansi.Reset)
 		})

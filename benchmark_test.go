@@ -20,7 +20,7 @@ func BenchmarkSelectCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewSelect[string](&result).
+		_ = NewSelect(&result).
 			Options(options...).
 			Title("Test")
 	}
@@ -39,7 +39,7 @@ func BenchmarkSelectCreationLargeOptions(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewSelect[string](&result).
+		_ = NewSelect(&result).
 			Options(options...).
 			Title("Test")
 	}
@@ -95,7 +95,7 @@ func BenchmarkSelectAllocation(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		var result string
-		selectPrompt := NewSelect[string](&result).
+		selectPrompt := NewSelect(&result).
 			Options(options...).
 			Title("Test")
 		_ = selectPrompt
@@ -112,7 +112,7 @@ func BenchmarkFluentAPI(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		var result string
-		_ = NewSelect[string](&result).
+		_ = NewSelect(&result).
 			Title("Select an option").
 			Options(options...).
 			Cursor("> ")
