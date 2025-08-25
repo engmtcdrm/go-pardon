@@ -87,6 +87,14 @@ func (q *Question) setAnswerFunc() {
 
 // Ask displays the question prompt and waits for input.
 func (q *Question) Ask() error {
+	if q.title.val == "" && q.title.fn == nil {
+		return ErrNoTitle
+	}
+
+	if q.value == nil {
+		return ErrNoValue
+	}
+
 	question := fmt.Sprintf("%s%s ", q.icon.Get(), q.title.Get())
 	q.setAnswerFunc()
 

@@ -87,6 +87,14 @@ func (p *Password) setAnswerFunc() {
 
 // Ask displays the password prompt.
 func (p *Password) Ask() error {
+	if p.title.val == "" && p.title.fn == nil {
+		return ErrNoTitle
+	}
+
+	if p.value == nil {
+		return ErrNoValue
+	}
+
 	question := fmt.Sprintf("%s%s ", p.icon.Get(), p.title.Get())
 	p.setAnswerFunc()
 
