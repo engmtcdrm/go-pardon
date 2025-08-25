@@ -11,7 +11,7 @@ func TestSelectCreation(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string](&result).
+	selectPrompt := NewSelect(&result).
 		Options(options...)
 
 	if selectPrompt == nil {
@@ -30,7 +30,7 @@ func TestSelectWithTitle(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string](&result).
+	selectPrompt := NewSelect(&result).
 		Options(options...).
 		Title("Test Title")
 
@@ -45,7 +45,7 @@ func TestSelectWithCursor(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string](&result).
+	selectPrompt := NewSelect(&result).
 		Options(options...).
 		Cursor("→ ")
 
@@ -61,7 +61,7 @@ func TestSelectValidation(t *testing.T) {
 		}
 
 		var result string
-		prompt := NewSelect[string](&result).
+		prompt := NewSelect(&result).
 			Options(options...)
 
 		// Test that title is empty, which should cause validation to fail
@@ -82,7 +82,7 @@ func TestSelectValidation(t *testing.T) {
 
 	t.Run("no options", func(t *testing.T) {
 		var result string
-		prompt := NewSelect[string](&result).
+		prompt := NewSelect(&result).
 			Title("Test")
 
 		// Test that options are empty, which should cause validation to fail
@@ -106,14 +106,9 @@ func TestSelectValidation(t *testing.T) {
 		}
 
 		var result string
-		prompt := NewSelect[string](&result).
+		prompt := NewSelect(&result).
 			Options(options...).
 			Title("Test")
-
-		// Test that value is nil, which should cause validation to fail
-		if prompt.value != nil {
-			t.Error("Expected value to be nil")
-		}
 
 		// Verify other conditions are met
 		if len(prompt.options) == 0 {
@@ -134,7 +129,7 @@ func TestSelectGenericTypes(t *testing.T) {
 		}
 
 		var result string
-		selectPrompt := NewSelect[string](&result).
+		selectPrompt := NewSelect(&result).
 			Options(options...)
 
 		if selectPrompt == nil {
@@ -149,7 +144,7 @@ func TestSelectGenericTypes(t *testing.T) {
 		}
 
 		var result int
-		selectPrompt := NewSelect[int](&result).
+		selectPrompt := NewSelect(&result).
 			Options(options...)
 
 		if selectPrompt == nil {
@@ -169,7 +164,7 @@ func TestSelectGenericTypes(t *testing.T) {
 		}
 
 		var result CustomStruct
-		selectPrompt := NewSelect[CustomStruct](&result).
+		selectPrompt := NewSelect(&result).
 			Options(options...)
 
 		if selectPrompt == nil {
@@ -186,7 +181,7 @@ func TestSelectCursorPositioning(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string](&result).
+	selectPrompt := NewSelect(&result).
 		Options(options...)
 
 	// Test initial cursor position
@@ -203,7 +198,7 @@ func TestSelectScrollOffset(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string](&result).
+	selectPrompt := NewSelect(&result).
 		Options(options...)
 
 	// Test initial scroll offset

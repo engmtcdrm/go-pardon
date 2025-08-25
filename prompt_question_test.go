@@ -12,11 +12,6 @@ func TestQuestionCreation(t *testing.T) {
 		t.Error("NewQuestion returned nil")
 	}
 
-	// Test initial state
-	if question.value != nil {
-		t.Error("Question value should be nil initially")
-	}
-
 	if question.icon.val == "" {
 		t.Error("Question should have default icon")
 	}
@@ -62,11 +57,6 @@ func TestQuestionValidation(t *testing.T) {
 		var result string
 		prompt := NewQuestion(&result).
 			Title("Test question")
-
-		// Test that value is nil, which should cause validation to fail
-		if prompt.value != nil {
-			t.Error("Expected value to be nil")
-		}
 
 		// Verify title is set correctly
 		if prompt.title.val != "Test question" {

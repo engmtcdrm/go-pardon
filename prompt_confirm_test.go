@@ -12,11 +12,6 @@ func TestConfirmCreation(t *testing.T) {
 		t.Error("NewConfirm returned nil")
 	}
 
-	// Test initial state
-	if confirm.value != nil {
-		t.Error("Confirm value should be nil initially")
-	}
-
 	if confirm.icon.val == "" {
 		t.Error("Confirm should have default icon")
 	}
@@ -46,11 +41,6 @@ func TestConfirmValidation(t *testing.T) {
 		var result bool
 		prompt := NewConfirm(&result)
 
-		// Test that title is empty, which should cause validation to fail
-		if prompt.title.val != "" {
-			t.Error("Expected title to be empty")
-		}
-
 		// We can't easily test Ask() without user interaction,
 		// but we can verify the validation conditions
 		if prompt.value == nil {
@@ -62,11 +52,6 @@ func TestConfirmValidation(t *testing.T) {
 		var result bool
 		prompt := NewConfirm(&result).
 			Title("Proceed?")
-
-		// Test that value is nil, which should cause validation to fail
-		if prompt.value != nil {
-			t.Error("Expected value to be nil")
-		}
 
 		// Verify title is set correctly
 		if prompt.title.val != "Proceed?" {

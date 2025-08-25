@@ -12,11 +12,6 @@ func TestPasswordCreation(t *testing.T) {
 		t.Error("NewPassword returned nil")
 	}
 
-	// Test initial state
-	if password.value != nil {
-		t.Error("Password value should be nil initially")
-	}
-
 	if password.icon.val == "" {
 		t.Error("Password should have default icon")
 	}
@@ -62,11 +57,6 @@ func TestPasswordValidation(t *testing.T) {
 		var result []byte
 		prompt := NewPassword(&result).
 			Title("Enter password:")
-
-		// Test that value is nil, which should cause validation to fail
-		if prompt.value != nil {
-			t.Error("Expected value to be nil")
-		}
 
 		// Verify title is set correctly
 		if prompt.title.val != "Enter password:" {
