@@ -1,10 +1,10 @@
 
 # go-pardon
+
 Lightweight interactive CLI prompt library for Go
 
-![](https://media.giphy.com/media/Nmc3muJhaCfPe2LWd9/giphy.gif)
-
 ## Import the package
+
 ```go
 import "github.com/engmtcdrm/pardon"
 ```
@@ -12,6 +12,7 @@ import "github.com/engmtcdrm/pardon"
 ## Usage
 
 ### Select Prompt
+
 ```go
 package main
 
@@ -43,6 +44,7 @@ func main() {
 ```
 
 ### Question Prompt
+
 ```go
 favColor := ""
 question := pardon.NewQuestion().
@@ -56,6 +58,7 @@ fmt.Printf("Entered favorite color is '%s'\n", favColor)
 ```
 
 ### Password Prompt
+
 ```go
 password := []byte{}
 passwordPrompt := pardon.NewPassword().
@@ -69,6 +72,7 @@ fmt.Printf("Entered password is '%s'\n", string(password))
 ```
 
 ### Confirm Prompt
+
 ```go
 continueFlag := true
 confirm := pardon.NewConfirm().
