@@ -20,7 +20,9 @@ func BenchmarkSelectCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewSelect[string]().Options(options...).Value(&result).Title("Test")
+		_ = NewSelect[string](&result).
+			Options(options...).
+			Title("Test")
 	}
 }
 
@@ -37,7 +39,9 @@ func BenchmarkSelectCreationLargeOptions(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewSelect[string]().Options(options...).Value(&result).Title("Test")
+		_ = NewSelect[string](&result).
+			Options(options...).
+			Title("Test")
 	}
 }
 
@@ -46,7 +50,8 @@ func BenchmarkQuestionCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewQuestion().Value(&result).Title("Test Question")
+		_ = NewQuestion(&result).
+			Title("Test Question")
 	}
 }
 
@@ -55,7 +60,8 @@ func BenchmarkPasswordCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewPassword().Value(&result).Title("Enter Password")
+		_ = NewPassword(&result).
+			Title("Enter Password")
 	}
 }
 
@@ -64,7 +70,8 @@ func BenchmarkConfirmCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewConfirm().Value(&result).Title("Are you sure?")
+		_ = NewConfirm(&result).
+			Title("Are you sure?")
 	}
 }
 
@@ -88,7 +95,9 @@ func BenchmarkSelectAllocation(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		var result string
-		selectPrompt := NewSelect[string]().Options(options...).Value(&result).Title("Test")
+		selectPrompt := NewSelect[string](&result).
+			Options(options...).
+			Title("Test")
 		_ = selectPrompt
 	}
 }
@@ -103,10 +112,9 @@ func BenchmarkFluentAPI(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		var result string
-		_ = NewSelect[string]().
+		_ = NewSelect[string](&result).
 			Title("Select an option").
 			Options(options...).
-			Value(&result).
 			Cursor("> ")
 	}
 }

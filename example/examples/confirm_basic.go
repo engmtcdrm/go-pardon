@@ -10,9 +10,8 @@ import (
 func ConfirmBasic() {
 	continueFlag := true
 
-	confirm := pardon.NewConfirm().
-		Title("Are you sure you want to proceed?").
-		Value(&continueFlag)
+	confirm := pardon.NewConfirm(&continueFlag).
+		Title("Are you sure you want to proceed?")
 
 	if err := confirm.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

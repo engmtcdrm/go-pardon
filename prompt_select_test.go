@@ -11,7 +11,8 @@ func TestSelectCreation(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string]().Options(options...).Value(&result)
+	selectPrompt := NewSelect[string](&result).
+		Options(options...)
 
 	if selectPrompt == nil {
 		t.Error("NewSelect returned nil")
@@ -29,7 +30,9 @@ func TestSelectWithTitle(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string]().Options(options...).Value(&result).Title("Test Title")
+	selectPrompt := NewSelect[string](&result).
+		Options(options...).
+		Title("Test Title")
 
 	if selectPrompt.title.val != "Test Title" {
 		t.Errorf("Title() = %q; want %q", selectPrompt.title.val, "Test Title")
@@ -42,7 +45,9 @@ func TestSelectWithCursor(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string]().Options(options...).Value(&result).Cursor("→ ")
+	selectPrompt := NewSelect[string](&result).
+		Options(options...).
+		Cursor("→ ")
 
 	if selectPrompt.cursor.val != "→ " {
 		t.Errorf("Cursor() = %q; want %q", selectPrompt.cursor.val, "→ ")
@@ -56,7 +61,8 @@ func TestSelectValidation(t *testing.T) {
 		}
 
 		var result string
-		prompt := NewSelect[string]().Options(options...).Value(&result)
+		prompt := NewSelect[string](&result).
+			Options(options...)
 
 		// Test that title is empty, which should cause validation to fail
 		if prompt.title.val != "" {
@@ -76,7 +82,8 @@ func TestSelectValidation(t *testing.T) {
 
 	t.Run("no options", func(t *testing.T) {
 		var result string
-		prompt := NewSelect[string]().Value(&result).Title("Test")
+		prompt := NewSelect[string](&result).
+			Title("Test")
 
 		// Test that options are empty, which should cause validation to fail
 		if len(prompt.options) != 0 {
@@ -98,7 +105,10 @@ func TestSelectValidation(t *testing.T) {
 			{Key: "Option 1", Value: "value1"},
 		}
 
-		prompt := NewSelect[string]().Options(options...).Title("Test")
+		var result string
+		prompt := NewSelect[string](&result).
+			Options(options...).
+			Title("Test")
 
 		// Test that value is nil, which should cause validation to fail
 		if prompt.value != nil {
@@ -124,7 +134,8 @@ func TestSelectGenericTypes(t *testing.T) {
 		}
 
 		var result string
-		selectPrompt := NewSelect[string]().Options(options...).Value(&result)
+		selectPrompt := NewSelect[string](&result).
+			Options(options...)
 
 		if selectPrompt == nil {
 			t.Error("NewSelect for string type returned nil")
@@ -138,7 +149,8 @@ func TestSelectGenericTypes(t *testing.T) {
 		}
 
 		var result int
-		selectPrompt := NewSelect[int]().Options(options...).Value(&result)
+		selectPrompt := NewSelect[int](&result).
+			Options(options...)
 
 		if selectPrompt == nil {
 			t.Error("NewSelect for int type returned nil")
@@ -157,7 +169,8 @@ func TestSelectGenericTypes(t *testing.T) {
 		}
 
 		var result CustomStruct
-		selectPrompt := NewSelect[CustomStruct]().Options(options...).Value(&result)
+		selectPrompt := NewSelect[CustomStruct](&result).
+			Options(options...)
 
 		if selectPrompt == nil {
 			t.Error("NewSelect for struct type returned nil")
@@ -173,7 +186,8 @@ func TestSelectCursorPositioning(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string]().Options(options...).Value(&result)
+	selectPrompt := NewSelect[string](&result).
+		Options(options...)
 
 	// Test initial cursor position
 	if selectPrompt.cursorPos != 0 {
@@ -189,7 +203,8 @@ func TestSelectScrollOffset(t *testing.T) {
 	}
 
 	var result string
-	selectPrompt := NewSelect[string]().Options(options...).Value(&result)
+	selectPrompt := NewSelect[string](&result).
+		Options(options...)
 
 	// Test initial scroll offset
 	if selectPrompt.scrollOffset != 0 {

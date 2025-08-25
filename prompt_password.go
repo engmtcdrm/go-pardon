@@ -16,11 +16,11 @@ type Password struct {
 }
 
 // NewPassword creates a new Password prompt instance.
-func NewPassword() *Password {
+func NewPassword(value *[]byte) *Password {
 	return &Password{
 		icon:  eval[string]{val: Icons.Password, defaultFn: defaultFuncs.iconFn},
 		title: eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		value: nil,
+		value: value,
 		tui:   tui.NewPasswordPrompt(),
 	}
 }

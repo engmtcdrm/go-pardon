@@ -5,7 +5,8 @@ import (
 )
 
 func TestConfirmCreation(t *testing.T) {
-	confirm := NewConfirm()
+	var result bool
+	confirm := NewConfirm(&result)
 
 	if confirm == nil {
 		t.Error("NewConfirm returned nil")
@@ -23,7 +24,8 @@ func TestConfirmCreation(t *testing.T) {
 
 func TestConfirmWithTitle(t *testing.T) {
 	var result bool
-	confirm := NewConfirm().Value(&result).Title("Are you sure?")
+	confirm := NewConfirm(&result).
+		Title("Are you sure?")
 
 	if confirm.title.val != "Are you sure?" {
 		t.Errorf("Title() = %q; want %q", confirm.title.val, "Are you sure?")
@@ -32,7 +34,7 @@ func TestConfirmWithTitle(t *testing.T) {
 
 func TestConfirmWithValue(t *testing.T) {
 	var result bool
-	confirm := NewConfirm().Value(&result)
+	confirm := NewConfirm(&result)
 
 	if confirm.value != &result {
 		t.Error("Confirm value pointer not properly set")
@@ -42,7 +44,7 @@ func TestConfirmWithValue(t *testing.T) {
 func TestConfirmValidation(t *testing.T) {
 	t.Run("no title", func(t *testing.T) {
 		var result bool
-		prompt := NewConfirm().Value(&result)
+		prompt := NewConfirm(&result)
 
 		// Test that title is empty, which should cause validation to fail
 		if prompt.title.val != "" {
@@ -57,7 +59,9 @@ func TestConfirmValidation(t *testing.T) {
 	})
 
 	t.Run("no value", func(t *testing.T) {
-		prompt := NewConfirm().Title("Proceed?")
+		var result bool
+		prompt := NewConfirm(&result).
+			Title("Proceed?")
 
 		// Test that value is nil, which should cause validation to fail
 		if prompt.value != nil {
@@ -73,9 +77,11 @@ func TestConfirmValidation(t *testing.T) {
 
 func TestConfirmWithAnswerFunc(t *testing.T) {
 	var result bool
-	confirm := NewConfirm().Value(&result).Title("Continue?").AnswerFunc(func(answer string) string {
-		return "[" + answer + "]"
-	})
+	confirm := NewConfirm(&result).
+		Title("Continue?").
+		AnswerFunc(func(answer string) string {
+			return "[" + answer + "]"
+		})
 
 	// We can't test the actual interaction, but we can verify configuration
 	if confirm == nil {

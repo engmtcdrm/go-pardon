@@ -12,12 +12,10 @@ func FormBasic() {
 	age := ""
 
 	f := pardon.NewForm(
-		pardon.NewConfirm().
-			Title("Are you sure you want to proceed?").
-			Value(&continueFlag),
-		pardon.NewQuestion().
-			Title("How old are you?").
-			Value(&age),
+		pardon.NewConfirm(&continueFlag).
+			Title("Are you sure you want to proceed?"),
+		pardon.NewQuestion(&age).
+			Title("How old are you?"),
 	)
 
 	if err := f.Ask(); err != nil {

@@ -18,12 +18,13 @@ type Confirm struct {
 }
 
 // NewConfirm creates a new Confirm prompt instance.
-func NewConfirm() *Confirm {
+func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
 		icon:    eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:   eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		confirm: "Y",
 		deny:    "N",
+		value:   value,
 	}
 }
 

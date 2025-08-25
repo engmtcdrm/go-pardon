@@ -5,7 +5,8 @@ import (
 )
 
 func TestQuestionCreation(t *testing.T) {
-	question := NewQuestion()
+	var result string
+	question := NewQuestion(&result)
 
 	if question == nil {
 		t.Error("NewQuestion returned nil")
@@ -23,7 +24,8 @@ func TestQuestionCreation(t *testing.T) {
 
 func TestQuestionWithTitle(t *testing.T) {
 	var result string
-	question := NewQuestion().Value(&result).Title("What is your name?")
+	question := NewQuestion(&result).
+		Title("What is your name?")
 
 	if question.title.val != "What is your name?" {
 		t.Errorf("Title() = %q; want %q", question.title.val, "What is your name?")
@@ -32,7 +34,7 @@ func TestQuestionWithTitle(t *testing.T) {
 
 func TestQuestionWithValue(t *testing.T) {
 	var result string
-	question := NewQuestion().Value(&result)
+	question := NewQuestion(&result)
 
 	if question.value != &result {
 		t.Error("Question value pointer not properly set")
@@ -42,7 +44,7 @@ func TestQuestionWithValue(t *testing.T) {
 func TestQuestionValidation(t *testing.T) {
 	t.Run("no title", func(t *testing.T) {
 		var result string
-		prompt := NewQuestion().Value(&result)
+		prompt := NewQuestion(&result)
 
 		// Test that title is empty, which should cause validation to fail
 		if prompt.title.val != "" {
@@ -57,7 +59,9 @@ func TestQuestionValidation(t *testing.T) {
 	})
 
 	t.Run("no value", func(t *testing.T) {
-		prompt := NewQuestion().Title("Test question")
+		var result string
+		prompt := NewQuestion(&result).
+			Title("Test question")
 
 		// Test that value is nil, which should cause validation to fail
 		if prompt.value != nil {
@@ -73,12 +77,14 @@ func TestQuestionValidation(t *testing.T) {
 
 func TestQuestionWithValidate(t *testing.T) {
 	var result string
-	question := NewQuestion().Value(&result).Title("Enter name:").Validate(func(input string) error {
-		if input == "" {
-			return ErrNoValue
-		}
-		return nil
-	})
+	question := NewQuestion(&result).
+		Title("Enter name:").
+		Validate(func(input string) error {
+			if input == "" {
+				return ErrNoValue
+			}
+			return nil
+		})
 
 	// Validate functionality test - we can't easily test the actual input
 	// but we can verify the question was configured properly

@@ -13,10 +13,9 @@ func FormValidate() {
 	age := ""
 
 	f := pardon.NewForm(
-		pardon.NewConfirm().
-			Title("Are you sure you want to proceed?").
-			Value(&continueFlag),
-		pardon.NewQuestion().
+		pardon.NewConfirm(&continueFlag).
+			Title("Are you sure you want to proceed?"),
+		pardon.NewQuestion(&age).
 			Title("How old are you?").
 			Validate(func(answer string) error {
 				if answer == "" {
@@ -33,8 +32,7 @@ func FormValidate() {
 				}
 
 				return nil
-			}).
-			Value(&age),
+			}),
 	)
 
 	if err := f.Ask(); err != nil {

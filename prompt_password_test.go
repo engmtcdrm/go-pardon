@@ -5,7 +5,8 @@ import (
 )
 
 func TestPasswordCreation(t *testing.T) {
-	password := NewPassword()
+	var result []byte
+	password := NewPassword(&result)
 
 	if password == nil {
 		t.Error("NewPassword returned nil")
@@ -23,7 +24,8 @@ func TestPasswordCreation(t *testing.T) {
 
 func TestPasswordWithTitle(t *testing.T) {
 	var result []byte
-	password := NewPassword().Value(&result).Title("Enter password:")
+	password := NewPassword(&result).
+		Title("Enter password:")
 
 	if password.title.val != "Enter password:" {
 		t.Errorf("Title() = %q; want %q", password.title.val, "Enter password:")
@@ -32,7 +34,7 @@ func TestPasswordWithTitle(t *testing.T) {
 
 func TestPasswordWithValue(t *testing.T) {
 	var result []byte
-	password := NewPassword().Value(&result)
+	password := NewPassword(&result)
 
 	if password.value != &result {
 		t.Error("Password value pointer not properly set")
@@ -42,7 +44,7 @@ func TestPasswordWithValue(t *testing.T) {
 func TestPasswordValidation(t *testing.T) {
 	t.Run("no title", func(t *testing.T) {
 		var result []byte
-		prompt := NewPassword().Value(&result)
+		prompt := NewPassword(&result)
 
 		// Test that title is empty, which should cause validation to fail
 		if prompt.title.val != "" {
@@ -57,7 +59,9 @@ func TestPasswordValidation(t *testing.T) {
 	})
 
 	t.Run("no value", func(t *testing.T) {
-		prompt := NewPassword().Title("Enter password:")
+		var result []byte
+		prompt := NewPassword(&result).
+			Title("Enter password:")
 
 		// Test that value is nil, which should cause validation to fail
 		if prompt.value != nil {
@@ -73,12 +77,14 @@ func TestPasswordValidation(t *testing.T) {
 
 func TestPasswordWithValidate(t *testing.T) {
 	var result []byte
-	password := NewPassword().Value(&result).Title("Enter password:").Validate(func(input []byte) error {
-		if len(input) < 6 {
-			return ErrNoValue // Using existing error for test simplicity
-		}
-		return nil
-	})
+	password := NewPassword(&result).
+		Title("Enter password:").
+		Validate(func(input []byte) error {
+			if len(input) < 6 {
+				return ErrNoValue // Using existing error for test simplicity
+			}
+			return nil
+		})
 
 	// Validate functionality test - we can't easily test the actual input
 	// but we can verify the password was configured properly

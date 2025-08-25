@@ -10,9 +10,8 @@ import (
 
 func QuestionBasic() {
 	favColor := ""
-	question := pardon.NewQuestion().
-		Title("What is your name?").
-		Value(&favColor)
+	question := pardon.NewQuestion(&favColor).
+		Title("What is your name?")
 
 	if err := question.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

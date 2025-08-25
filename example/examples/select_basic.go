@@ -15,10 +15,9 @@ func SelectBasic() {
 	colors = append(colors, pardon.Option[int]{Key: "Green", Value: 3})
 	colors = append(colors, pardon.Option[int]{Key: "Yellow", Value: 4})
 
-	selectPrompt := pardon.NewSelect[int]().
+	selectPrompt := pardon.NewSelect(&selectedColor).
 		Title("Choose a color:").
-		Options(colors...).
-		Value(&selectedColor)
+		Options(colors...)
 
 	if err := selectPrompt.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

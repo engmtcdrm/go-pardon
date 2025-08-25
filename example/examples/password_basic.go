@@ -10,9 +10,8 @@ import (
 
 func PasswordBasic() {
 	password := []byte{}
-	passwordQuestion := pardon.NewPassword().
-		Title("Enter your password:").
-		Value(&password)
+	passwordQuestion := pardon.NewPassword(&password).
+		Title("Enter your password:")
 
 	if err := passwordQuestion.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

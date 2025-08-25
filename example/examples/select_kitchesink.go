@@ -16,7 +16,7 @@ func SelectKitchensink() {
 	colors = append(colors, pardon.Option[int]{Key: "Green", Value: 3})
 	colors = append(colors, pardon.Option[int]{Key: "Yellow", Value: 4})
 
-	selectPrompt := pardon.NewSelect[int]().
+	selectPrompt := pardon.NewSelect(&selectedColor).
 		Title("Choose a color:").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
@@ -35,8 +35,7 @@ func SelectKitchensink() {
 		SelectFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s%s", ansi.RedBg, ansi.Cyan, s, ansi.Reset)
 		}).
-		Options(colors...).
-		Value(&selectedColor)
+		Options(colors...)
 
 	if err := selectPrompt.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

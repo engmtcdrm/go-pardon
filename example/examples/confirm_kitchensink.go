@@ -11,7 +11,7 @@ import (
 func ConfirmKitchensink() {
 	continueFlag := true
 
-	confirm := pardon.NewConfirm().
+	confirm := pardon.NewConfirm(&continueFlag).
 		Title("Are you sure you want to proceed?").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.MagentaBg, s, ansi.Reset)
@@ -22,8 +22,7 @@ func ConfirmKitchensink() {
 		}).
 		AnswerFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.BlueBg, s, ansi.Reset)
-		}).
-		Value(&continueFlag)
+		})
 
 	if err := confirm.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

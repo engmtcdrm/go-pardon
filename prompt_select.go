@@ -3,11 +3,11 @@ package pardon
 import (
 	"fmt"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/keys"
 	"github.com/engmtcdrm/go-pardon/tui"
+	"github.com/mattn/go-runewidth"
 )
 
 // Select represents a multiple-choice selection prompt.
@@ -24,12 +24,13 @@ type Select[T comparable] struct {
 }
 
 // NewSelect creates a new Select prompt instance.
-func NewSelect[T comparable]() *Select[T] {
+func NewSelect[T comparable](value *T) *Select[T] {
 	return &Select[T]{
 		icon:    eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:   eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		cursor:  eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
 		options: make([]Option[T], 0),
+		value:   value,
 	}
 }
 
@@ -198,7 +199,7 @@ func (sel *Select[T]) renderOptions(redraw bool) {
 		// Build all lines in memory first
 		for i := sel.scrollOffset; i < tui.Min(sel.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := sel.options[i]
-			cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
+			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.StripCodes(selectCursor)))
 
 			// Clear line and build content
 			output.WriteString("\r")
@@ -221,7 +222,7 @@ func (sel *Select[T]) renderOptions(redraw bool) {
 		// Initial render without redraw
 		for i := sel.scrollOffset; i < tui.Min(sel.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := sel.options[i]
-			cursor := strings.Repeat(" ", utf8.RuneCountInString(ansi.StripCodes(selectCursor)))
+			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.StripCodes(selectCursor)))
 
 			if i == sel.cursorPos {
 				cursor = sel.getSelectFunc(selectCursor)

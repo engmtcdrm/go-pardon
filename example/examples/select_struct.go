@@ -20,10 +20,9 @@ func SelectStruct() {
 	colors = append(colors, pardon.Option[Color]{Key: "Green", Value: Color{Name: "Green", ID: 3}})
 	colors = append(colors, pardon.Option[Color]{Key: "Yellow", Value: Color{Name: "Yellow", ID: 4}})
 
-	menu := pardon.NewSelect[Color]().
+	menu := pardon.NewSelect(&selectedColor).
 		Title("Choose a color:").
-		Options(colors...).
-		Value(&selectedColor)
+		Options(colors...)
 
 	if err := menu.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

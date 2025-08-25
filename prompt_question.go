@@ -16,11 +16,11 @@ type Question struct {
 }
 
 // NewQuestion creates a new Question prompt instance.
-func NewQuestion() *Question {
+func NewQuestion(value *string) *Question {
 	return &Question{
 		icon:  eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title: eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		value: nil,
+		value: value,
 		tui:   tui.NewStringPrompt(),
 	}
 }

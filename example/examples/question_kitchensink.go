@@ -10,7 +10,7 @@ import (
 
 func QuestionKitchensink() {
 	favColor := ""
-	question := pardon.NewQuestion().
+	question := pardon.NewQuestion(&favColor).
 		Title("What is your favorite color?").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
@@ -34,8 +34,7 @@ func QuestionKitchensink() {
 				}
 			}
 			return fmt.Errorf("invalid color: %s, must be one of: %v", input, validColors)
-		}).
-		Value(&favColor)
+		})
 
 	if err := question.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)
