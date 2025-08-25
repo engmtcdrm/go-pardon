@@ -2,7 +2,7 @@
 
 ## Known Issues
 
-- [ ] Unicode East Asian Width and some Emojis might not work correctly for selector cursor in Select prompt.
+- [X] Unicode East Asian Width and some Emojis might not work correctly for selector cursor in Select prompt.
 
 ## Functionality Tasks
 
