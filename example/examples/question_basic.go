@@ -9,8 +9,8 @@ import (
 )
 
 func QuestionBasic() {
-	favColor := ""
-	question := pardon.NewQuestion(&favColor).
+	name := ""
+	question := pardon.NewQuestion(&name).
 		Title("What is your name?")
 
 	if err := question.Ask(); err != nil {
@@ -18,7 +18,7 @@ func QuestionBasic() {
 		return
 	}
 
-	fmt.Printf("Your name is %s%s%s\n", ansi.Green, favColor, ansi.Reset)
+	fmt.Printf("Your name is %s%s%s\n", ansi.Green, name, ansi.Reset)
 
 	os.Exit(0)
 }
