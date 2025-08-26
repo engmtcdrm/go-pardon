@@ -3,6 +3,7 @@
 ## Known Issues
 
 - [X] Unicode East Asian Width and some Emojis might not work correctly for selector cursor in Select prompt.
+- [ ] Issue when validation messaging is longer than terminal width
 
 ## Functionality Tasks
 
