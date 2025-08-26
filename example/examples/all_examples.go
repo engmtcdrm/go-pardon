@@ -8,8 +8,6 @@ type Example struct {
 var AllExamples = []Example{
 	{"Confirm - Basic", ConfirmBasic},
 	{"Confirm - Kitchen Sink", ConfirmKitchensink},
-	{"Form - Basic", FormBasic},
-	{"Form - Validate", FormValidate},
 	{"Password - Basic", PasswordBasic},
 	{"Password - Validate", PasswordValidate},
 	{"Password - Kitchen Sink", PasswordKitchesink},
@@ -19,4 +17,7 @@ var AllExamples = []Example{
 	{"Select - Basic", SelectBasic},
 	{"Select - Struct", SelectStruct},
 	{"Select - Kitchen Sink", SelectKitchensink},
+	{"Form - Basic", FormBasic},
+	{"Form - Validate", FormValidate},
+	{"Reusing a Prompt", ReusingPrompt},
 }
