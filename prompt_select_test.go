@@ -218,3 +218,103 @@ func TestNewOption(t *testing.T) {
 		t.Errorf("NewOption Value = %q; want %q", option.Value, "test value")
 	}
 }
+
+func TestSelectWithIcon(t *testing.T) {
+	options := []Option[string]{
+		{Key: "Option 1", Value: "value1"},
+	}
+
+	var result string
+	selectPrompt := NewSelect(&result).
+		Options(options...).
+		Icon("🎯 ")
+
+	if selectPrompt.icon.val != "🎯 " {
+		t.Errorf("Icon() = %q; want %q", selectPrompt.icon.val, "🎯 ")
+	}
+}
+
+func TestSelectWithIconFunc(t *testing.T) {
+	options := []Option[string]{
+		{Key: "Option 1", Value: "value1"},
+	}
+
+	var result string
+	selectPrompt := NewSelect(&result).
+		Options(options...).
+		IconFunc(func(input string) string {
+			return "🚀 "
+		})
+
+	if selectPrompt.icon.fn == nil {
+		t.Error("IconFunc should set the icon function")
+	}
+}
+
+func TestSelectWithTitleFunc(t *testing.T) {
+	options := []Option[string]{
+		{Key: "Option 1", Value: "value1"},
+	}
+
+	var result string
+	selectPrompt := NewSelect(&result).
+		Options(options...).
+		TitleFunc(func(input string) string {
+			return "Choose: " + input
+		})
+
+	if selectPrompt.title.fn == nil {
+		t.Error("TitleFunc should set the title function")
+	}
+}
+
+func TestSelectWithCursorFunc(t *testing.T) {
+	options := []Option[string]{
+		{Key: "Option 1", Value: "value1"},
+	}
+
+	var result string
+	selectPrompt := NewSelect(&result).
+		Options(options...).
+		CursorFunc(func(input string) string {
+			return "⭐ "
+		})
+
+	if selectPrompt.cursor.fn == nil {
+		t.Error("CursorFunc should set the cursor function")
+	}
+}
+
+func TestSelectWithSelectFunc(t *testing.T) {
+	options := []Option[string]{
+		{Key: "Option 1", Value: "value1"},
+	}
+
+	var result string
+	selectPrompt := NewSelect(&result).
+		Options(options...).
+		SelectFunc(func(input string) string {
+			return "✓ " + input
+		})
+
+	if selectPrompt.selectFn == nil {
+		t.Error("SelectFunc should set the select function")
+	}
+}
+
+func TestSelectWithAnswerFunc(t *testing.T) {
+	options := []Option[string]{
+		{Key: "Option 1", Value: "value1"},
+	}
+
+	var result string
+	selectPrompt := NewSelect(&result).
+		Options(options...).
+		AnswerFunc(func(answer string) string {
+			return "[SELECTED: " + answer + "]"
+		})
+
+	if selectPrompt.answerFn == nil {
+		t.Error("AnswerFunc should set the answer function")
+	}
+}

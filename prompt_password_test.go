@@ -82,3 +82,50 @@ func TestPasswordWithValidate(t *testing.T) {
 		t.Error("Password with validation returned nil")
 	}
 }
+
+func TestPasswordWithIcon(t *testing.T) {
+	var result []byte
+	password := NewPassword(&result).
+		Icon("🔐 ")
+
+	if password.icon.val != "🔐 " {
+		t.Errorf("Icon() = %q; want %q", password.icon.val, "🔐 ")
+	}
+}
+
+func TestPasswordWithIconFunc(t *testing.T) {
+	var result []byte
+	password := NewPassword(&result).
+		IconFunc(func(input string) string {
+			return "🛡️ "
+		})
+
+	if password.icon.fn == nil {
+		t.Error("IconFunc should set the icon function")
+	}
+}
+
+func TestPasswordWithTitleFunc(t *testing.T) {
+	var result []byte
+	password := NewPassword(&result).
+		TitleFunc(func(input string) string {
+			return "Secure: " + input
+		})
+
+	if password.title.fn == nil {
+		t.Error("TitleFunc should set the title function")
+	}
+}
+
+func TestPasswordWithAnswerFunc(t *testing.T) {
+	var result []byte
+	password := NewPassword(&result).
+		Title("Password").
+		AnswerFunc(func(answer string) string {
+			return "***hidden***"
+		})
+
+	if password.answerFn == nil {
+		t.Error("AnswerFunc should set the answer function")
+	}
+}

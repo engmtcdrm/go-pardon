@@ -82,3 +82,50 @@ func TestQuestionWithValidate(t *testing.T) {
 		t.Error("Question with validation returned nil")
 	}
 }
+
+func TestQuestionWithIcon(t *testing.T) {
+	var result string
+	question := NewQuestion(&result).
+		Icon("➤ ")
+
+	if question.icon.val != "➤ " {
+		t.Errorf("Icon() = %q; want %q", question.icon.val, "➤ ")
+	}
+}
+
+func TestQuestionWithIconFunc(t *testing.T) {
+	var result string
+	question := NewQuestion(&result).
+		IconFunc(func(input string) string {
+			return "🔍 "
+		})
+
+	if question.icon.fn == nil {
+		t.Error("IconFunc should set the icon function")
+	}
+}
+
+func TestQuestionWithTitleFunc(t *testing.T) {
+	var result string
+	question := NewQuestion(&result).
+		TitleFunc(func(input string) string {
+			return "Dynamic: " + input
+		})
+
+	if question.title.fn == nil {
+		t.Error("TitleFunc should set the title function")
+	}
+}
+
+func TestQuestionWithAnswerFunc(t *testing.T) {
+	var result string
+	question := NewQuestion(&result).
+		Title("Test").
+		AnswerFunc(func(answer string) string {
+			return "[" + answer + "]"
+		})
+
+	if question.answerFn == nil {
+		t.Error("AnswerFunc should set the answer function")
+	}
+}

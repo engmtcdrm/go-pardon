@@ -73,3 +73,37 @@ func TestConfirmWithAnswerFunc(t *testing.T) {
 		t.Error("Confirm with answer function returned nil")
 	}
 }
+
+func TestConfirmWithIcon(t *testing.T) {
+	var result bool
+	confirm := NewConfirm(&result).
+		Icon("❓ ")
+
+	if confirm.icon.val != "❓ " {
+		t.Errorf("Icon() = %q; want %q", confirm.icon.val, "❓ ")
+	}
+}
+
+func TestConfirmWithIconFunc(t *testing.T) {
+	var result bool
+	confirm := NewConfirm(&result).
+		IconFunc(func(input string) string {
+			return "⚡ "
+		})
+
+	if confirm.icon.fn == nil {
+		t.Error("IconFunc should set the icon function")
+	}
+}
+
+func TestConfirmWithTitleFunc(t *testing.T) {
+	var result bool
+	confirm := NewConfirm(&result).
+		TitleFunc(func(input string) string {
+			return "Confirm: " + input
+		})
+
+	if confirm.title.fn == nil {
+		t.Error("TitleFunc should set the title function")
+	}
+}
