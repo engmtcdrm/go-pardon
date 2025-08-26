@@ -28,7 +28,6 @@ func NewPassword(value *[]byte) *Password {
 // Title sets a static title for the password prompt.
 func (p *Password) Title(title string) *Password {
 	p.title.val = title
-	p.title.fn = nil
 	return p
 }
 

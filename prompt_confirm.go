@@ -31,7 +31,6 @@ func NewConfirm(value *bool) *Confirm {
 // Title sets a static title for the confirmation prompt.
 func (c *Confirm) Title(title string) *Confirm {
 	c.title.val = title
-	c.title.fn = nil
 	return c
 }
 

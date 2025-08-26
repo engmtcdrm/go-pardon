@@ -28,7 +28,6 @@ func NewQuestion(value *string) *Question {
 // Title sets the question text.
 func (q *Question) Title(title string) *Question {
 	q.title.val = title
-	q.title.fn = nil
 	return q
 }
 

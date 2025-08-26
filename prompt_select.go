@@ -37,7 +37,6 @@ func NewSelect[T comparable](value *T) *Select[T] {
 // Title sets the prompt title text that will be displayed to the user.
 func (sel *Select[T]) Title(title string) *Select[T] {
 	sel.title.val = title
-	sel.title.fn = nil
 	return sel
 }
 
