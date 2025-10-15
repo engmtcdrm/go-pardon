@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
 
 func TestInputPromptCreation(t *testing.T) {

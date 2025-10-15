@@ -3,8 +3,8 @@ package pardon
 import (
 	"fmt"
 
-	"github.com/engmtcdrm/go-pardon/keys"
-	"github.com/engmtcdrm/go-pardon/tui"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
+	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 // Confirm represents a yes/no confirmation prompt for user decisions.

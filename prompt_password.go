@@ -3,7 +3,7 @@ package pardon
 import (
 	"fmt"
 
-	"github.com/engmtcdrm/go-pardon/tui"
+	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 // Password represents a password input prompt that securely collects sensitive information.

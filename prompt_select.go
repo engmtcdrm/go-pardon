@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/keys"
-	"github.com/engmtcdrm/go-pardon/tui"
 	"github.com/mattn/go-runewidth"
+
+	"github.com/engmtcdrm/go-pardon/internal/keys"
+	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 // Select represents a multiple-choice selection prompt.

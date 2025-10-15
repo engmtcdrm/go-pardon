@@ -7,16 +7,14 @@ import (
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 	"golang.org/x/term"
 )
 
 var (
 	// ErrUserAborted is returned when the user cancels a prompt operation.
 	ErrUserAborted = errors.New("user aborted")
-)
 
-var (
 	// navigationKeys defines a map of byte keycodes for navigation actions.
 	// These keys are used for cursor movement and selection in interactive prompts.
 	navigationKeys = map[byte]bool{

@@ -3,7 +3,7 @@ package pardon
 import (
 	"fmt"
 
-	"github.com/engmtcdrm/go-pardon/tui"
+	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 // Question represents a text input prompt for user questions.
