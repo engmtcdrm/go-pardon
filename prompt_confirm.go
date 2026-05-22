@@ -110,22 +110,22 @@ func (c *Confirm) Ask() error {
 		keyCode := tui.GetInput()
 
 		switch keyCode {
-		case keys.KeyYesUpper, keys.KeyYes:
+		case keys.YesUpper, keys.Yes:
 			*c.value = true
 			fmt.Print(c.formatFinalOutput(question, c.confirm))
 			return nil
-		case keys.KeyNoUpper, keys.KeyNo:
+		case keys.NoUpper, keys.No:
 			*c.value = false
 			fmt.Print(c.formatFinalOutput(question, c.deny))
 			return nil
-		case keys.KeyEnter, keys.KeyCarriageReturn:
+		case keys.Enter, keys.CarriageReturn:
 			if *c.value {
 				fmt.Print(c.formatFinalOutput(question, c.confirm))
 			} else {
 				fmt.Print(c.formatFinalOutput(question, c.deny))
 			}
 			return nil
-		case keys.KeyCtrlC, keys.KeyEscape:
+		case keys.CtrlC, keys.Escape:
 			fmt.Println()
 			return ErrUserAborted
 		}

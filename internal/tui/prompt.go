@@ -18,10 +18,10 @@ var (
 	// navigationKeys defines a map of byte keycodes for navigation actions.
 	// These keys are used for cursor movement and selection in interactive prompts.
 	navigationKeys = map[byte]bool{
-		keys.KeyUp:    true,
-		keys.KeyDown:  true,
-		keys.KeyLeft:  true,
-		keys.KeyRight: true,
+		keys.Up:    true,
+		keys.Down:  true,
+		keys.Left:  true,
+		keys.Right: true,
 	}
 
 	// lastInputWasEscSeq tracks whether the previous input was part of an escape sequence.
@@ -192,7 +192,7 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 		keyCode := GetInput()
 
 		switch keyCode {
-		case keys.KeyEnter, keys.KeyCarriageReturn:
+		case keys.Enter, keys.CarriageReturn:
 			if err := p.validateFn(input); err != nil {
 				lastError = err.Error()
 				showError = true
@@ -221,7 +221,7 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 			}
 			fmt.Print(finalOutput)
 			return nil
-		case keys.KeyCtrlC:
+		case keys.CtrlC:
 			// Clear any error lines
 			var finalOutput string
 
@@ -232,11 +232,11 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 			}
 			fmt.Print(finalOutput)
 			return ErrUserAborted
-		case keys.KeyBackspace:
+		case keys.Backspace:
 			input = p.removeLastFn(input)
 			showError = false
 			redraw()
-		case keys.KeyUp, keys.KeyDown, keys.KeyLeft, keys.KeyRight:
+		case keys.Up, keys.Down, keys.Left, keys.Right:
 			// Only treat as navigation keys if they came from escape sequences
 			if lastInputWasEscSeq {
 				showError = false
@@ -304,7 +304,7 @@ func GetInput() byte {
 	}
 
 	// Handle escape sequences (arrow keys)
-	if read == 3 && readBytes[0] == keys.KeyEscape && readBytes[1] == keys.KeyLeftBracket {
+	if read == 3 && readBytes[0] == keys.Escape && readBytes[1] == keys.LeftBracket {
 		// This is a proper ANSI escape sequence (ESC[X)
 		if _, ok := navigationKeys[readBytes[2]]; ok {
 			lastInputWasEscSeq = true

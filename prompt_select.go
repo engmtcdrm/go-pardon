@@ -156,17 +156,17 @@ func (sel *Select[T]) Ask() error {
 		keyCode := tui.GetInput()
 
 		switch keyCode {
-		case keys.KeyCtrlC:
+		case keys.CtrlC:
 			return ErrUserAborted
-		case keys.KeyEnter, keys.KeyCarriageReturn:
+		case keys.Enter, keys.CarriageReturn:
 			*sel.value = sel.options[sel.cursorPos].Value
 			visibleOptions := tui.Min(len(sel.options), tui.GetTerminalHeight()-3)
 			tui.RenderClearAndReposition(visibleOptions+1, sel.icon.Get(), sel.title.Get(), sel.getAnswerFunc(sel.options[sel.cursorPos].Key))
 			return nil
-		case keys.KeyUp:
+		case keys.Up:
 			sel.cursorPos = (sel.cursorPos + len(sel.options) - 1) % len(sel.options)
 			sel.renderOptions(true)
-		case keys.KeyDown:
+		case keys.Down:
 			sel.cursorPos = (sel.cursorPos + 1) % len(sel.options)
 			sel.renderOptions(true)
 		}

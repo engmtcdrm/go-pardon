@@ -10,21 +10,22 @@ func TestKeyConstants(t *testing.T) {
 		key      byte
 		expected byte
 	}{
-		{"Ctrl+C", KeyCtrlC, 3},
-		{"Delete", KeyDelete, 8},
-		{"Carriage Return", KeyCarriageReturn, 10},
-		{"Enter", KeyEnter, 13},
-		{"Escape", KeyEscape, 27},
-		{"Up Arrow", KeyUp, 65},
-		{"Down Arrow", KeyDown, 66},
-		{"Right Arrow", KeyRight, 67},
-		{"Left Arrow", KeyLeft, 68},
-		{"No Upper", KeyNoUpper, 78},
-		{"Yes Upper", KeyYesUpper, 89},
-		{"Left Bracket", KeyLeftBracket, 91},
-		{"No", KeyNo, 110},
-		{"Yes", KeyYes, 121},
-		{"Backspace", KeyBackspace, 127},
+		{"Ctrl+C", CtrlC, 3},
+		{"Delete", Delete, 8},
+		{"Carriage Return", CarriageReturn, 10},
+		{"Enter", Enter, 13},
+		{"Escape", Escape, 27},
+		{"Up Arrow", Up, 65},
+		{"Down Arrow", Down, 66},
+		{"Right Arrow", Right, 67},
+		{"Left Arrow", Left, 68},
+		{"No Upper", NoUpper, 78},
+		{"Yes Upper", YesUpper, 89},
+		{"Left Bracket", LeftBracket, 91},
+		{"No", No, 110},
+		{"Yes", Yes, 121},
+		{"Backspace", Backspace, 127},
+		{"Capital O", CapitalO, byte('O')},
 	}
 
 	for _, tt := range tests {
@@ -39,10 +40,10 @@ func TestKeyConstants(t *testing.T) {
 func TestArrowKeys(t *testing.T) {
 	// Test arrow key constants
 	arrowKeys := map[string]byte{
-		"Up":    KeyUp,
-		"Down":  KeyDown,
-		"Right": KeyRight,
-		"Left":  KeyLeft,
+		"Up":    Up,
+		"Down":  Down,
+		"Right": Right,
+		"Left":  Left,
 	}
 
 	expectedValues := map[string]byte{
@@ -69,10 +70,10 @@ func TestConfirmationKeys(t *testing.T) {
 		key      byte
 		expected byte
 	}{
-		{"Yes lowercase", KeyYes, 121},
-		{"Yes uppercase", KeyYesUpper, 89},
-		{"No lowercase", KeyNo, 110},
-		{"No uppercase", KeyNoUpper, 78},
+		{"Yes lowercase", Yes, 121},
+		{"Yes uppercase", YesUpper, 89},
+		{"No lowercase", No, 110},
+		{"No uppercase", NoUpper, 78},
 	}
 
 	for _, tt := range confirmKeys {
@@ -90,13 +91,13 @@ func TestSpecialKeys(t *testing.T) {
 		key      byte
 		expected byte
 	}{
-		{"Ctrl+C", KeyCtrlC, 3},
-		{"Delete", KeyDelete, 8},
-		{"Enter", KeyEnter, 13},
-		{"Carriage Return", KeyCarriageReturn, 10},
-		{"Escape", KeyEscape, 27},
-		{"Backspace", KeyBackspace, 127},
-		{"Left Bracket", KeyLeftBracket, 91},
+		{"Ctrl+C", CtrlC, 3},
+		{"Delete", Delete, 8},
+		{"Enter", Enter, 13},
+		{"Carriage Return", CarriageReturn, 10},
+		{"Escape", Escape, 27},
+		{"Backspace", Backspace, 127},
+		{"Left Bracket", LeftBracket, 91},
 	}
 
 	for _, tt := range specialKeys {
@@ -111,12 +112,12 @@ func TestSpecialKeys(t *testing.T) {
 // Test that key constants are reasonable
 func TestKeyRanges(t *testing.T) {
 	// Control characters should be in range 1-31
-	if KeyCtrlC < 1 || KeyCtrlC > 31 {
+	if CtrlC < 1 || CtrlC > 31 {
 		t.Error("KeyCtrlC should be in control character range (1-31)")
 	}
 
 	// Arrow keys should be in the expected ANSI range
-	arrowKeys := []byte{KeyUp, KeyDown, KeyRight, KeyLeft}
+	arrowKeys := []byte{Up, Down, Right, Left}
 	for i, key := range arrowKeys {
 		if key < 65 || key > 68 {
 			t.Errorf("Arrow key %d should be in range 65-68, got %d", i, key)
@@ -124,7 +125,7 @@ func TestKeyRanges(t *testing.T) {
 	}
 
 	// Yes/No keys should be printable ASCII
-	yesNoKeys := []byte{KeyYes, KeyYesUpper, KeyNo, KeyNoUpper}
+	yesNoKeys := []byte{Yes, YesUpper, No, NoUpper}
 	for _, key := range yesNoKeys {
 		if key < 32 || key > 126 {
 			t.Errorf("Yes/No key %d should be in printable ASCII range (32-126)", key)

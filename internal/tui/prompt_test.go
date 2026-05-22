@@ -29,14 +29,14 @@ func TestControlCharacterFiltering(t *testing.T) {
 		keyCode  byte
 		expected bool // true if should be allowed, false if filtered
 	}{
-		{"Control character - Ctrl+A", keys.KeyCtrlC, false},
+		{"Control character - Ctrl+A", keys.CtrlC, false},
 		{"Printable character - space", 32, true},
 		{"Printable character - 'a'", 97, true},
 		{"Printable character - '0'", 48, true},
 		{"High ASCII character", 128, true},
 		{"Tab character", 9, false},
 		{"Newline character", 10, false},
-		{"Delete character", keys.KeyDelete, false},
+		{"Delete character", keys.Delete, false},
 	}
 
 	for _, tt := range tests {
