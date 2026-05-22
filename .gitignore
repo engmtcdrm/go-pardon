@@ -17,4 +17,5 @@ vendor/
 # Temporary files
 ___*
 
-example/example
+examples/examples
+__debug_bin*
