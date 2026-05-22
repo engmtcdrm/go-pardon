@@ -1,18 +1,27 @@
-package examples
+package internal
 
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon"
 )
 
-func PasswordValidate() {
+func PasswordKitchesink() {
 	password := []byte{}
 	passwordQuestion := pardon.NewPassword(&password).
 		Title("Enter your password:").
+		TitleFunc(func(s string) string {
+			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
+		}).
+		Icon("§ ").
+		IconFunc(func(s string) string {
+			return fmt.Sprintf("%s%s%s", ansi.Red, s, ansi.Reset)
+		}).
+		AnswerFunc(func(s string) string {
+			return fmt.Sprintf("%s%s%s", ansi.BlueBg, s, ansi.Reset)
+		}).
 		Validate(func(input []byte) error {
 			if len(input) < 8 {
 				return fmt.Errorf("password must be at least 8 characters long")
@@ -31,14 +40,4 @@ func PasswordValidate() {
 	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, string(password), ansi.Reset)
 
 	os.Exit(0)
-}
-
-func containsSpecialChar(input []byte) bool {
-	specialChars := "!@#$%^&*()-_=+[]{}|;:',.<>?/"
-	for _, char := range input {
-		if strings.ContainsRune(specialChars, rune(char)) {
-			return true
-		}
-	}
-	return false
 }

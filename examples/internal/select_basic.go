@@ -1,14 +1,13 @@
-package examples
+package internal
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon"
 )
 
-func SelectKitchensink() {
+func SelectBasic() {
 	var selectedColor int
 	colors := []pardon.Option[int]{}
 	colors = append(colors, pardon.Option[int]{Key: "Red", Value: 1})
@@ -18,23 +17,6 @@ func SelectKitchensink() {
 
 	selectPrompt := pardon.NewSelect(&selectedColor).
 		Title("Choose a color:").
-		TitleFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
-		}).
-		Icon("??? ").
-		IconFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s", ansi.Blue, s, ansi.Reset)
-		}).
-		AnswerFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s", ansi.CyanBg, s, ansi.Reset)
-		}).
-		Cursor("» ").
-		CursorFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s%s", ansi.Magenta, ansi.YellowBg, s, ansi.Reset)
-		}).
-		SelectFunc(func(s string) string {
-			return fmt.Sprintf("%s%s%s%s", ansi.RedBg, ansi.Cyan, s, ansi.Reset)
-		}).
 		Options(colors...)
 
 	if err := selectPrompt.Ask(); err != nil {
