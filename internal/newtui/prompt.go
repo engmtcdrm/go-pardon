@@ -1,4 +1,4 @@
-package new
+package newtui
 
 import (
 	"errors"
@@ -21,32 +21,37 @@ var (
 type InputPrompt struct {
 	answerFn   func(string) string
 	validateFn func(string) error
-	hidden     bool
-	input      *Input
-	prompt     string
-	value      *string
+
+	// Hide indicates whether the input should be hidden (e.g., for password
+	// input).
+	hide bool
+
+	input  *Input
+	prompt string
+	value  *string
 }
 
 // NewStringPrompt creates an InputPrompt for plaintext string input.
-func NewStringPrompt() *InputPrompt {
+func NewStringPrompt(value *string) *InputPrompt {
 	return &InputPrompt{
 		answerFn:   func(s string) string { return s },
 		validateFn: func(s string) error { return nil },
-		hidden:     false,
+		hide:       false,
 		input:      NewInput(),
+		value:      value,
 	}
 }
 
 // NewPasswordPrompt creates an InputPrompt for secure password input with masking.
-func NewPasswordPrompt() *InputPrompt {
-	inputPrompt := NewStringPrompt()
+func NewPasswordPrompt(value *string) *InputPrompt {
+	inputPrompt := NewStringPrompt(value)
 	inputPrompt.Hidden(true)
 	return inputPrompt
 }
 
 func (p *InputPrompt) Hidden(hidden bool) *InputPrompt {
-	p.hidden = hidden
-	p.input.Hidden = hidden
+	p.hide = hidden
+	p.input.Hide = hidden
 	return p
 }
 
@@ -64,17 +69,16 @@ func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
 	return p
 }
 
-func (p *InputPrompt) Display(prompt string, value *string) error {
+func (p *InputPrompt) Display(prompt string) error {
 	if prompt == "" {
 		return ErrNoPrompt
 	}
 
-	if value == nil {
+	if p.value == nil {
 		return ErrNoValue
 	}
 
 	p.prompt = prompt
-	p.value = value
 
 	err := p.display()
 	if err != nil {
@@ -109,27 +113,30 @@ func (p *InputPrompt) display() error {
 }
 
 func (p *InputPrompt) printErrorMessage(err error) {
+	builder := strings.Builder{}
 	// Have to manually jump to the next line if the input is hidden, otherwise
 	// the error message will be printed on the same line as the prompt.
-	if p.hidden {
-		fmt.Println()
+	if p.hide {
+		builder.WriteByte('\n')
 	}
 
-	fmt.Print(buildValidationErrorMessage(err))
-	fmt.Print(ansi.CursorUp(1) + ansi.ClearLineReset)
-	fmt.Print(p.prompt + " ")
+	builder.WriteString(buildValidationErrorMessage(err))
+	builder.WriteString(ansi.CursorUp(1) + ansi.ClearLineReset)
+	builder.WriteString(p.prompt + " ")
+	fmt.Print(builder.String())
 }
 
 func (p *InputPrompt) printFinalPromptLine() {
+	builder := strings.Builder{}
 	// If the input is not hidden, let's redraw the prompt and call the answer
 	// function to look pretty.
-	if !p.hidden {
-		fmt.Print(ansi.CursorUp(1) + ansi.ClearLineReset)
-		fmt.Print(p.prompt + " " + p.answerFn(*p.value))
-
+	if !p.hide {
+		builder.WriteString(ansi.CursorUp(1) + ansi.ClearLineReset)
+		builder.WriteString(p.prompt + " " + p.answerFn(*p.value))
 	}
 
-	fmt.Print("\n" + ansi.ClearLineReset)
+	builder.WriteString("\n" + ansi.ClearLineReset)
+	fmt.Print(builder.String())
 }
 
 func buildValidationErrorMessage(err error) string {

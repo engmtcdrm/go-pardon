@@ -1,4 +1,4 @@
-package new
+package newtui
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/engmtcdrm/go-pardon/internal/new/keys"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
 
 type Input struct {
-	// Hidden indicates whether the input should be hidden (e.g., for password
+	// Hide indicates whether the input should be hidden (e.g., for password
 	// input).
-	Hidden bool
+	Hide bool
 
 	writer io.Writer
 	result []rune
@@ -21,7 +21,7 @@ type Input struct {
 
 func NewInput() *Input {
 	return &Input{
-		Hidden: false,
+		Hide:   false,
 		writer: os.Stdout,
 	}
 }
@@ -163,7 +163,7 @@ func (i *Input) handleEscapeSequence(pending []byte) ([]byte, bool) {
 
 // print writes the given arguments to the terminal if [Input.Hidden] is false.
 func (i *Input) print(a ...any) {
-	if !i.Hidden {
+	if !i.Hide {
 		fmt.Fprint(i.writer, a...)
 	}
 }
