@@ -1,19 +1,29 @@
 .PHONY: build runexe run test testv
 
 build:
-	echo "Size before build:"; ls -la example |grep example; ls -lh example |grep example; echo "\n\nSize after build:"; go build --ldflags "-s -w" -o example/example ./example; ls -la example |grep example; ls -lh example |grep example
+	@
+	cd examples; \
+	echo "Size before build:"; \
+	ls -la examples |grep examples; \
+	ls -lh examples |grep examples; \
+	echo "\n\nSize after build:"; \
+	go build --ldflags "-s -w" -o examples; \
+	ls -la examples |grep examples; \
+	ls -lh examples |grep examples
 
 check-build-files:
-	go list -f '{{.GoFiles}}' . ./tui ./keys
+	@go list -f '{{.GoFiles}}' . ./tui ./keys
 
 runexe:
-	./example/example
+	@./examples/examples
 
 run:
-	go run ./example/main.go
+	@cd examples; \
+	go run .; \
+	cd ..
 
 test:
-	go test ./...
+	@go test ./...
 
 testv:
-	go test -v ./...
+	@go test -v ./...
