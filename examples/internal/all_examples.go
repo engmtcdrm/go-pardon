@@ -3,6 +3,9 @@ package internal
 import "github.com/engmtcdrm/go-eggy"
 
 var AllExamples = []eggy.Example{
+	{Name: "New Question - Basic", Fn: ExampleNewQuestion},
+	{Name: "New Question - Validate", Fn: NewQuestionValidate},
+	{Name: "New Question - Kitchen Sink", Fn: NewQuestionKitchensink},
 	{Name: "Confirm - Basic", Fn: ConfirmBasic},
 	{Name: "Confirm - Kitchen Sink", Fn: ConfirmKitchensink},
 	{Name: "Password - Basic", Fn: PasswordBasic},

@@ -1,4 +1,4 @@
-package newtui
+package pardon
 
 import (
 	"fmt"
@@ -161,7 +161,7 @@ func (i *Input) handleEscapeSequence(pending []byte) ([]byte, bool) {
 	// }
 }
 
-// print writes the given arguments to the terminal if [Input.Hidden] is false.
+// print writes the given arguments to the terminal if [Input.Hide] is false.
 func (i *Input) print(a ...any) {
 	if !i.Hide {
 		fmt.Fprint(i.writer, a...)

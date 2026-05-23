@@ -1,4 +1,4 @@
-package newtui
+package pardon
 
 import (
 	"errors"
@@ -11,14 +11,12 @@ import (
 )
 
 var (
-	// ErrUserAborted is returned when the user cancels a prompt operation.
-	ErrUserAborted = errors.New("user aborted")
-
 	ErrNoPrompt = errors.New("prompt requires a prompt")
-	ErrNoValue  = errors.New("value must be set")
 )
 
 type InputPrompt struct {
+	icon       eval[string]
+	title      eval[string]
 	answerFn   func(string) string
 	validateFn func(string) error
 
@@ -45,13 +43,25 @@ func NewStringPrompt(value *string) *InputPrompt {
 // NewPasswordPrompt creates an InputPrompt for secure password input with masking.
 func NewPasswordPrompt(value *string) *InputPrompt {
 	inputPrompt := NewStringPrompt(value)
-	inputPrompt.Hidden(true)
+	inputPrompt.Hide(true)
 	return inputPrompt
 }
 
-func (p *InputPrompt) Hidden(hidden bool) *InputPrompt {
-	p.hide = hidden
-	p.input.Hide = hidden
+func (p *InputPrompt) Hide(hide bool) *InputPrompt {
+	p.hide = hide
+	p.input.Hide = hide
+	return p
+}
+
+// Title sets the question text.
+func (p *InputPrompt) Title(title string) *InputPrompt {
+	p.title.val = title
+	return p
+}
+
+// TitleFunc sets a dynamic title function.
+func (p *InputPrompt) TitleFunc(fn func(string) string) *InputPrompt {
+	p.title.fn = fn
 	return p
 }
 
@@ -69,18 +79,37 @@ func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
 	return p
 }
 
-func (p *InputPrompt) Display(prompt string) error {
-	if prompt == "" {
-		return ErrNoPrompt
+// Value sets a default input value.
+func (p *InputPrompt) Value(value *string) *InputPrompt {
+	p.value = value
+	return p
+}
+
+// Icon sets the prompt icon.
+func (p *InputPrompt) Icon(s string) *InputPrompt {
+	p.icon.val = s
+	p.icon.fn = nil
+	return p
+}
+
+// IconFunc sets a dynamic icon function.
+func (p *InputPrompt) IconFunc(fn func(string) string) *InputPrompt {
+	p.icon.fn = fn
+	return p
+}
+
+func (p *InputPrompt) Ask() error {
+	if p.title.val == "" && p.title.fn == nil {
+		return ErrNoTitle
 	}
 
 	if p.value == nil {
 		return ErrNoValue
 	}
 
-	p.prompt = prompt
+	p.prompt = fmt.Sprintf("%s%s ", p.icon.Get(), p.title.Get())
 
-	err := p.display()
+	err := p.ask()
 	if err != nil {
 		return err
 	}
@@ -88,12 +117,16 @@ func (p *InputPrompt) Display(prompt string) error {
 	return nil
 }
 
-func (p *InputPrompt) display() error {
-	fmt.Print(p.prompt + " ")
+func (p *InputPrompt) ask() error {
+	fmt.Print(p.prompt)
 
 	for {
 		line, err := p.input.RawRead()
 		if err != nil {
+			if errors.Is(err, ErrUserAborted) {
+				fmt.Print(ansi.ClearLineReset + p.prompt)
+				return err
+			}
 			return err
 		}
 
@@ -122,7 +155,7 @@ func (p *InputPrompt) printErrorMessage(err error) {
 
 	builder.WriteString(buildValidationErrorMessage(err))
 	builder.WriteString(ansi.CursorUp(1) + ansi.ClearLineReset)
-	builder.WriteString(p.prompt + " ")
+	builder.WriteString(p.prompt)
 	fmt.Print(builder.String())
 }
 
@@ -132,7 +165,7 @@ func (p *InputPrompt) printFinalPromptLine() {
 	// function to look pretty.
 	if !p.hide {
 		builder.WriteString(ansi.CursorUp(1) + ansi.ClearLineReset)
-		builder.WriteString(p.prompt + " " + p.answerFn(*p.value))
+		builder.WriteString(p.prompt + p.answerFn(*p.value))
 	}
 
 	builder.WriteString("\n" + ansi.ClearLineReset)
