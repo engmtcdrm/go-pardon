@@ -11,7 +11,7 @@
             "request": "launch",
             "mode": "auto",
             "console": "integratedTerminal",
-            "program": "example/main.go"
+            "program": "examples/main.go"
         }
     ]
 }
