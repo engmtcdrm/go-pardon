@@ -5,7 +5,6 @@ package pardon
 
 import (
 	"fmt"
-	"os"
 
 	"golang.org/x/term"
 )
@@ -16,7 +15,7 @@ import (
 func (i *Input) RawRead() (string, error) {
 	// MakeRaw put the terminal connected to the given file descriptor
 	// into raw mode
-	fd := int(os.Stdin.Fd())
+	fd := int(i.reader.Fd())
 	if !term.IsTerminal(fd) {
 		return "", fmt.Errorf("file descriptor %d is not a terminal", fd)
 	}
@@ -27,5 +26,5 @@ func (i *Input) RawRead() (string, error) {
 	}
 	defer term.Restore(fd, oldState)
 
-	return i.rawReadline(os.Stdin)
+	return i.rawReadline(i.reader)
 }

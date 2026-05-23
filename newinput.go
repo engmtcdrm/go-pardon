@@ -16,6 +16,7 @@ type Input struct {
 	Hide bool
 
 	writer io.Writer
+	reader *os.File
 	result []rune
 }
 
@@ -23,6 +24,7 @@ func NewInput() *Input {
 	return &Input{
 		Hide:   false,
 		writer: os.Stdout,
+		reader: os.Stdin,
 	}
 }
 
