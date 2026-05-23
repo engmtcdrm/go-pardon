@@ -199,7 +199,7 @@ func (sel *Select[T]) renderOptions(redraw bool) {
 		// Build all lines in memory first
 		for i := sel.scrollOffset; i < tui.Min(sel.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := sel.options[i]
-			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.StripCodes(selectCursor)))
+			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
 
 			// Clear line and build content
 			output.WriteString("\r")
@@ -222,7 +222,7 @@ func (sel *Select[T]) renderOptions(redraw bool) {
 		// Initial render without redraw
 		for i := sel.scrollOffset; i < tui.Min(sel.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := sel.options[i]
-			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.StripCodes(selectCursor)))
+			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
 
 			if i == sel.cursorPos {
 				cursor = sel.getSelectFunc(selectCursor)
