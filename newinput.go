@@ -15,9 +15,10 @@ type Input struct {
 	// input).
 	Hide bool
 
-	writer io.Writer
-	reader *os.File
-	result []rune
+	writer  io.Writer
+	reader  *os.File
+	pending []byte
+	result  []rune
 }
 
 func NewInput() *Input {
@@ -28,11 +29,16 @@ func NewInput() *Input {
 	}
 }
 
-func (i *Input) rawReadline(f *os.File) (string, error) {
-	var pending []byte
-	i.result = nil // Reset results before reading new input
+// print writes the given arguments to the terminal if [Input.Hide] is false.
+func (i *Input) print(a ...any) {
+	if !i.Hide {
+		fmt.Fprint(i.writer, a...)
+	}
+}
 
-outer:
+func (i *Input) rawReadline(f *os.File) (string, error) {
+	i.reset()
+
 	for {
 		var buf [8]byte
 		n, err := f.Read(buf[:])
@@ -42,85 +48,15 @@ outer:
 
 		if n == 0 {
 			if err == io.EOF {
-				break outer
+				break
 			}
-			continue outer
+			continue
 		}
 
-		pending = append(pending, buf[:n]...)
+		i.pending = append(i.pending, buf[:n]...)
 
-	inner:
-		for len(pending) > 0 {
-			if pending[0] == keys.CarriageReturn || pending[0] == keys.Enter {
-				i.print("\n")
-				return string(i.result), nil
-			}
-
-			if pending[0] == keys.CtrlC {
-				return "", ErrUserAborted
-			}
-
-			if pending[0] == keys.Backspace || pending[0] == keys.Delete {
-				pending = pending[1:]
-				if len(i.result) > 0 {
-					i.result = i.result[:len(i.result)-1]
-					i.print("\b \b")
-				}
-				continue inner
-			}
-
-			if pending[0] == keys.Escape {
-				if len(pending) < 2 {
-					break inner
-				}
-
-				if pending[1] == keys.LeftBracket || pending[1] == keys.CapitalO {
-					i := 2
-				secondInner:
-					for i < len(pending) {
-						c := pending[i]
-						if c >= 0x40 && c <= 0x7E {
-							i++
-							break secondInner
-						}
-						i++
-					}
-
-					if i > len(pending) {
-						break inner
-					}
-
-					pending = pending[i:]
-					continue inner
-				}
-
-				pending = pending[1:]
-				continue inner
-			}
-
-			// pending, shouldContinue := i.handleEscapeSequence(pending)
-			// if shouldContinue {
-			// 	continue inner
-			// } else {
-			// 	break
-			// }
-
-			r, size := utf8.DecodeRune(pending)
-			if r == utf8.RuneError && size == 1 {
-				if !utf8.FullRune(pending) {
-					break inner
-				}
-
-				pending = pending[1:]
-				continue inner
-			}
-
-			pending = pending[size:]
-
-			if unicode.IsPrint(r) && !unicode.IsControl(r) {
-				i.result = append(i.result, r)
-				i.print(string(r))
-			}
+		if returnString, done, err := i.processPending(); done {
+			return returnString, err
 		}
 	}
 
@@ -128,44 +64,86 @@ outer:
 	return string(i.result), nil
 }
 
-func (i *Input) handleEscapeSequence(pending []byte) ([]byte, bool) {
-	if len(pending) < 2 {
-		return pending, false
-	}
-
-	if pending[0] != keys.Escape {
-		return pending, false
-	}
-
-	// if pending[0] == keys.Escape {
-	if pending[1] == keys.LeftBracket || pending[1] == keys.CapitalO {
-		i := 2
-
-		for i < len(pending) {
-			c := pending[i]
-			if c >= 0x40 && c <= 0x7E {
-				i++
-				break
-			}
-			i++
-		}
-
-		if i > len(pending) {
-			return pending, false
-		}
-
-		pending = pending[i:]
-		return pending, true
-	}
-
-	pending = pending[1:]
-	return pending, true
-	// }
+// reset clears the pending input and the result. This is called prior to
+// processing new input.
+func (i *Input) reset() {
+	i.pending = nil
+	i.result = nil
 }
 
-// print writes the given arguments to the terminal if [Input.Hide] is false.
-func (i *Input) print(a ...any) {
-	if !i.Hide {
-		fmt.Fprint(i.writer, a...)
+func (i *Input) processPending() (returnString string, done bool, err error) {
+	for len(i.pending) > 0 {
+		switch i.pending[0] {
+		case keys.CarriageReturn, keys.Enter:
+			i.print("\n")
+			return string(i.result), true, nil
+		case keys.CtrlC:
+			return "", true, ErrUserAborted
+		case keys.Backspace, keys.Delete:
+			i.handleErase()
+			continue
+		case keys.Escape:
+			if doBreak := i.handleEscapeSequence(); doBreak {
+				break
+			}
+			continue
+		}
+
+		r, size := utf8.DecodeRune(i.pending)
+		if r == utf8.RuneError && size == 1 {
+			if !utf8.FullRune(i.pending) {
+				break
+			}
+
+			i.pending = i.pending[1:]
+			continue
+		}
+
+		i.pending = i.pending[size:]
+
+		if unicode.IsPrint(r) && !unicode.IsControl(r) {
+			i.result = append(i.result, r)
+			i.print(string(r))
+		}
 	}
+
+	return "", false, nil
+}
+
+// handleErase processes a backspace or delete key press by removing the last
+// character
+func (i *Input) handleErase() {
+	i.pending = i.pending[1:]
+	if len(i.result) > 0 {
+		i.result = i.result[:len(i.result)-1]
+		i.print("\b \b")
+	}
+}
+
+func (i *Input) handleEscapeSequence() (doBreak bool) {
+	if len(i.pending) < 2 {
+		return true
+	}
+
+	if i.pending[1] != keys.LeftBracket && i.pending[1] != keys.CapitalO {
+		i.pending = i.pending[1:]
+		return false
+	}
+
+	k := 2
+	for k < len(i.pending) {
+		c := i.pending[k]
+		if c >= 0x40 && c <= 0x7E {
+			k++
+			break
+		}
+		k++
+	}
+
+	if k > len(i.pending) {
+		return true
+	}
+
+	i.pending = i.pending[k:]
+	return false
 }
