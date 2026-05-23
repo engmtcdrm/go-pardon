@@ -22,7 +22,7 @@ func NewQuestionKitchensink() {
 		AnswerFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.CyanBg, s, ansi.Reset)
 		}).
-		Validate(func(input string) error {
+		ValidateFunc(func(input string) error {
 			if input == "" {
 				return fmt.Errorf("color cannot be empty")
 			}
