@@ -15,24 +15,29 @@ type Input struct {
 	// input).
 	Hide bool
 
-	writer  io.Writer
-	reader  *os.File
+	Writer io.Writer
+	Reader io.Reader
+
+	// pending holds the bytes that have been read but not yet processed.
 	pending []byte
-	result  []rune
+
+	// result holds the runes that have been processed and are part of the final
+	// input.
+	result []rune
 }
 
 func NewInput() *Input {
 	return &Input{
 		Hide:   false,
-		writer: os.Stdout,
-		reader: os.Stdin,
+		Writer: os.Stdout,
+		Reader: os.Stdin,
 	}
 }
 
 // print writes the given arguments to the terminal if [Input.Hide] is false.
 func (i *Input) print(a ...any) {
 	if !i.Hide {
-		fmt.Fprint(i.writer, a...)
+		fmt.Fprint(i.Writer, a...)
 	}
 }
 
@@ -120,6 +125,7 @@ func (i *Input) handleErase() {
 	}
 }
 
+// handleEscapeSequence processes an escape sequence starting with the escape key.
 func (i *Input) handleEscapeSequence() (doBreak bool) {
 	if len(i.pending) < 2 {
 		return true

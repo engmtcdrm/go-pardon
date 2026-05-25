@@ -3,6 +3,7 @@ package pardon
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
@@ -175,6 +176,8 @@ func (p *InputPrompt) printErrorMessage(err error) {
 	fmt.Print(builder.String())
 }
 
+// printFinalPromptLine handles printing the final prompt line after successful
+// input.
 func (p *InputPrompt) printFinalPromptLine() {
 	builder := strings.Builder{}
 	// If the input is not hidden, cursor will be on the next line due to user
@@ -203,7 +206,12 @@ func resetLineAbove() string {
 func (p *InputPrompt) getPromptLines(prompt string) (int, error) {
 	promptLines := 1
 
-	fd := int(p.input.reader.Fd())
+	reader, ok := p.input.Reader.(*os.File)
+	if !ok {
+		return 0, fmt.Errorf("unable to determine prompt lines: input reader is not a file")
+	}
+
+	fd := int(reader.Fd())
 	width, _, err := term.GetSize(fd)
 	if err != nil {
 		return 0, err
