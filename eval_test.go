@@ -5,7 +5,13 @@ import (
 	"testing"
 )
 
-func TestEval_Get(t *testing.T) {
+// Tests for [eval.Get] method.
+func Test_eval_Get(t *testing.T) {
+	type CustomStruct struct {
+		Name  string
+		Count int
+	}
+
 	t.Run("returns static value when no functions are set", func(t *testing.T) {
 		e := eval[string]{val: "hello"}
 
@@ -98,9 +104,7 @@ func TestEval_Get(t *testing.T) {
 			t.Errorf("Expected 'test', got '%s'", result)
 		}
 	})
-}
 
-func TestEval_ComplexTransformations(t *testing.T) {
 	t.Run("string concatenation with fn", func(t *testing.T) {
 		e := eval[string]{
 			val: "world",
@@ -150,13 +154,6 @@ func TestEval_ComplexTransformations(t *testing.T) {
 			t.Errorf("Expected '%s', got '%s'", expected, finalResult)
 		}
 	})
-}
-
-func TestEval_CustomTypes(t *testing.T) {
-	type CustomStruct struct {
-		Name  string
-		Count int
-	}
 
 	t.Run("works with custom struct type", func(t *testing.T) {
 		original := CustomStruct{Name: "test", Count: 1}
