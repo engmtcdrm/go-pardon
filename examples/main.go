@@ -9,7 +9,7 @@ import (
 	pp "github.com/engmtcdrm/go-prettyprint"
 
 	"github.com/engmtcdrm/go-pardon"
-	"github.com/engmtcdrm/go-pardon/example/internal"
+	"github.com/engmtcdrm/go-pardon/examples/internal"
 )
 
 func main() {

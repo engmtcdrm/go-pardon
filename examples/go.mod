@@ -1,4 +1,4 @@
-module github.com/engmtcdrm/go-pardon/example
+module github.com/engmtcdrm/go-pardon/examples
 
 go 1.25.10
 
