@@ -24,11 +24,11 @@ type funcs struct {
 }
 
 var defaultFuncs = funcs{
-	answerFn: nil,
-	cursorFn: nil,
-	iconFn:   nil,
-	selectFn: nil,
-	titleFn:  nil,
+	answerFn: func(s string) string { return s },
+	cursorFn: func(s string) string { return s },
+	iconFn:   func(s string) string { return s },
+	selectFn: func(s string) string { return s },
+	titleFn:  func(s string) string { return s },
 }
 
 // SetDefaultAnswerFunc sets the global default answer transformation function.
