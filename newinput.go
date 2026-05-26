@@ -34,11 +34,102 @@ func NewInput() *Input {
 	}
 }
 
+func NewHiddenInput() *Input {
+	input := NewInput()
+	input.Hide = true
+
+	return input
+}
+
+// handleErase processes a backspace or delete key press by removing the last
+// character
+func (i *Input) handleErase() {
+	i.pending = i.pending[1:]
+	if len(i.result) > 0 {
+		i.result = i.result[:len(i.result)-1]
+		i.print("\b \b")
+	}
+}
+
+// handleEscapeSequence processes an escape sequence starting with the escape key.
+func (i *Input) handleEscapeSequence() (doBreak bool) {
+	if len(i.pending) < 2 {
+		return true
+	}
+
+	if !validateEscapeSequence(i.pending[1]) {
+		i.pending = i.pending[1:]
+		return false
+	}
+
+	k := 2
+	foundFinal := false
+	for k < len(i.pending) {
+		c := i.pending[k]
+		// The final byte of an escape sequence is in the range 0x40 to 0x7E.
+		if c >= 0x40 && c <= 0x7E {
+			k++
+			foundFinal = true
+			break
+		}
+		k++
+	}
+
+	// If we didn't find a final byte yet, the sequence is incomplete — wait
+	// for more bytes by signalling the caller to break processing.
+	if !foundFinal {
+		return true
+	}
+
+	i.pending = i.pending[k:]
+	return false
+}
+
 // print writes the given arguments to the terminal if [Input.Hide] is false.
 func (i *Input) print(a ...any) {
 	if !i.Hide {
 		fmt.Fprint(i.Writer, a...)
 	}
+}
+
+// processPending processes the pending input bytes and updates the result.
+func (i *Input) processPending() (returnString string, done bool, err error) {
+	for len(i.pending) > 0 {
+		switch i.pending[0] {
+		case keys.CarriageReturn, keys.Enter:
+			i.print("\n")
+			return string(i.result), true, nil
+		case keys.CtrlC:
+			return "", true, ErrUserAborted
+		case keys.Delete, keys.Backspace:
+			i.handleErase()
+			continue
+		case keys.Escape:
+			if doBreak := i.handleEscapeSequence(); doBreak {
+				break
+			}
+			continue
+		}
+
+		r, size := utf8.DecodeRune(i.pending)
+		if r == utf8.RuneError && size == 1 {
+			if !utf8.FullRune(i.pending) {
+				break
+			}
+
+			i.pending = i.pending[1:]
+			continue
+		}
+
+		i.pending = i.pending[size:]
+
+		if unicode.IsPrint(r) && !unicode.IsControl(r) {
+			i.result = append(i.result, r)
+			i.print(string(r))
+		}
+	}
+
+	return "", false, nil
 }
 
 func (i *Input) rawReadline(f *os.File) (string, error) {
@@ -74,82 +165,4 @@ func (i *Input) rawReadline(f *os.File) (string, error) {
 func (i *Input) reset() {
 	i.pending = nil
 	i.result = nil
-}
-
-func (i *Input) processPending() (returnString string, done bool, err error) {
-	for len(i.pending) > 0 {
-		switch i.pending[0] {
-		case keys.CarriageReturn, keys.Enter:
-			i.print("\n")
-			return string(i.result), true, nil
-		case keys.CtrlC:
-			return "", true, ErrUserAborted
-		case keys.Backspace, keys.Delete:
-			i.handleErase()
-			continue
-		case keys.Escape:
-			if doBreak := i.handleEscapeSequence(); doBreak {
-				break
-			}
-			continue
-		}
-
-		r, size := utf8.DecodeRune(i.pending)
-		if r == utf8.RuneError && size == 1 {
-			if !utf8.FullRune(i.pending) {
-				break
-			}
-
-			i.pending = i.pending[1:]
-			continue
-		}
-
-		i.pending = i.pending[size:]
-
-		if unicode.IsPrint(r) && !unicode.IsControl(r) {
-			i.result = append(i.result, r)
-			i.print(string(r))
-		}
-	}
-
-	return "", false, nil
-}
-
-// handleErase processes a backspace or delete key press by removing the last
-// character
-func (i *Input) handleErase() {
-	i.pending = i.pending[1:]
-	if len(i.result) > 0 {
-		i.result = i.result[:len(i.result)-1]
-		i.print("\b \b")
-	}
-}
-
-// handleEscapeSequence processes an escape sequence starting with the escape key.
-func (i *Input) handleEscapeSequence() (doBreak bool) {
-	if len(i.pending) < 2 {
-		return true
-	}
-
-	if i.pending[1] != keys.LeftBracket && i.pending[1] != keys.CapitalO {
-		i.pending = i.pending[1:]
-		return false
-	}
-
-	k := 2
-	for k < len(i.pending) {
-		c := i.pending[k]
-		if c >= 0x40 && c <= 0x7E {
-			k++
-			break
-		}
-		k++
-	}
-
-	if k > len(i.pending) {
-		return true
-	}
-
-	i.pending = i.pending[k:]
-	return false
 }
