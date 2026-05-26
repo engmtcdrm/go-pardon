@@ -12,20 +12,20 @@ func TestKeyConstants(t *testing.T) {
 	}{
 		{"Ctrl+C", CtrlC, 3},
 		{"Delete", Backspace, 8},
-		{"Carriage Return", CarriageReturn, 10},
+		{"Carriage Return", NewLine, 10},
 		{"Enter", Enter, 13},
 		{"Escape", Escape, 27},
 		{"Up Arrow", Up, 65},
 		{"Down Arrow", Down, 66},
 		{"Right Arrow", Right, 67},
 		{"Left Arrow", Left, 68},
-		{"No Upper", NoUpper, 78},
-		{"Yes Upper", YesUpper, 89},
+		{"No Upper", UpperN, 78},
+		{"Yes Upper", UpperY, 89},
 		{"Left Bracket", LeftBracket, 91},
-		{"No", No, 110},
-		{"Yes", Yes, 121},
+		{"No", LowerN, 110},
+		{"Yes", LowerY, 121},
 		{"Backspace", Delete, 127},
-		{"Capital O", CapitalO, byte('O')},
+		{"Capital O", UpperO, byte('O')},
 	}
 
 	for _, tt := range tests {
@@ -70,10 +70,10 @@ func TestConfirmationKeys(t *testing.T) {
 		key      byte
 		expected byte
 	}{
-		{"Yes lowercase", Yes, 121},
-		{"Yes uppercase", YesUpper, 89},
-		{"No lowercase", No, 110},
-		{"No uppercase", NoUpper, 78},
+		{"Yes lowercase", LowerY, 121},
+		{"Yes uppercase", UpperY, 89},
+		{"No lowercase", LowerN, 110},
+		{"No uppercase", UpperN, 78},
 	}
 
 	for _, tt := range confirmKeys {
@@ -94,7 +94,7 @@ func TestSpecialKeys(t *testing.T) {
 		{"Ctrl+C", CtrlC, 3},
 		{"Delete", Backspace, 8},
 		{"Enter", Enter, 13},
-		{"Carriage Return", CarriageReturn, 10},
+		{"Carriage Return", NewLine, 10},
 		{"Escape", Escape, 27},
 		{"Backspace", Delete, 127},
 		{"Left Bracket", LeftBracket, 91},
@@ -125,7 +125,7 @@ func TestKeyRanges(t *testing.T) {
 	}
 
 	// Yes/No keys should be printable ASCII
-	yesNoKeys := []byte{Yes, YesUpper, No, NoUpper}
+	yesNoKeys := []byte{LowerY, UpperY, LowerN, UpperN}
 	for _, key := range yesNoKeys {
 		if key < 32 || key > 126 {
 			t.Errorf("Yes/No key %d should be in printable ASCII range (32-126)", key)

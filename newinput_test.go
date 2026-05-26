@@ -117,7 +117,7 @@ func Test_Input_processPending(t *testing.T) {
 	t.Run("should process pending input as Carriage Return", func(t *testing.T) {
 		expectedResult := "hello"
 		input := NewInput()
-		input.pending = []byte{keys.CarriageReturn}
+		input.pending = []byte{keys.NewLine}
 		input.result = []rune(expectedResult)
 
 		returnString, done, err := input.processPending()

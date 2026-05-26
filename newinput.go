@@ -96,7 +96,7 @@ func (i *Input) print(a ...any) {
 func (i *Input) processPending() (returnString string, done bool, err error) {
 	for len(i.pending) > 0 {
 		switch i.pending[0] {
-		case keys.CarriageReturn, keys.Enter:
+		case keys.NewLine, keys.Enter:
 			i.print("\n")
 			return string(i.result), true, nil
 		case keys.CtrlC:

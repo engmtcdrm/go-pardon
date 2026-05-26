@@ -158,7 +158,7 @@ func (sel *Select[T]) Ask() error {
 		switch keyCode {
 		case keys.CtrlC:
 			return ErrUserAborted
-		case keys.Enter, keys.CarriageReturn:
+		case keys.Enter, keys.NewLine:
 			*sel.value = sel.options[sel.cursorPos].Value
 			visibleOptions := tui.Min(len(sel.options), tui.GetTerminalHeight()-3)
 			tui.RenderClearAndReposition(visibleOptions+1, sel.icon.Get(), sel.title.Get(), sel.getAnswerFunc(sel.options[sel.cursorPos].Key))

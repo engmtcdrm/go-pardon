@@ -110,15 +110,15 @@ func (c *Confirm) Ask() error {
 		keyCode := tui.GetInput()
 
 		switch keyCode {
-		case keys.YesUpper, keys.Yes:
+		case keys.UpperY, keys.LowerY:
 			*c.value = true
 			fmt.Print(c.formatFinalOutput(question, c.confirm))
 			return nil
-		case keys.NoUpper, keys.No:
+		case keys.UpperN, keys.LowerN:
 			*c.value = false
 			fmt.Print(c.formatFinalOutput(question, c.deny))
 			return nil
-		case keys.Enter, keys.CarriageReturn:
+		case keys.Enter, keys.NewLine:
 			if *c.value {
 				fmt.Print(c.formatFinalOutput(question, c.confirm))
 			} else {

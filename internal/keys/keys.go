@@ -1,21 +1,27 @@
 package keys
 
 const (
-	// Key codes for navigation and actions
-	CtrlC          = byte(3)
-	Backspace      = byte(8)
-	CarriageReturn = byte(10) // Additional for cross-platform compatibility
-	Enter          = byte(13)
-	Escape         = byte(27)
-	Up             = byte(65)
-	Down           = byte(66)
-	Right          = byte(67)
-	Left           = byte(68)
-	NoUpper        = byte(78)
-	YesUpper       = byte(89)
-	LeftBracket    = byte(91)
-	No             = byte(110)
-	Yes            = byte(121)
-	Delete         = byte(127)
-	CapitalO       = byte('O')
+	CtrlC     = byte(3)
+	Backspace = byte(8)
+	Escape    = byte(27)
+	Delete    = byte(127)
+
+	Up    = UpperA
+	Down  = UpperB
+	Right = UpperC
+	Left  = UpperD
+
+	Enter       = byte('\r')
+	LeftBracket = byte('[')
+	LowerN      = byte('n')
+	LowerY      = byte('y')
+	NewLine     = byte('\n') // Additional for cross-platform compatibility
+
+	UpperA = byte('A')
+	UpperB = byte('B')
+	UpperC = byte('C')
+	UpperD = byte('D')
+	UpperN = byte('N')
+	UpperO = byte('O')
+	UpperY = byte('Y')
 )

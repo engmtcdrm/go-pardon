@@ -5,7 +5,7 @@ import "github.com/engmtcdrm/go-pardon/internal/keys"
 // https://www.climagic.org/mirrors/VT100_Escape_Codes.html
 func validateEscapeSequence(b byte) bool {
 	switch b {
-	case keys.LeftBracket, keys.CapitalO:
+	case keys.LeftBracket, keys.UpperO:
 		return true
 	default:
 		return false

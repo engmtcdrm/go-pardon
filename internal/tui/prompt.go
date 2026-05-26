@@ -192,7 +192,7 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 		keyCode := GetInput()
 
 		switch keyCode {
-		case keys.Enter, keys.CarriageReturn:
+		case keys.Enter, keys.NewLine:
 			if err := p.validateFn(input); err != nil {
 				lastError = err.Error()
 				showError = true

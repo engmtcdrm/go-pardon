@@ -23,7 +23,7 @@ func Test_validateEscapeSequence(t *testing.T) {
 		},
 		{
 			name:     "valid escape sequence byte: CapitalO",
-			input:    keys.CapitalO,
+			input:    keys.UpperO,
 			expected: true,
 		},
 		{
