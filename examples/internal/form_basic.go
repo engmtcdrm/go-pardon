@@ -14,7 +14,7 @@ func FormBasic() {
 	f := pardon.NewForm(
 		pardon.NewConfirm(&continueFlag).
 			Title("Are you sure you want to proceed?"),
-		pardon.NewQuestion(&age).
+		pardon.NewStringPrompt(&age).
 			Title("How old are you?"),
 	)
 

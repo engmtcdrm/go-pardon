@@ -15,9 +15,9 @@ func FormValidate() {
 	f := pardon.NewForm(
 		pardon.NewConfirm(&continueFlag).
 			Title("Are you sure you want to proceed?"),
-		pardon.NewQuestion(&age).
+		pardon.NewStringPrompt(&age).
 			Title("How old are you?").
-			Validate(func(answer string) error {
+			ValidateFunc(func(answer string) error {
 				if answer == "" {
 					return fmt.Errorf("age cannot be empty")
 				}
