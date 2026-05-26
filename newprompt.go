@@ -34,7 +34,6 @@ func NewStringPrompt(value *string) *InputPrompt {
 	return &InputPrompt{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		answerFn:   func(s string) string { return s },
 		validateFn: func(s string) error { return nil },
 		hide:       false,
 		input:      NewInput(),
@@ -44,10 +43,14 @@ func NewStringPrompt(value *string) *InputPrompt {
 
 // NewPasswordPrompt creates an InputPrompt for secure password input with masking.
 func NewPasswordPrompt(value *string) *InputPrompt {
-	inputPrompt := NewStringPrompt(value)
-	inputPrompt.icon = eval[string]{val: Icons.Password, defaultFn: defaultFuncs.iconFn}
-	inputPrompt.Hide(true)
-	return inputPrompt
+	return &InputPrompt{
+		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		validateFn: func(s string) error { return nil },
+		hide:       true,
+		input:      NewHiddenInput(),
+		value:      value,
+	}
 }
 
 func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
@@ -57,6 +60,7 @@ func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
 	return p
 }
 
+// Hide sets whether the input should be hidden (e.g., for password input).
 func (p *InputPrompt) Hide(hide bool) *InputPrompt {
 	p.hide = hide
 	p.input.Hide = hide
@@ -121,6 +125,18 @@ func (p *InputPrompt) Ask() error {
 	return nil
 }
 
+func (p *InputPrompt) callAnswerFunc(s string) string {
+	if p.answerFn != nil {
+		return p.answerFn(s)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(s)
+	}
+
+	return s
+}
+
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
 func (p *InputPrompt) ask() error {
@@ -171,6 +187,7 @@ func (p *InputPrompt) printErrorMessage(err error) {
 	for i := 0; i < errMsgLines-1; i++ {
 		builder.WriteString(ansi.CursorUp(1))
 	}
+
 	builder.WriteString(resetLineAbove())
 	builder.WriteString(p.prompt)
 	fmt.Print(builder.String())
@@ -185,7 +202,7 @@ func (p *InputPrompt) printFinalPromptLine() {
 	// prompt with the answer function applied.
 	if !p.hide {
 		builder.WriteString(resetLineAbove())
-		builder.WriteString(p.prompt + p.answerFn(*p.value))
+		builder.WriteString(p.prompt + p.callAnswerFunc(*p.value))
 	}
 
 	// Regardless of being hidden or not we need to move to the next line and
