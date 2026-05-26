@@ -11,7 +11,7 @@ func TestKeyConstants(t *testing.T) {
 		expected byte
 	}{
 		{"Ctrl+C", CtrlC, 3},
-		{"Delete", Delete, 8},
+		{"Delete", Backspace, 8},
 		{"Carriage Return", CarriageReturn, 10},
 		{"Enter", Enter, 13},
 		{"Escape", Escape, 27},
@@ -24,7 +24,7 @@ func TestKeyConstants(t *testing.T) {
 		{"Left Bracket", LeftBracket, 91},
 		{"No", No, 110},
 		{"Yes", Yes, 121},
-		{"Backspace", Backspace, 127},
+		{"Backspace", Delete, 127},
 		{"Capital O", CapitalO, byte('O')},
 	}
 
@@ -92,11 +92,11 @@ func TestSpecialKeys(t *testing.T) {
 		expected byte
 	}{
 		{"Ctrl+C", CtrlC, 3},
-		{"Delete", Delete, 8},
+		{"Delete", Backspace, 8},
 		{"Enter", Enter, 13},
 		{"Carriage Return", CarriageReturn, 10},
 		{"Escape", Escape, 27},
-		{"Backspace", Backspace, 127},
+		{"Backspace", Delete, 127},
 		{"Left Bracket", LeftBracket, 91},
 	}
 

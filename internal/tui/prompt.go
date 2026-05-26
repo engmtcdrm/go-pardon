@@ -232,7 +232,7 @@ func (p *InputPrompt[T]) Display(prompt string, value *T) error {
 			}
 			fmt.Print(finalOutput)
 			return ErrUserAborted
-		case keys.Backspace:
+		case keys.Delete:
 			input = p.removeLastFn(input)
 			showError = false
 			redraw()

@@ -36,7 +36,7 @@ func TestControlCharacterFiltering(t *testing.T) {
 		{"High ASCII character", 128, true},
 		{"Tab character", 9, false},
 		{"Newline character", 10, false},
-		{"Delete character", keys.Delete, false},
+		{"Delete character", keys.Backspace, false},
 	}
 
 	for _, tt := range tests {

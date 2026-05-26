@@ -3,7 +3,7 @@ package keys
 const (
 	// Key codes for navigation and actions
 	CtrlC          = byte(3)
-	Delete         = byte(8)
+	Backspace      = byte(8)
 	CarriageReturn = byte(10) // Additional for cross-platform compatibility
 	Enter          = byte(13)
 	Escape         = byte(27)
@@ -16,6 +16,6 @@ const (
 	LeftBracket    = byte(91)
 	No             = byte(110)
 	Yes            = byte(121)
-	Backspace      = byte(127)
+	Delete         = byte(127)
 	CapitalO       = byte('O')
 )
