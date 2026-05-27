@@ -20,10 +20,6 @@ type InputPrompt struct {
 	answerFn   func(string) string
 	validateFn func(string) error
 
-	// Hide indicates whether the input should be hidden (e.g., for password
-	// input).
-	hide bool
-
 	input  *Input
 	prompt string
 	value  *string
@@ -35,7 +31,6 @@ func NewStringPrompt(value *string) *InputPrompt {
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
-		hide:       false,
 		input:      NewInput(),
 		value:      value,
 	}
@@ -47,7 +42,6 @@ func NewPasswordPrompt(value *string) *InputPrompt {
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
-		hide:       true,
 		input:      NewHiddenInput(),
 		value:      value,
 	}
@@ -62,7 +56,6 @@ func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
 
 // Hide sets whether the input should be hidden (e.g., for password input).
 func (p *InputPrompt) Hide(hide bool) *InputPrompt {
-	p.hide = hide
 	p.input.Hide = hide
 	return p
 }
@@ -169,11 +162,9 @@ func (p *InputPrompt) ask() error {
 
 func (p *InputPrompt) printErrorMessage(err error) {
 	builder := strings.Builder{}
-	// Have to manually jump to the next line if the input is hidden, otherwise
-	// the error message will be printed on the same line as the prompt.
-	if p.hide {
-		builder.WriteByte('\n')
-	}
+	// Have to manually jump to the next line, otherwise the error message will
+	// be printed on the same line as the prompt.
+	builder.WriteByte('\n')
 
 	// Write error message, move/clear the line above, then reprint the prompt.
 	errMsg := validationErrorMessage(err)
@@ -197,11 +188,10 @@ func (p *InputPrompt) printErrorMessage(err error) {
 // input.
 func (p *InputPrompt) printFinalPromptLine() {
 	builder := strings.Builder{}
-	// If the input is not hidden, cursor will be on the next line due to user
-	// pressing enter. We need to move the cursor up, clear, then print the
+	// If the input is not hidden, We need to clear the line, then print the
 	// prompt with the answer function applied.
-	if !p.hide {
-		builder.WriteString(resetLineAbove())
+	if !p.input.Hide {
+		builder.WriteString(ansi.ClearLineReset)
 		builder.WriteString(p.prompt + p.callAnswerFunc(*p.value))
 	}
 
