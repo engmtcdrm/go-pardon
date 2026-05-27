@@ -15,6 +15,9 @@ type Input struct {
 	// input).
 	Hide bool
 
+	// Confirm indicates whether the input should be treated as a confirmation.
+	Confirm bool
+
 	Writer io.Writer
 	Reader io.Reader
 
@@ -37,6 +40,13 @@ func NewInput() *Input {
 func NewHiddenInput() *Input {
 	input := NewInput()
 	input.Hide = true
+
+	return input
+}
+
+func NewConfirmInput() *Input {
+	input := NewInput()
+	input.Confirm = true
 
 	return input
 }
@@ -97,7 +107,6 @@ func (i *Input) processPending() (returnString string, done bool, err error) {
 	for len(i.pending) > 0 {
 		switch i.pending[0] {
 		case keys.NewLine, keys.Enter:
-			i.print("\n")
 			return string(i.result), true, nil
 		case keys.CtrlC:
 			return "", true, ErrUserAborted
@@ -125,7 +134,11 @@ func (i *Input) processPending() (returnString string, done bool, err error) {
 
 		if unicode.IsPrint(r) && !unicode.IsControl(r) {
 			i.result = append(i.result, r)
-			i.print(string(r))
+			if !i.Confirm {
+				i.print(string(r))
+			} else {
+				return string(i.result), true, nil
+			}
 		}
 	}
 
