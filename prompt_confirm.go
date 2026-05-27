@@ -1,20 +1,25 @@
 package pardon
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/internal/keys"
-	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
 type Confirm struct {
-	icon     eval[string]
-	title    eval[string]
-	confirm  string
-	deny     string
-	value    *bool
-	answerFn func(string) string
+	icon       eval[string]
+	title      eval[string]
+	confirm    string
+	deny       string
+	value      *bool
+	answerFn   func(string) string
+	input      *Input
+	prompt     string
+	promptOpts string
 }
 
 // NewConfirm creates a new Confirm prompt instance.
@@ -25,6 +30,7 @@ func NewConfirm(value *bool) *Confirm {
 		confirm: "Y",
 		deny:    "N",
 		value:   value,
+		input:   NewConfirmInput(),
 	}
 }
 
@@ -65,11 +71,6 @@ func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
 	return c
 }
 
-// formatFinalOutput formats the final confirmation display after user selection.
-func (c *Confirm) formatFinalOutput(question string, answer string) string {
-	return tui.RenderFormattedOutput(question, c.setAnswerFunc(answer))
-}
-
 // setAnswerFunc configures the answer transformation priority:
 // prompt-specific, global default, or the string itself.
 func (c *Confirm) setAnswerFunc(s string) string {
@@ -99,35 +100,71 @@ func (c *Confirm) Ask() error {
 		options = "[Y/n]"
 	}
 
-	question := fmt.Sprintf("%s%s", c.icon.Get(), c.title.Get())
-	question_opt := fmt.Sprintf("%s %s ", question, options)
+	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
+	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, options)
 
-	// Display the confirmation prompt
-	fmt.Print(question_opt)
+	if err := c.ask(); err != nil {
+		return err
+	}
 
-	// Capture user input
+	return nil
+}
+
+func (c *Confirm) ask() error {
+	fmt.Print(c.promptOpts)
+
+outer:
 	for {
-		keyCode := tui.GetInput()
+		line, err := c.input.RawRead()
+		if err != nil {
+			if errors.Is(err, ErrUserAborted) {
+				fmt.Print(ansi.ClearLineReset + c.promptOpts)
+				return err
+			}
+			return err
+		}
 
-		switch keyCode {
+		// If user hit enter, user the default value
+		if line == "" {
+			line = c.getDefaultValue()
+		}
+
+		pendingValue := strings.TrimSpace(line)
+		switch pendingValue[0] {
 		case keys.UpperY, keys.LowerY:
 			*c.value = true
-			fmt.Print(c.formatFinalOutput(question, c.confirm))
-			return nil
+			break outer
 		case keys.UpperN, keys.LowerN:
 			*c.value = false
-			fmt.Print(c.formatFinalOutput(question, c.deny))
-			return nil
-		case keys.Enter, keys.NewLine:
-			if *c.value {
-				fmt.Print(c.formatFinalOutput(question, c.confirm))
-			} else {
-				fmt.Print(c.formatFinalOutput(question, c.deny))
-			}
-			return nil
-		case keys.CtrlC, keys.Escape:
-			fmt.Println()
-			return ErrUserAborted
+			break outer
+		default:
+			continue
 		}
 	}
+
+	c.printFinalPromptLine()
+
+	return nil
+}
+
+func (c *Confirm) printFinalPromptLine() {
+	builder := strings.Builder{}
+	builder.WriteString(ansi.ClearLineReset)
+
+	if *c.value {
+		builder.WriteString(c.prompt + c.setAnswerFunc(c.confirm))
+	} else {
+		builder.WriteString(c.prompt + c.setAnswerFunc(c.deny))
+	}
+
+	builder.WriteString("\n" + ansi.ClearLineReset)
+	fmt.Print(builder.String())
+}
+
+func (c *Confirm) getDefaultValue() string {
+	if *c.value {
+		return c.confirm
+	}
+
+	return c.deny
 }
