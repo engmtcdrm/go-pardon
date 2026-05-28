@@ -2,6 +2,8 @@ package pardon
 
 import (
 	"testing"
+
+	"github.com/engmtcdrm/go-pardon/internal/runekeys"
 )
 
 // TestAskValidation tests the Ask() method validation logic
@@ -41,11 +43,11 @@ func TestAskValidation(t *testing.T) {
 
 	t.Run("confirm with nil value should return error", func(t *testing.T) {
 		confirm := &Confirm{
-			icon:    eval[string]{val: Icons.QuestionMark},
-			title:   eval[string]{val: "Test?"},
-			confirm: "Y",
-			deny:    "N",
-			value:   nil, // This should cause ErrNoValue
+			icon:       eval[string]{val: Icons.QuestionMark},
+			title:      eval[string]{val: "Test?"},
+			confirmKey: runekeys.UpperY,
+			denyKey:    runekeys.UpperN,
+			value:      nil, // This should cause ErrNoValue
 		}
 
 		err := confirm.Ask()
