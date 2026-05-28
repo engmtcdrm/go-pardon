@@ -85,9 +85,9 @@ func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
 	return c
 }
 
-// setAnswerFunc configures the answer transformation priority:
+// callAnswerFunc configures the answer transformation priority:
 // prompt-specific, global default, or the string itself.
-func (c *Confirm) setAnswerFunc(s string) string {
+func (c *Confirm) callAnswerFunc(s string) string {
 	if c.answerFn != nil {
 		return c.answerFn(s)
 	}
@@ -200,7 +200,7 @@ func (c *Confirm) getValueAsString() string {
 func (c *Confirm) printFinalPromptLine() {
 	builder := strings.Builder{}
 	builder.WriteString(ansi.ClearLineReset)
-	builder.WriteString(c.prompt + c.setAnswerFunc(c.getValueAsString()))
+	builder.WriteString(c.prompt + c.callAnswerFunc(c.getValueAsString()))
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Print(builder.String())
 }
