@@ -4,20 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/internal/keys"
+	"github.com/engmtcdrm/go-pardon/internal/runekeys"
 )
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
 type Confirm struct {
+	input      *Input
+	value      *bool
 	icon       eval[string]
 	title      eval[string]
-	confirm    string
-	deny       string
-	value      *bool
+	confirmKey rune
+	denyKey    rune
 	answerFn   func(string) string
-	input      *Input
 	prompt     string
 	promptOpts string
 }
@@ -25,13 +26,26 @@ type Confirm struct {
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		icon:    eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title:   eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
-		confirm: "Y",
-		deny:    "N",
-		value:   value,
-		input:   NewConfirmInput(),
+		input:      NewConfirmInput(),
+		value:      value,
+		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		confirmKey: runekeys.UpperY,
+		denyKey:    runekeys.UpperN,
 	}
+}
+
+// ConfirmKey sets the rune that represents the confirmation key (e.g., 'Y' for
+// yes).
+func (c *Confirm) ConfirmKey(r rune) *Confirm {
+	c.confirmKey = r
+	return c
+}
+
+// DenyKey sets the rune that represents the denial key (e.g., 'N' for no).
+func (c *Confirm) DenyKey(r rune) *Confirm {
+	c.denyKey = r
+	return c
 }
 
 // Title sets a static title for the confirmation prompt.
@@ -95,14 +109,6 @@ func (c *Confirm) Ask() error {
 		return ErrNoValue
 	}
 
-	options := "[y/N]"
-	if *c.value {
-		options = "[Y/n]"
-	}
-
-	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
-	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, options)
-
 	if err := c.ask(); err != nil {
 		return err
 	}
@@ -111,34 +117,25 @@ func (c *Confirm) Ask() error {
 }
 
 func (c *Confirm) ask() error {
+	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
+	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, c.getPromptOptions())
+
 	fmt.Print(c.promptOpts)
 
-outer:
+	// outer:
 	for {
 		line, err := c.input.RawRead()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
-				fmt.Print(ansi.ClearLineReset + c.promptOpts)
+				fmt.Print(ansi.ClearLineReset + c.prompt)
 				return err
 			}
+
 			return err
 		}
 
-		// If user hit enter, user the default value
-		if line == "" {
-			line = c.getDefaultValue()
-		}
-
-		pendingValue := strings.TrimSpace(line)
-		switch pendingValue[0] {
-		case keys.UpperY, keys.LowerY:
-			*c.value = true
-			break outer
-		case keys.UpperN, keys.LowerN:
-			*c.value = false
-			break outer
-		default:
-			continue
+		if done := c.processLine(line); done {
+			break
 		}
 	}
 
@@ -147,24 +144,67 @@ outer:
 	return nil
 }
 
+func (c *Confirm) processLine(line []rune) (done bool) {
+	// If user hit enter, use the current value as the input
+	if len(line) == 0 {
+		line = c.getValueAsRunes()
+	}
+
+	line = c.trimSpace(line)
+
+	switch {
+	case c.equal(line[0], c.confirmKey):
+		*c.value = true
+		return true
+	case c.equal(line[0], c.denyKey):
+		*c.value = false
+		return true
+	}
+
+	return false
+}
+
+func (c *Confirm) equal(a rune, b rune) bool {
+	return unicode.ToLower(a) == unicode.ToLower(b)
+}
+
+func (c *Confirm) getPromptOptions() string {
+	var confirmKey, denyKey rune
+	if *c.value {
+		confirmKey = unicode.ToUpper(c.confirmKey)
+		denyKey = unicode.ToLower(c.denyKey)
+	} else {
+		confirmKey = unicode.ToLower(c.confirmKey)
+		denyKey = unicode.ToUpper(c.denyKey)
+	}
+
+	return fmt.Sprintf("[%c/%c]", confirmKey, denyKey)
+}
+
+func (c *Confirm) getValueAsRunes() []rune {
+	if *c.value {
+		return []rune{c.confirmKey}
+	}
+
+	return []rune{c.denyKey}
+}
+
+func (c *Confirm) getValueAsString() string {
+	if *c.value {
+		return string(c.confirmKey)
+	}
+
+	return string(c.denyKey)
+}
+
 func (c *Confirm) printFinalPromptLine() {
 	builder := strings.Builder{}
 	builder.WriteString(ansi.ClearLineReset)
-
-	if *c.value {
-		builder.WriteString(c.prompt + c.setAnswerFunc(c.confirm))
-	} else {
-		builder.WriteString(c.prompt + c.setAnswerFunc(c.deny))
-	}
-
+	builder.WriteString(c.prompt + c.setAnswerFunc(c.getValueAsString()))
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Print(builder.String())
 }
 
-func (c *Confirm) getDefaultValue() string {
-	if *c.value {
-		return c.confirm
-	}
-
-	return c.deny
+func (c *Confirm) trimSpace(input []rune) []rune {
+	return []rune(strings.TrimSpace(string(input)))
 }
