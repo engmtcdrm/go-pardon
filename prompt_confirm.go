@@ -35,6 +35,12 @@ func NewConfirm(value *bool) *Confirm {
 	}
 }
 
+// AnswerFunc sets a function to transform the final answer before returning.
+func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
+	c.answerFn = fn
+	return c
+}
+
 // ConfirmKey sets the rune that represents the confirmation key (e.g., 'Y' for
 // yes).
 func (c *Confirm) ConfirmKey(r rune) *Confirm {
@@ -45,18 +51,6 @@ func (c *Confirm) ConfirmKey(r rune) *Confirm {
 // DenyKey sets the rune that represents the denial key (e.g., 'N' for no).
 func (c *Confirm) DenyKey(r rune) *Confirm {
 	c.denyKey = r
-	return c
-}
-
-// Title sets a static title for the confirmation prompt.
-func (c *Confirm) Title(title string) *Confirm {
-	c.title.val = title
-	return c
-}
-
-// TitleFunc sets a dynamic title function for the confirmation prompt.
-func (c *Confirm) TitleFunc(fn func(string) string) *Confirm {
-	c.title.fn = fn
 	return c
 }
 
@@ -73,30 +67,22 @@ func (c *Confirm) IconFunc(fn func(string) string) *Confirm {
 	return c
 }
 
+// Title sets a static title for the confirmation prompt.
+func (c *Confirm) Title(title string) *Confirm {
+	c.title.val = title
+	return c
+}
+
+// TitleFunc sets a dynamic title function for the confirmation prompt.
+func (c *Confirm) TitleFunc(fn func(string) string) *Confirm {
+	c.title.fn = fn
+	return c
+}
+
 // Value sets a default value for the confirmation prompt.
 func (c *Confirm) Value(value *bool) *Confirm {
 	c.value = value
 	return c
-}
-
-// AnswerFunc sets a function to transform the final answer before returning.
-func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
-	c.answerFn = fn
-	return c
-}
-
-// callAnswerFunc configures the answer transformation priority:
-// prompt-specific, global default, or the string itself.
-func (c *Confirm) callAnswerFunc(s string) string {
-	if c.answerFn != nil {
-		return c.answerFn(s)
-	}
-
-	if defaultFuncs.answerFn != nil {
-		return defaultFuncs.answerFn(s)
-	}
-
-	return s
 }
 
 // Ask displays the confirmation prompt.
@@ -142,6 +128,20 @@ func (c *Confirm) ask() error {
 	c.printFinalPromptLine()
 
 	return nil
+}
+
+// callAnswerFunc configures the answer transformation priority:
+// prompt-specific, global default, or the string itself.
+func (c *Confirm) callAnswerFunc(s string) string {
+	if c.answerFn != nil {
+		return c.answerFn(s)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(s)
+	}
+
+	return s
 }
 
 func (c *Confirm) processLine(line []rune) (done bool) {
