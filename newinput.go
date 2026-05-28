@@ -103,13 +103,13 @@ func (i *Input) print(a ...any) {
 }
 
 // processPending processes the pending input bytes and updates the result.
-func (i *Input) processPending() (returnString string, done bool, err error) {
+func (i *Input) processPending() (returnRunes []rune, done bool, err error) {
 	for len(i.pending) > 0 {
 		switch i.pending[0] {
 		case keys.NewLine, keys.Enter:
-			return string(i.result), true, nil
+			return i.result, true, nil
 		case keys.CtrlC:
-			return "", true, ErrUserAborted
+			return nil, true, ErrUserAborted
 		case keys.Delete, keys.Backspace:
 			i.handleErase()
 			continue
@@ -137,22 +137,22 @@ func (i *Input) processPending() (returnString string, done bool, err error) {
 			if !i.Confirm {
 				i.print(string(r))
 			} else {
-				return string(i.result), true, nil
+				return i.result, true, nil
 			}
 		}
 	}
 
-	return "", false, nil
+	return nil, false, nil
 }
 
-func (i *Input) rawReadline(f *os.File) (string, error) {
+func (i *Input) rawReadline(f *os.File) ([]rune, error) {
 	i.reset()
 
 	for {
 		var buf [8]byte
 		n, err := f.Read(buf[:])
 		if err != nil && err != io.EOF {
-			return "", err
+			return nil, err
 		}
 
 		if n == 0 {
@@ -164,13 +164,13 @@ func (i *Input) rawReadline(f *os.File) (string, error) {
 
 		i.pending = append(i.pending, buf[:n]...)
 
-		if returnString, done, err := i.processPending(); done {
-			return returnString, err
+		if returnRunes, done, err := i.processPending(); done {
+			return returnRunes, err
 		}
 	}
 
 	i.print("\n")
-	return string(i.result), nil
+	return i.result, nil
 }
 
 // reset clears the pending input and the result. This is called prior to

@@ -145,7 +145,7 @@ func (p *InputPrompt) ask() error {
 			return err
 		}
 
-		pendingValue := strings.TrimSpace(line)
+		pendingValue := strings.TrimSpace(string(line))
 		if err := p.validateFn(pendingValue); err != nil {
 			p.printErrorMessage(err)
 			continue

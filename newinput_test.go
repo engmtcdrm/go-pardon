@@ -115,94 +115,94 @@ func Test_Input_print(t *testing.T) {
 // Tests for [Input.processPending] function.
 func Test_Input_processPending(t *testing.T) {
 	t.Run("should process pending input as Carriage Return", func(t *testing.T) {
-		expectedResult := "hello"
+		expectedResult := []rune("hello")
 		input := NewInput()
 		input.pending = []byte{keys.NewLine}
 		input.result = []rune(expectedResult)
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.True(t, done)
 		require.NoError(t, err)
-		require.Equal(t, expectedResult, returnString)
+		require.Equal(t, expectedResult, returnRunes)
 	})
 
 	t.Run("should process pending input as Enter", func(t *testing.T) {
-		expectedResult := "hello"
+		expectedResult := []rune("hello")
 		input := NewInput()
 		input.pending = []byte{keys.Enter}
 		input.result = []rune(expectedResult)
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.True(t, done)
 		require.NoError(t, err)
-		require.Equal(t, expectedResult, returnString)
+		require.Equal(t, expectedResult, returnRunes)
 	})
 
 	t.Run("should process pending input as CtrlC", func(t *testing.T) {
-		expectedResult := "hello"
+		expectedResult := []rune("hello")
 		input := NewInput()
 		input.pending = []byte{keys.CtrlC}
 		input.result = []rune(expectedResult)
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.True(t, done)
 		require.ErrorIs(t, err, ErrUserAborted)
-		require.Equal(t, "", returnString)
-		require.Equal(t, expectedResult, string(input.result))
+		require.Nil(t, returnRunes)
+		require.Equal(t, expectedResult, input.result)
 	})
 
 	t.Run("should process pending input as Backspace", func(t *testing.T) {
-		expectedResult := "hell"
+		expectedResult := []rune("hell")
 		input := NewInput()
 		input.pending = []byte{keys.Delete}
 		input.result = []rune("hello")
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.False(t, done)
 		require.NoError(t, err)
-		require.Equal(t, "", returnString)
-		require.Equal(t, expectedResult, string(input.result))
+		require.Nil(t, returnRunes)
+		require.Equal(t, expectedResult, input.result)
 	})
 
 	t.Run("should process pending input as Delete", func(t *testing.T) {
-		expectedResult := "hell"
+		expectedResult := []rune("hell")
 		input := NewInput()
 		input.pending = []byte{keys.Backspace}
 		input.result = []rune("hello")
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.False(t, done)
 		require.NoError(t, err)
-		require.Equal(t, "", returnString)
-		require.Equal(t, expectedResult, string(input.result))
+		require.Nil(t, returnRunes)
+		require.Equal(t, expectedResult, input.result)
 	})
 
 	t.Run("should process pending input as Escape sequence", func(t *testing.T) {
-		expectedResult := "hello"
+		expectedResult := []rune("hello")
 		input := NewInput()
 		input.pending = []byte{keys.Escape, keys.LeftBracket, 'A'}
 		input.result = []rune(expectedResult)
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.False(t, done)
 		require.NoError(t, err)
-		require.Equal(t, "", returnString)
+		require.Nil(t, returnRunes)
 		require.Empty(t, input.pending)
-		require.Equal(t, expectedResult, string(input.result))
+		require.Equal(t, expectedResult, input.result)
 	})
 
 	t.Run("should process pending input as Escape sequence, too short", func(t *testing.T) {
-		expectedResult := "hello"
+		expectedResult := []rune("hello")
 		input := NewInput()
 		input.pending = []byte{keys.Escape}
 		input.result = []rune(expectedResult)
 
-		returnString, done, err := input.processPending()
+		returnRunes, done, err := input.processPending()
 		require.False(t, done)
 		require.NoError(t, err)
-		require.Equal(t, "", returnString)
+		require.Nil(t, returnRunes)
 		require.Equal(t, []byte{}, input.pending, "pending should be empty because the escape byte should be consumed")
-		require.Equal(t, expectedResult, string(input.result))
+		require.Equal(t, expectedResult, input.result)
 	})
 }
 
