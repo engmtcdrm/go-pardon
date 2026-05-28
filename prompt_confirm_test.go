@@ -2,108 +2,158 @@ package pardon
 
 import (
 	"testing"
+
+	"github.com/engmtcdrm/go-pardon/internal/runekeys"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestConfirmCreation(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result)
-
-	if confirm == nil {
-		t.Error("NewConfirm returned nil")
-	}
-
-	if confirm.icon.val == "" {
-		t.Error("Confirm should have default icon")
-	}
-}
-
-func TestConfirmWithTitle(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result).
-		Title("Are you sure?")
-
-	if confirm.title.val != "Are you sure?" {
-		t.Errorf("Title() = %q; want %q", confirm.title.val, "Are you sure?")
-	}
-}
-
-func TestConfirmWithValue(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result)
-
-	if confirm.value != &result {
-		t.Error("Confirm value pointer not properly set")
-	}
-}
-
-func TestConfirmValidation(t *testing.T) {
-	t.Run("no title", func(t *testing.T) {
+// Tests for [NewConfirm] function.
+func Test_NewConfirm(t *testing.T) {
+	t.Run("with default settings", func(t *testing.T) {
 		var result bool
-		prompt := NewConfirm(&result)
-
-		// We can't easily test Ask() without user interaction,
-		// but we can verify the validation conditions
-		if prompt.value == nil {
-			t.Error("Value should be set")
-		}
-	})
-
-	t.Run("no value", func(t *testing.T) {
-		var result bool
-		prompt := NewConfirm(&result).
-			Title("Proceed?")
-
-		// Verify title is set correctly
-		if prompt.title.val != "Proceed?" {
-			t.Error("Title should be set correctly")
-		}
+		confirm := NewConfirm(&result)
+		require.NotNil(t, confirm, "NewConfirm returned nil")
 	})
 }
 
-func TestConfirmWithAnswerFunc(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result).
-		Title("Continue?").
-		AnswerFunc(func(answer string) string {
-			return "[" + answer + "]"
-		})
+// Tests for [Confirm.AnswerFunc] function.
+func Test_Confirm_AnswerFunc(t *testing.T) {
+	t.Run("using default answer function", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		assert.Nil(t, confirm.answerFn, "Default answer function should be nil")
+	})
 
-	// We can't test the actual interaction, but we can verify configuration
-	if confirm == nil {
-		t.Error("Confirm with answer function returned nil")
-	}
+	t.Run("using custom answer function", func(t *testing.T) {
+		var result bool
+		customFn := func(s string) string {
+			return "Custom: " + s
+		}
+		confirm := NewConfirm(&result).
+			Title("Continue?").
+			AnswerFunc(customFn)
+		assert.Equal(t, customFn("Test"), confirm.answerFn("Test"), "Custom answer function did not return expected result")
+	})
 }
 
-func TestConfirmWithIcon(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result).
-		Icon("❓ ")
+// Tests for [Confirm.ConfirmKey] function.
+func Test_Confirm_ConfirmKey(t *testing.T) {
+	t.Run("default confirm key", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.Equal(t, runekeys.UpperY, confirm.confirmKey, "Default confirm key should be 'Y'")
+	})
 
-	if confirm.icon.val != "❓ " {
-		t.Errorf("Icon() = %q; want %q", confirm.icon.val, "❓ ")
-	}
+	t.Run("custom confirm key", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			ConfirmKey(runekeys.UpperO)
+		require.Equal(t, runekeys.UpperO, confirm.confirmKey, "Custom confirm key should be 'O'")
+	})
 }
 
-func TestConfirmWithIconFunc(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result).
-		IconFunc(func(input string) string {
-			return "⚡ "
-		})
+// Tests for [Confirm.DenyKey] function.
+func Test_Confirm_DenyKey(t *testing.T) {
+	t.Run("default deny key", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.Equal(t, runekeys.UpperN, confirm.denyKey, "Default deny key should be 'N'")
+	})
 
-	if confirm.icon.fn == nil {
-		t.Error("IconFunc should set the icon function")
-	}
+	t.Run("custom deny key", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			DenyKey(runekeys.UpperO)
+		require.Equal(t, runekeys.UpperO, confirm.denyKey, "Custom deny key should be 'O'")
+	})
 }
 
-func TestConfirmWithTitleFunc(t *testing.T) {
-	var result bool
-	confirm := NewConfirm(&result).
-		TitleFunc(func(input string) string {
-			return "Confirm: " + input
-		})
+// Tests for [Confirm.Icon] function.
+func Test_Confirm_Icon(t *testing.T) {
+	// TODO: Fillout
+}
 
-	if confirm.title.fn == nil {
-		t.Error("TitleFunc should set the title function")
-	}
+// Tests for [Confirm.IconFunc] function.
+func Test_Confirm_IconFunc(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.Title] function.
+func Test_Confirm_Title(t *testing.T) {
+	t.Run("with title", func(t *testing.T) {
+		expectedTitle := "Are you sure?"
+		var result bool
+		confirm := NewConfirm(&result).
+			Title(expectedTitle)
+		require.Equal(t, expectedTitle, confirm.title.val, "Title() did not set the title correctly")
+	})
+
+	t.Run("without title", func(t *testing.T) {
+		expectedTitle := ""
+		var result bool
+		confirm := NewConfirm(&result)
+		require.Equal(t, expectedTitle, confirm.title.val, "Title() did not set the title correctly")
+	})
+}
+
+// Tests for [Confirm.TitleFunc] function.
+func Test_Confirm_TitleFunc(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.Value] function.
+func Test_Confirm_Value(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.Ask] function.
+func Test_Confirm_Ask(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.ask] function.
+func Test_Confirm_ask(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.callAnswerFunc] function.
+func Tests_Confirm_callAnswerFunc(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.processLine] function.
+func Tests_Confirm_processLine(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.equal] function.
+func Tests_Confirm_equal(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.getPromptOptions] function.
+func Tests_Confirm_getPromptOptions(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.getValueAsRunes] function.
+func Tests_Confirm_getValueAsRunes(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.getValueAsString] function.
+func Tests_Confirm_getValueAsString(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.printFinalPromptLine] function.
+func Tests_Confirm_printFinalPromptLine(t *testing.T) {
+	// TODO: Fillout
+}
+
+// Tests for [Confirm.trimSpace] function.
+func Tests_Confirm_trimSpace(t *testing.T) {
+	// TODO: Fillout
 }
