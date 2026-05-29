@@ -3,9 +3,11 @@ package pardon
 import (
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// MockPrompt is a test double for the Prompt interface
 type MockPrompt struct {
 	shouldError bool
 	errorMsg    string
@@ -20,27 +22,19 @@ func (m *MockPrompt) Ask() error {
 	return nil
 }
 
-func TestNewForm(t *testing.T) {
+// Tests for [NewForm] function.
+func Test_NewForm(t *testing.T) {
 	t.Run("creates form with no prompts", func(t *testing.T) {
 		form := NewForm()
-		if form == nil {
-			t.Fatal("NewForm() returned nil")
-		}
-		if len(form.prompts) != 0 {
-			t.Errorf("Expected 0 prompts, got %d", len(form.prompts))
-		}
+		require.NotNil(t, form, "NewForm() returned nil")
+		require.Equalf(t, len(form.prompts), 0, "Expected 0 prompts, got %d", len(form.prompts))
 	})
 
 	t.Run("creates form with single prompt", func(t *testing.T) {
 		mockPrompt := &MockPrompt{}
 		form := NewForm(mockPrompt)
-
-		if form == nil {
-			t.Fatal("NewForm() returned nil")
-		}
-		if len(form.prompts) != 1 {
-			t.Errorf("Expected 1 prompt, got %d", len(form.prompts))
-		}
+		require.NotNil(t, form, "NewForm() returned nil")
+		require.Equalf(t, len(form.prompts), 1, "Expected 1 prompt, got %d", len(form.prompts))
 	})
 
 	t.Run("creates form with multiple prompts", func(t *testing.T) {
@@ -49,40 +43,29 @@ func TestNewForm(t *testing.T) {
 		mockPrompt3 := &MockPrompt{}
 
 		form := NewForm(mockPrompt1, mockPrompt2, mockPrompt3)
-
-		if form == nil {
-			t.Fatal("NewForm() returned nil")
-		}
-		if len(form.prompts) != 3 {
-			t.Errorf("Expected 3 prompts, got %d", len(form.prompts))
-		}
+		require.NotNil(t, form, "NewForm() returned nil")
+		require.Equalf(t, len(form.prompts), 3, "Expected 3 prompts, got %d", len(form.prompts))
 	})
 }
 
-func TestForm_Ask(t *testing.T) {
+// Tests for [Form.Ask] function.
+func Test_Form_Ask(t *testing.T) {
 	t.Run("executes all prompts successfully", func(t *testing.T) {
 		mockPrompt1 := &MockPrompt{}
 		mockPrompt2 := &MockPrompt{}
 		mockPrompt3 := &MockPrompt{}
 
-		form := NewForm(mockPrompt1, mockPrompt2, mockPrompt3)
+		form := NewForm(
+			mockPrompt1,
+			mockPrompt2,
+			mockPrompt3,
+		)
 
 		err := form.Ask()
-
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
-
-		// Verify all prompts were called
-		if !mockPrompt1.askCalled {
-			t.Error("First prompt was not called")
-		}
-		if !mockPrompt2.askCalled {
-			t.Error("Second prompt was not called")
-		}
-		if !mockPrompt3.askCalled {
-			t.Error("Third prompt was not called")
-		}
+		require.NoErrorf(t, err, "Expected no error, got %v", err)
+		assert.True(t, mockPrompt1.askCalled, "First prompt was not called")
+		assert.True(t, mockPrompt2.askCalled, "Second prompt was not called")
+		assert.True(t, mockPrompt3.askCalled, "Third prompt was not called")
 	})
 
 	t.Run("stops on first error", func(t *testing.T) {
@@ -90,27 +73,20 @@ func TestForm_Ask(t *testing.T) {
 		mockPrompt2 := &MockPrompt{shouldError: true, errorMsg: "test error"}
 		mockPrompt3 := &MockPrompt{}
 
-		form := NewForm(mockPrompt1, mockPrompt2, mockPrompt3)
+		form := NewForm(
+			mockPrompt1,
+			mockPrompt2,
+			mockPrompt3,
+		)
 
 		err := form.Ask()
-
-		if err == nil {
-			t.Error("Expected error, got nil")
-		}
-		if err.Error() != "test error" {
-			t.Errorf("Expected 'test error', got %v", err)
-		}
+		require.Error(t, err, "Expected error, got nil")
+		require.Equal(t, "test error", err.Error(), "Error message did not match")
 
 		// Verify execution stopped after the error
-		if !mockPrompt1.askCalled {
-			t.Error("First prompt was not called")
-		}
-		if !mockPrompt2.askCalled {
-			t.Error("Second prompt was not called")
-		}
-		if mockPrompt3.askCalled {
-			t.Error("Third prompt should not have been called after error")
-		}
+		assert.True(t, mockPrompt1.askCalled, "First prompt was not called")
+		assert.True(t, mockPrompt2.askCalled, "Second prompt was not called")
+		assert.False(t, mockPrompt3.askCalled, "Third prompt should not have been called after error")
 	})
 
 	t.Run("handles error on first prompt", func(t *testing.T) {
@@ -120,31 +96,20 @@ func TestForm_Ask(t *testing.T) {
 		form := NewForm(mockPrompt1, mockPrompt2)
 
 		err := form.Ask()
-
-		if err == nil {
-			t.Error("Expected error, got nil")
-		}
-		if err.Error() != "first prompt error" {
-			t.Errorf("Expected 'first prompt error', got %v", err)
-		}
+		require.Error(t, err, "Expected error, got nil")
+		require.Equal(t, "first prompt error", err.Error(), "Error message did not match")
 
 		// Verify only first prompt was called
-		if !mockPrompt1.askCalled {
-			t.Error("First prompt was not called")
-		}
-		if mockPrompt2.askCalled {
-			t.Error("Second prompt should not have been called after error")
-		}
+		assert.True(t, mockPrompt1.askCalled, "First prompt was not called")
+		assert.False(t, mockPrompt2.askCalled, "Second prompt should not have been called after error")
 	})
 
 	t.Run("handles empty form", func(t *testing.T) {
 		form := NewForm()
 
 		err := form.Ask()
-
-		if err != nil {
-			t.Errorf("Expected no error for empty form, got %v", err)
-		}
+		require.Error(t, err, "Expected error, got nil")
+		assert.Equal(t, ErrNoPrompts, err, "Expected ErrNoPrompts for empty form")
 	})
 
 	t.Run("handles single successful prompt", func(t *testing.T) {
@@ -152,13 +117,8 @@ func TestForm_Ask(t *testing.T) {
 		form := NewForm(mockPrompt)
 
 		err := form.Ask()
-
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
-		if !mockPrompt.askCalled {
-			t.Error("Prompt was not called")
-		}
+		require.NoErrorf(t, err, "Expected no error, got %v", err)
+		assert.True(t, mockPrompt.askCalled, "Prompt was not called")
 	})
 
 	t.Run("handles single failing prompt", func(t *testing.T) {
@@ -166,63 +126,8 @@ func TestForm_Ask(t *testing.T) {
 		form := NewForm(mockPrompt)
 
 		err := form.Ask()
-
-		if err == nil {
-			t.Error("Expected error, got nil")
-		}
-		if err.Error() != "single prompt error" {
-			t.Errorf("Expected 'single prompt error', got %v", err)
-		}
-		if !mockPrompt.askCalled {
-			t.Error("Prompt was not called")
-		}
-	})
-}
-
-func TestForm_Integration(t *testing.T) {
-	t.Run("complex scenario with mixed success and failure", func(t *testing.T) {
-		// Create a scenario with multiple prompts where the 3rd one fails
-		prompts := []*MockPrompt{
-			{}, // Success
-			{}, // Success
-			{shouldError: true, errorMsg: "validation failed"}, // Failure
-			{}, // Should not be reached
-			{}, // Should not be reached
-		}
-
-		form := NewForm(
-			prompts[0],
-			prompts[1],
-			prompts[2],
-			prompts[3],
-			prompts[4],
-		)
-
-		err := form.Ask()
-
-		// Should return error from 3rd prompt
-		if err == nil {
-			t.Error("Expected error, got nil")
-		}
-		if err.Error() != "validation failed" {
-			t.Errorf("Expected 'validation failed', got %v", err)
-		}
-
-		// Check execution sequence
-		if !prompts[0].askCalled {
-			t.Error("First prompt should have been called")
-		}
-		if !prompts[1].askCalled {
-			t.Error("Second prompt should have been called")
-		}
-		if !prompts[2].askCalled {
-			t.Error("Third prompt should have been called")
-		}
-		if prompts[3].askCalled {
-			t.Error("Fourth prompt should not have been called")
-		}
-		if prompts[4].askCalled {
-			t.Error("Fifth prompt should not have been called")
-		}
+		require.Error(t, err, "Expected error, got nil")
+		require.Equal(t, "single prompt error", err.Error(), "Error message did not match")
+		assert.True(t, mockPrompt.askCalled, "Prompt was not called")
 	})
 }

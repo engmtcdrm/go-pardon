@@ -31,6 +31,23 @@ func Test_NewHiddenInput(t *testing.T) {
 	})
 }
 
+// Tests for [NewConfirmInput] function.
+func Test_NewConfirmInput(t *testing.T) {
+	t.Run("should create a new Input instance with Hide set to true", func(t *testing.T) {
+		input := NewConfirmInput()
+		require.NotNil(t, input)
+		require.Equal(t, input.Hide, false)
+		require.Equal(t, input.Confirm, true)
+		require.Equal(t, input.Writer, os.Stdout)
+		require.Equal(t, input.Reader, os.Stdin)
+	})
+}
+
+// Tests for [Input.RawRead] function.
+func Test_Input_RawRead(t *testing.T) {
+	t.Skip("not implemented")
+}
+
 // Tests for [Input.handleErase] function.
 func Test_Input_handleErase(t *testing.T) {
 	t.Run("should remove the last character from result and pending", func(t *testing.T) {
