@@ -2,13 +2,12 @@ package pardon
 
 import (
 	"errors"
-
-	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 var (
-	ErrUserAborted     = tui.ErrUserAborted
-	ErrNoTitle         = errors.New("prompt requires a title")
+	ErrNoPrompts       = errors.New("form requires at least one prompt")
 	ErrNoSelectOptions = errors.New("select prompt requires at least one option")
+	ErrNoTitle         = errors.New("prompt requires a title")
 	ErrNoValue         = errors.New("value must be set")
+	ErrUserAborted     = errors.New("user aborted")
 )
