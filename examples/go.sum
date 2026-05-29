@@ -8,8 +8,8 @@ github.com/engmtcdrm/go-eggy v0.0.0-20260111001735-22eb72b6e803 h1:RaxkJza28erWq
 github.com/engmtcdrm/go-eggy v0.0.0-20260111001735-22eb72b6e803/go.mod h1:UZR7ogQfyN6q4BeP4wziqwkrYjdJI1OJw8MquCKhCWk=
 github.com/engmtcdrm/go-prettyprint v1.2.0 h1:VZZNj51npvlvUU3APqAmQznlRvulHLDLHPk8Per0EFY=
 github.com/engmtcdrm/go-prettyprint v1.2.0/go.mod h1:JAVlA6ZwVyk3jkpeejxRCMc6daru6WxSN2zFtHGL9ag=
-github.com/mattn/go-runewidth v0.0.23 h1:7ykA0T0jkPpzSvMS5i9uoNn2Xy3R383f9HDx3RybWcw=
-github.com/mattn/go-runewidth v0.0.23/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
+github.com/mattn/go-runewidth v0.0.24 h1:cpokDiIn0MGnhdHwuWnJBITySJ20QyNGnY2kR/ay2DU=
+github.com/mattn/go-runewidth v0.0.24/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
