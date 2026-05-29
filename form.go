@@ -15,6 +15,10 @@ func NewForm(prompts ...Prompt) *Form {
 
 // Ask executes all prompts in sequence, stopping on the first error.
 func (f *Form) Ask() error {
+	if len(f.prompts) == 0 {
+		return ErrNoPrompts
+	}
+
 	for _, p := range f.prompts {
 		if err := p.Ask(); err != nil {
 			return err
