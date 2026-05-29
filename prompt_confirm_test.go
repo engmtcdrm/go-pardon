@@ -72,12 +72,12 @@ func Test_Confirm_DenyKey(t *testing.T) {
 
 // Tests for [Confirm.Icon] function.
 func Test_Confirm_Icon(t *testing.T) {
-	// TODO: Fillout
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.IconFunc] function.
 func Test_Confirm_IconFunc(t *testing.T) {
-	// TODO: Fillout
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.Title] function.
@@ -100,60 +100,60 @@ func Test_Confirm_Title(t *testing.T) {
 
 // Tests for [Confirm.TitleFunc] function.
 func Test_Confirm_TitleFunc(t *testing.T) {
-	// TODO: Fillout
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.Value] function.
 func Test_Confirm_Value(t *testing.T) {
-	// TODO: Fillout
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.Ask] function.
 func Test_Confirm_Ask(t *testing.T) {
-	// TODO: Fillout
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.ask] function.
 func Test_Confirm_ask(t *testing.T) {
-	// TODO: Fillout
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.callAnswerFunc] function.
-func Tests_Confirm_callAnswerFunc(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_callAnswerFunc(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.processLine] function.
-func Tests_Confirm_processLine(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_processLine(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.equal] function.
-func Tests_Confirm_equal(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_equal(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.getPromptOptions] function.
-func Tests_Confirm_getPromptOptions(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_getPromptOptions(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.getValueAsRunes] function.
-func Tests_Confirm_getValueAsRunes(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_getValueAsRunes(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.getValueAsString] function.
-func Tests_Confirm_getValueAsString(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_getValueAsString(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.printFinalPromptLine] function.
-func Tests_Confirm_printFinalPromptLine(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_printFinalPromptLine(t *testing.T) {
+	t.Skip("not implemented")
 }
 
 // Tests for [Confirm.trimSpace] function.
-func Tests_Confirm_trimSpace(t *testing.T) {
-	// TODO: Fillout
+func Test_Confirm_trimSpace(t *testing.T) {
+	t.Skip("not implemented")
 }
