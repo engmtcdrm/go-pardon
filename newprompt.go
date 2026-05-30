@@ -135,6 +135,8 @@ func (p *InputPrompt) callAnswerFunc(s string) string {
 func (p *InputPrompt) ask() error {
 	fmt.Print(p.prompt)
 
+	p.input.Reset()
+
 	for {
 		line, err := p.input.RawRead()
 		if err != nil {
