@@ -3,6 +3,7 @@ module github.com/engmtcdrm/go-pardon
 go 1.25.10
 
 require (
+	github.com/creack/pty v1.1.24
 	github.com/engmtcdrm/go-ansi v1.0.2
 	github.com/mattn/go-runewidth v0.0.24
 	github.com/stretchr/testify v1.11.1

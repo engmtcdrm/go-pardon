@@ -64,8 +64,13 @@ func (i *Input) RawRead() ([]rune, error) {
 	// MakeRaw put the terminal connected to the given file descriptor
 	// into raw mode
 	fd := int(reader.Fd())
+
+	// If the reader is not connected to a terminal (e.g., during tests
+	// where we use PTYs or files), fall back to rawReadline which reads
+	// directly from the provided file without attempting to put the
+	// descriptor into raw mode.
 	if !term.IsTerminal(fd) {
-		return nil, fmt.Errorf("file descriptor %d is not a terminal", fd)
+		return i.rawReadline(reader)
 	}
 
 	oldState, err := term.MakeRaw(fd)
@@ -75,6 +80,15 @@ func (i *Input) RawRead() ([]rune, error) {
 	defer term.Restore(fd, oldState)
 
 	return i.rawReadline(reader)
+}
+
+// Reset clears the pending input and the result. This should be called prior
+// to calling [Input.RawRead] to ensure that any previous input does not
+// interfere with the new input. This is intentional to allow for easier testing
+// of the [Input] struct.
+func (i *Input) Reset() {
+	i.pending = nil
+	i.result = nil
 }
 
 // handleErase processes a backspace or delete key press by removing the last
@@ -172,8 +186,6 @@ func (i *Input) processPending() (returnRunes []rune, done bool, err error) {
 }
 
 func (i *Input) rawReadline(f *os.File) ([]rune, error) {
-	i.reset()
-
 	for {
 		var buf [8]byte
 		n, err := f.Read(buf[:])
@@ -197,11 +209,4 @@ func (i *Input) rawReadline(f *os.File) ([]rune, error) {
 
 	i.print("\n")
 	return i.result, nil
-}
-
-// reset clears the pending input and the result. This is called prior to
-// processing new input.
-func (i *Input) reset() {
-	i.pending = nil
-	i.result = nil
 }
