@@ -160,6 +160,7 @@ func (t *Terminal) processPending() (returnRunes []rune, done bool, err error) {
 	for len(t.pending) > 0 {
 		switch t.pending[0] {
 		case keys.NewLine, keys.Enter:
+			t.result = append(t.result, rune(t.pending[0]))
 			return t.result, true, nil
 		case keys.CtrlC:
 			return nil, true, ErrUserAborted

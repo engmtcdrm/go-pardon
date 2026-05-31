@@ -63,7 +63,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 
 		results, err := terminal.RawRead()
 		require.NoError(t, err)
-		require.Equal(t, []rune("hello"), results)
+		require.Equal(t, []rune("hello\n"), results)
 	})
 
 	t.Run("should return an error if In is not a file", func(t *testing.T) {
@@ -86,7 +86,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 
 		results, err := terminal.RawRead()
 		require.NoError(t, err)
-		require.Equal(t, []rune("hello"), results)
+		require.Equal(t, []rune("hello\n"), results)
 	})
 
 	t.Run("should error when term.MakeRaw fails", func(t *testing.T) {
@@ -196,11 +196,13 @@ func Test_Terminal_print(t *testing.T) {
 // Tests for [Terminal.processPending] function.
 func Test_Terminal_processPending(t *testing.T) {
 	t.Run("should process pending input as Carriage Return", func(t *testing.T) {
-		expectedResult := []rune("hello")
+		initialResult := []rune("hello")
 		terminal := NewTerminal()
 		terminal.Out = io.Discard
 		terminal.pending = []byte{keys.NewLine}
-		terminal.result = []rune(expectedResult)
+		terminal.result = []rune(initialResult)
+
+		expectedResult := []rune("hello\n")
 
 		returnRunes, done, err := terminal.processPending()
 		require.True(t, done)
@@ -209,11 +211,13 @@ func Test_Terminal_processPending(t *testing.T) {
 	})
 
 	t.Run("should process pending input as Enter", func(t *testing.T) {
-		expectedResult := []rune("hello")
+		initialResult := []rune("hello")
 		terminal := NewTerminal()
 		terminal.Out = io.Discard
 		terminal.pending = []byte{keys.Enter}
-		terminal.result = []rune(expectedResult)
+		terminal.result = []rune(initialResult)
+
+		expectedResult := []rune("hello\r")
 
 		returnRunes, done, err := terminal.processPending()
 		require.True(t, done)
@@ -302,7 +306,7 @@ func Test_Terminal_processPending(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, done)
 		require.NotNil(t, returnRunes)
-		require.Equal(t, []rune{'H', 'I'}, returnRunes, "pending should remain unchanged on invalid rune")
+		require.Equal(t, []rune{'H', 'I', runekeys.Enter}, returnRunes, "pending should remain unchanged on invalid rune")
 	})
 
 	t.Run("invalid full rune in pending input", func(t *testing.T) {
@@ -341,7 +345,7 @@ func Test_Terminal_rawReadline(t *testing.T) {
 
 		results, err := terminal.rawReadline(f)
 		require.NoError(t, err)
-		require.Equal(t, []rune("hello"), results)
+		require.Equal(t, []rune("hello\n"), results)
 	})
 
 	t.Run("should return an error if there is an issue reading from the file", func(t *testing.T) {
