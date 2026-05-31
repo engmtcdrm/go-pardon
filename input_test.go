@@ -4,15 +4,12 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"testing"
 
-	"time"
-
-	"github.com/creack/pty"
 	"github.com/engmtcdrm/go-pardon/internal/keys"
 	"github.com/engmtcdrm/go-pardon/internal/runekeys"
+	"github.com/engmtcdrm/go-pardon/internal/testutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,7 +54,7 @@ func Test_Input_RawRead(t *testing.T) {
 			t.Skip("pty tests skipped on Windows. Pty is not supported.")
 		}
 
-		f := createPty(t, "hello\n")
+		f := testutils.CreatePTY(t, "hello\n")
 		defer f.Close()
 
 		input := NewInput()
@@ -80,7 +77,7 @@ func Test_Input_RawRead(t *testing.T) {
 	})
 
 	t.Run("should read input from the Reader if not a terminal but valid file", func(t *testing.T) {
-		f := createValidTestFile(t, "hello\n")
+		f := testutils.CreateValidTestFile(t, "hello\n")
 		defer f.Close()
 
 		input := NewInput()
@@ -336,7 +333,7 @@ func Test_Input_processPending(t *testing.T) {
 // Tests for [Input.rawReadline] function.
 func Test_Input_rawReadline(t *testing.T) {
 	t.Run("should read runes from the file until a newline is encountered", func(t *testing.T) {
-		f := createValidTestFile(t, "hello\n")
+		f := testutils.CreateValidTestFile(t, "hello\n")
 		defer f.Close()
 
 		input := NewInput()
@@ -348,7 +345,7 @@ func Test_Input_rawReadline(t *testing.T) {
 	})
 
 	t.Run("should return an error if there is an issue reading from the file", func(t *testing.T) {
-		f := createInvalidTestFile(t, "hello\n")
+		f := testutils.CreateInvalidTestFile(t, "hello\n")
 		defer f.Close()
 
 		input := NewInput()
@@ -366,58 +363,4 @@ func Test_Input_rawReadline(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, results)
 	})
-}
-
-// createValidTestFile is a helper function to create a temporary file with
-// specific content for emulating user input for tests. It appends an EOF
-// character to the content to ensure that the file is properly terminated for
-// reading.
-func createValidTestFile(t *testing.T, content string) *os.File {
-	// content += "\x04"
-	testFile := filepath.Join(t.TempDir(), "test_input.txt")
-
-	err := os.WriteFile(testFile, []byte(content), 0644)
-	require.NoError(t, err, "failed to write test file")
-
-	f, err := os.Open(testFile)
-	require.NoError(t, err, "failed to open test file")
-	return f
-}
-
-// createInvalidTestFile is a helper function to create a temporary file with
-// specific content for emulating user input for tests. It does not append an
-// EOF character to the content, which can be used to test how the code handles
-// unexpected end of input.
-func createInvalidTestFile(t *testing.T, content string) *os.File {
-	testFile := filepath.Join(t.TempDir(), "test_input.txt")
-
-	f, err := os.Create(testFile)
-	require.NoError(t, err, "failed to create test file")
-
-	_, err = f.WriteString(content)
-	require.NoError(t, err, "failed to write to test file")
-
-	return f
-}
-
-// createPty creates a pseudo-terminal pair and writes the provided content to
-// the master end so the returned slave *os.File can be used as a terminal
-// reader in tests. The master is closed after writing so the slave will
-// observe EOF when appropriate.
-func createPty(t *testing.T, content string) *os.File {
-	m, s, err := pty.Open()
-	require.NoError(t, err, "failed to open pty")
-
-	// Write content as if typed by a user to ensure ordering of bytes so
-	// that the reader processes printable runes before the newline is
-	// encountered. Close the master after writing so the slave observes EOF.
-	go func() {
-		defer m.Close()
-		for i := 0; i < len(content); i++ {
-			_, _ = m.Write([]byte{content[i]})
-			time.Sleep(5 * time.Millisecond)
-		}
-	}()
-
-	return s
 }
