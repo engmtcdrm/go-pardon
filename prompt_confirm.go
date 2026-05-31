@@ -41,6 +41,23 @@ func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
 	return c
 }
 
+// Ask displays the confirmation prompt.
+func (c *Confirm) Ask() error {
+	if c.title.val == "" && c.title.fn == nil {
+		return ErrNoTitle
+	}
+
+	if c.value == nil {
+		return ErrNoValue
+	}
+
+	if err := c.ask(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ConfirmKey sets the rune that represents the confirmation key (e.g., 'Y' for
 // yes).
 func (c *Confirm) ConfirmKey(r rune) *Confirm {
@@ -83,23 +100,6 @@ func (c *Confirm) TitleFunc(fn func(string) string) *Confirm {
 func (c *Confirm) Value(value *bool) *Confirm {
 	c.value = value
 	return c
-}
-
-// Ask displays the confirmation prompt.
-func (c *Confirm) Ask() error {
-	if c.title.val == "" && c.title.fn == nil {
-		return ErrNoTitle
-	}
-
-	if c.value == nil {
-		return ErrNoValue
-	}
-
-	if err := c.ask(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *Confirm) ask() error {
