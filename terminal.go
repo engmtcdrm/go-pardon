@@ -11,7 +11,7 @@ import (
 	"golang.org/x/term"
 )
 
-type Input struct {
+type Terminal struct {
 	// Hide indicates whether the input should be hidden (e.g., for password
 	// input).
 	Hide bool
@@ -19,8 +19,10 @@ type Input struct {
 	// Confirm indicates whether the input should be treated as a confirmation.
 	Confirm bool
 
-	Writer io.Writer
-	Reader io.Reader
+	// Out is the output writer for the terminal, typically [os.Stdout].
+	Out io.Writer
+	// In is the input reader for the terminal, typically [os.Stdin].
+	In io.Reader
 
 	// pending holds the bytes that have been read but not yet processed.
 	pending []byte
@@ -30,23 +32,31 @@ type Input struct {
 	result []rune
 }
 
-func NewInput() *Input {
-	return &Input{
-		Hide:   false,
-		Writer: os.Stdout,
-		Reader: os.Stdin,
+// NewTerminal creates a new Terminal instance with default settings for regular
+// input. Output will go to [os.Stdout] and input will be read from [os.Stdin].
+func NewTerminal() *Terminal {
+	return &Terminal{
+		Hide: false,
+		Out:  os.Stdout,
+		In:   os.Stdin,
 	}
 }
 
-func NewHiddenInput() *Input {
-	input := NewInput()
+// NewHiddenTerminal creates a new Terminal instance configured for hidden input,
+// such as for password prompts. Output will go to [os.Stdout] and input will be
+// read from [os.Stdin].
+func NewHiddenTerminal() *Terminal {
+	input := NewTerminal()
 	input.Hide = true
 
 	return input
 }
 
-func NewConfirmInput() *Input {
-	input := NewInput()
+// NewConfirmTerminal creates a new Terminal instance configured for
+// confirmation prompts. Output will go to [os.Stdout] and input will be read
+// from [os.Stdin].
+func NewConfirmTerminal() *Terminal {
+	input := NewTerminal()
 	input.Confirm = true
 
 	return input
@@ -55,8 +65,11 @@ func NewConfirmInput() *Input {
 // RawRead reads input from the terminal in raw mode. It handles special keys
 // like Enter, Backspace, etc., and returns the input as a slice of runes. If
 // the input is interrupted (e.g., by Ctrl+C), it returns an error.
-func (i *Input) RawRead() ([]rune, error) {
-	reader, ok := i.Reader.(*os.File)
+//
+// [Terminal.Reset] must be called before invoking this function to ensure that
+// any previous input does not interfere with the new input.
+func (t *Terminal) RawRead() ([]rune, error) {
+	reader, ok := t.In.(*os.File)
 	if !ok {
 		return nil, fmt.Errorf("unable to read input: input reader is not a file")
 	}
@@ -70,7 +83,7 @@ func (i *Input) RawRead() ([]rune, error) {
 	// directly from the provided file without attempting to put the
 	// descriptor into raw mode.
 	if !term.IsTerminal(fd) {
-		return i.rawReadline(reader)
+		return t.rawReadline(reader)
 	}
 
 	oldState, err := term.MakeRaw(fd)
@@ -79,43 +92,43 @@ func (i *Input) RawRead() ([]rune, error) {
 	}
 	defer term.Restore(fd, oldState)
 
-	return i.rawReadline(reader)
+	return t.rawReadline(reader)
 }
 
 // Reset clears the pending input and the result. This should be called prior
-// to calling [Input.RawRead] to ensure that any previous input does not
+// to calling [Terminal.RawRead] to ensure that any previous input does not
 // interfere with the new input. This is intentional to allow for easier testing
-// of the [Input] struct.
-func (i *Input) Reset() {
-	i.pending = nil
-	i.result = nil
+// of the [Terminal] struct.
+func (t *Terminal) Reset() {
+	t.pending = nil
+	t.result = nil
 }
 
 // handleErase processes a backspace or delete key press by removing the last
 // character
-func (i *Input) handleErase() {
-	i.pending = i.pending[1:]
-	if len(i.result) > 0 {
-		i.result = i.result[:len(i.result)-1]
-		i.print("\b \b")
+func (t *Terminal) handleErase() {
+	t.pending = t.pending[1:]
+	if len(t.result) > 0 {
+		t.result = t.result[:len(t.result)-1]
+		t.print("\b \b")
 	}
 }
 
 // handleEscapeSequence processes an escape sequence starting with the escape key.
-func (i *Input) handleEscapeSequence() (doBreak bool) {
-	if len(i.pending) < 2 {
+func (t *Terminal) handleEscapeSequence() (doBreak bool) {
+	if len(t.pending) < 2 {
 		return true
 	}
 
-	if !validateEscapeSequence(i.pending[1]) {
-		i.pending = i.pending[1:]
+	if !validateEscapeSequence(t.pending[1]) {
+		t.pending = t.pending[1:]
 		return false
 	}
 
 	k := 2
 	foundFinal := false
-	for k < len(i.pending) {
-		c := i.pending[k]
+	for k < len(t.pending) {
+		c := t.pending[k]
 		// The final byte of an escape sequence is in the range 0x40 to 0x7E.
 		if c >= 0x40 && c <= 0x7E {
 			k++
@@ -131,53 +144,53 @@ func (i *Input) handleEscapeSequence() (doBreak bool) {
 		return true
 	}
 
-	i.pending = i.pending[k:]
+	t.pending = t.pending[k:]
 	return false
 }
 
-// print writes the given arguments to the terminal if [Input.Hide] is false.
-func (i *Input) print(a ...any) {
-	if !i.Hide {
-		fmt.Fprint(i.Writer, a...)
+// print writes the given arguments to the terminal if [Terminal.Hide] is false.
+func (t *Terminal) print(a ...any) {
+	if !t.Hide {
+		fmt.Fprint(t.Out, a...)
 	}
 }
 
 // processPending processes the pending input bytes and updates the result.
-func (i *Input) processPending() (returnRunes []rune, done bool, err error) {
-	for len(i.pending) > 0 {
-		switch i.pending[0] {
+func (t *Terminal) processPending() (returnRunes []rune, done bool, err error) {
+	for len(t.pending) > 0 {
+		switch t.pending[0] {
 		case keys.NewLine, keys.Enter:
-			return i.result, true, nil
+			return t.result, true, nil
 		case keys.CtrlC:
 			return nil, true, ErrUserAborted
 		case keys.Delete, keys.Backspace:
-			i.handleErase()
+			t.handleErase()
 			continue
 		case keys.Escape:
-			if doBreak := i.handleEscapeSequence(); doBreak {
+			if doBreak := t.handleEscapeSequence(); doBreak {
 				break
 			}
 			continue
 		}
 
-		r, size := utf8.DecodeRune(i.pending)
+		r, size := utf8.DecodeRune(t.pending)
 		if r == utf8.RuneError && size == 1 {
-			if !utf8.FullRune(i.pending) {
+			if !utf8.FullRune(t.pending) {
 				break
 			}
 
-			i.pending = i.pending[1:]
+			t.pending = t.pending[1:]
 			continue
 		}
 
-		i.pending = i.pending[size:]
+		t.pending = t.pending[size:]
 
 		if unicode.IsPrint(r) && !unicode.IsControl(r) {
-			i.result = append(i.result, r)
-			if !i.Confirm {
-				i.print(string(r))
+			t.result = append(t.result, r)
+			if !t.Confirm {
+				t.print(string(r))
 			} else {
-				return i.result, true, nil
+				return t.result, true, nil
 			}
 		}
 	}
@@ -185,7 +198,7 @@ func (i *Input) processPending() (returnRunes []rune, done bool, err error) {
 	return nil, false, nil
 }
 
-func (i *Input) rawReadline(f *os.File) ([]rune, error) {
+func (t *Terminal) rawReadline(f *os.File) ([]rune, error) {
 	for {
 		var buf [8]byte
 		n, err := f.Read(buf[:])
@@ -200,13 +213,13 @@ func (i *Input) rawReadline(f *os.File) ([]rune, error) {
 			continue
 		}
 
-		i.pending = append(i.pending, buf[:n]...)
+		t.pending = append(t.pending, buf[:n]...)
 
-		if returnRunes, done, err := i.processPending(); done {
+		if returnRunes, done, err := t.processPending(); done {
 			return returnRunes, err
 		}
 	}
 
-	i.print("\n")
-	return i.result, nil
+	t.print("\n")
+	return t.result, nil
 }
