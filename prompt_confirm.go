@@ -12,7 +12,7 @@ import (
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
 type Confirm struct {
-	input      *Input
+	terminal   *Terminal
 	value      *bool
 	icon       eval[string]
 	title      eval[string]
@@ -26,7 +26,7 @@ type Confirm struct {
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		input:      NewConfirmInput(),
+		terminal:   NewConfirmTerminal(),
 		value:      value,
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
@@ -106,14 +106,14 @@ func (c *Confirm) ask() error {
 	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
 	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, c.getPromptOptions())
 
-	fmt.Print(c.promptOpts)
+	fmt.Fprint(c.terminal.Out, c.promptOpts)
 
-	// outer:
 	for {
-		line, err := c.input.RawRead()
+		c.terminal.Reset()
+		line, err := c.terminal.RawRead()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
-				fmt.Print(ansi.ClearLineReset + c.prompt)
+				fmt.Fprint(c.terminal.Out, ansi.ClearLineReset+c.prompt)
 				return err
 			}
 
@@ -145,12 +145,14 @@ func (c *Confirm) callAnswerFunc(s string) string {
 }
 
 func (c *Confirm) processLine(line []rune) (done bool) {
-	// If user hit enter, use the current value as the input
 	if len(line) == 0 {
-		line = c.getValueAsRunes()
+		return false
 	}
 
-	line = c.trimSpace(line)
+	// If user hit enter, use the current value of [Confirm.value] as the input
+	if line[0] == runekeys.Enter || line[0] == runekeys.NewLine {
+		line = c.getValueAsRunes()
+	}
 
 	switch {
 	case c.equal(line[0], c.confirmKey):
@@ -202,9 +204,5 @@ func (c *Confirm) printFinalPromptLine() {
 	builder.WriteString(ansi.ClearLineReset)
 	builder.WriteString(c.prompt + c.callAnswerFunc(c.getValueAsString()))
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	fmt.Print(builder.String())
-}
-
-func (c *Confirm) trimSpace(input []rune) []rune {
-	return []rune(strings.TrimSpace(string(input)))
+	fmt.Fprint(c.terminal.Out, builder.String())
 }

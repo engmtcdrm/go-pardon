@@ -24,7 +24,7 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		var result bool
 		confirm := NewConfirm(&result).
 			Title("Continue?")
-		confirm.input.Writer = io.Discard
+		confirm.terminal.Out = io.Discard
 		assert.Nil(t, confirm.answerFn, "Default answer function should be nil")
 	})
 
@@ -36,7 +36,7 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		confirm := NewConfirm(&result).
 			Title("Continue?").
 			AnswerFunc(customFn)
-		confirm.input.Writer = io.Discard
+		confirm.terminal.Out = io.Discard
 		assert.Equal(t, customFn("Test"), confirm.answerFn("Test"), "Custom answer function did not return expected result")
 	})
 }
@@ -353,10 +353,5 @@ func Test_Confirm_getValueAsString(t *testing.T) {
 
 // Tests for [Confirm.printFinalPromptLine] function.
 func Test_Confirm_printFinalPromptLine(t *testing.T) {
-	t.Skip("not implemented")
-}
-
-// Tests for [Confirm.trimSpace] function.
-func Test_Confirm_trimSpace(t *testing.T) {
 	t.Skip("not implemented")
 }
