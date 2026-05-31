@@ -20,9 +20,9 @@ type InputPrompt struct {
 	answerFn   func(string) string
 	validateFn func(string) error
 
-	input  *Input
-	prompt string
-	value  *string
+	terminal *Terminal
+	prompt   string
+	value    *string
 }
 
 // NewStringPrompt creates an InputPrompt for plaintext string input.
@@ -31,7 +31,7 @@ func NewStringPrompt(value *string) *InputPrompt {
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
-		input:      NewInput(),
+		terminal:   NewTerminal(),
 		value:      value,
 	}
 }
@@ -42,7 +42,7 @@ func NewPasswordPrompt(value *string) *InputPrompt {
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
-		input:      NewHiddenInput(),
+		terminal:   NewHiddenTerminal(),
 		value:      value,
 	}
 }
@@ -56,7 +56,7 @@ func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
 
 // Hide sets whether the input should be hidden (e.g., for password input).
 func (p *InputPrompt) Hide(hide bool) *InputPrompt {
-	p.input.Hide = hide
+	p.terminal.Hide = hide
 	return p
 }
 
@@ -133,15 +133,14 @@ func (p *InputPrompt) callAnswerFunc(s string) string {
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
 func (p *InputPrompt) ask() error {
-	fmt.Print(p.prompt)
-
-	p.input.Reset()
+	fmt.Fprint(p.terminal.Out, p.prompt)
 
 	for {
-		line, err := p.input.RawRead()
+		p.terminal.Reset()
+		line, err := p.terminal.RawRead()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
-				fmt.Print(ansi.ClearLineReset + p.prompt)
+				fmt.Fprint(p.terminal.Out, ansi.ClearLineReset+p.prompt)
 				return err
 			}
 			return err
@@ -183,7 +182,7 @@ func (p *InputPrompt) printErrorMessage(err error) {
 
 	builder.WriteString(resetLineAbove())
 	builder.WriteString(p.prompt)
-	fmt.Print(builder.String())
+	fmt.Fprint(p.terminal.Out, builder.String())
 }
 
 // printFinalPromptLine handles printing the final prompt line after successful
@@ -192,7 +191,7 @@ func (p *InputPrompt) printFinalPromptLine() {
 	builder := strings.Builder{}
 	// If the input is not hidden, We need to clear the line, then print the
 	// prompt with the answer function applied.
-	if !p.input.Hide {
+	if !p.terminal.Hide {
 		builder.WriteString(ansi.ClearLineReset)
 		builder.WriteString(p.prompt + p.callAnswerFunc(*p.value))
 	}
@@ -201,7 +200,7 @@ func (p *InputPrompt) printFinalPromptLine() {
 	// clear it in case there are any validation error messages that are still
 	// visible.
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	fmt.Print(builder.String())
+	fmt.Fprint(p.terminal.Out, builder.String())
 }
 
 func validationErrorMessage(err error) string {
@@ -215,7 +214,7 @@ func resetLineAbove() string {
 func (p *InputPrompt) getPromptLines(prompt string) (int, error) {
 	promptLines := 1
 
-	reader, ok := p.input.Reader.(*os.File)
+	reader, ok := p.terminal.In.(*os.File)
 	if !ok {
 		return 0, fmt.Errorf("unable to determine prompt lines: input reader is not a file")
 	}
