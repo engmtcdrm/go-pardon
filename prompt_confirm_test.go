@@ -1,6 +1,7 @@
 package pardon
 
 import (
+	"io"
 	"testing"
 
 	"github.com/engmtcdrm/go-pardon/internal/runekeys"
@@ -23,6 +24,7 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		var result bool
 		confirm := NewConfirm(&result).
 			Title("Continue?")
+		confirm.input.Writer = io.Discard
 		assert.Nil(t, confirm.answerFn, "Default answer function should be nil")
 	})
 
@@ -34,9 +36,56 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		confirm := NewConfirm(&result).
 			Title("Continue?").
 			AnswerFunc(customFn)
+		confirm.input.Writer = io.Discard
 		assert.Equal(t, customFn("Test"), confirm.answerFn("Test"), "Custom answer function did not return expected result")
 	})
 }
+
+// Tests for [Confirm.Ask] function.
+// func Test_Confirm_Ask(t *testing.T) {
+// 	t.Run("should return error with no title", func(t *testing.T) {
+// 		var result bool
+// 		confirm := NewConfirm(&result)
+
+// 		err := confirm.Ask()
+// 		require.Error(t, err, "Expected error when asking without title")
+// 		require.ErrorAsf(t, err, &ErrNoTitle, "Expected ErrNoTitle but got: %v", err)
+// 	})
+
+// 	t.Run("should return error with nil value", func(t *testing.T) {
+// 		confirm := NewConfirm(nil).
+// 			Title("Continue?")
+// 		confirm.input.Writer = io.Discard
+
+// 		err := confirm.Ask()
+// 		require.Error(t, err, "Expected error when asking with nil value")
+// 		require.ErrorAsf(t, err, &ErrNoValue, "Expected ErrNoValue but got: %v", err)
+// 	})
+
+// 	t.Run("should set value to true when confirmed", func(t *testing.T) {
+// 		var result bool
+// 		confirm := NewConfirm(&result).
+// 			Title("Continue?")
+// 		confirm.input.Writer = io.Discard
+// 		confirm.input.Reader = testutils.CreateValidTestFile(t, string(keys.LowerY))
+
+// 		err := confirm.Ask()
+// 		require.NoError(t, err, "Expected no error when asking with valid input")
+// 		require.True(t, result, "Expected result to be true when confirmed")
+// 	})
+
+// 	t.Run("should error when user presses Ctrl+C", func(t *testing.T) {
+// 		var result bool
+// 		confirm := NewConfirm(&result).
+// 			Title("Continue?")
+// 		confirm.input.Writer = io.Discard
+// 		confirm.input.Reader = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+
+// 		err := confirm.Ask()
+// 		require.Error(t, err, "Expected error when user presses Ctrl+C")
+// 		require.ErrorAsf(t, err, &ErrUserAborted, "Expected ErrUserAborted but got: %v", err)
+// 	})
+// }
 
 // Tests for [Confirm.ConfirmKey] function.
 func Test_Confirm_ConfirmKey(t *testing.T) {
@@ -187,12 +236,15 @@ func Test_Confirm_TitleFunc(t *testing.T) {
 
 // Tests for [Confirm.Value] function.
 func Test_Confirm_Value(t *testing.T) {
-	t.Skip("not implemented")
-}
+	t.Run("setting value to true", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.Equal(t, false, *confirm.value, "Initial value should be false")
 
-// Tests for [Confirm.Ask] function.
-func Test_Confirm_Ask(t *testing.T) {
-	t.Skip("not implemented")
+		result2 := true
+		confirm = confirm.Value(&result2)
+		require.Equal(t, true, *confirm.value, "Value() did not set the value to true")
+	})
 }
 
 // Tests for [Confirm.ask] function.
@@ -212,22 +264,91 @@ func Test_Confirm_processLine(t *testing.T) {
 
 // Tests for [Confirm.equal] function.
 func Test_Confirm_equal(t *testing.T) {
-	t.Skip("not implemented")
+	t.Run("should return true when values match", func(t *testing.T) {
+		confirm := NewConfirm(nil)
+		require.True(t, confirm.equal(runekeys.UpperY, runekeys.UpperY), "Expected equal to return true")
+		require.True(t, confirm.equal(runekeys.UpperN, runekeys.UpperN), "Expected equal to return true")
+	})
+
+	t.Run("should return false when values do not match", func(t *testing.T) {
+		confirm := NewConfirm(nil)
+
+		require.False(t, confirm.equal(runekeys.UpperO, runekeys.UpperY), "Expected equal to return false")
+		require.False(t, confirm.equal(runekeys.UpperO, runekeys.UpperN), "Expected equal to return false")
+	})
 }
 
 // Tests for [Confirm.getPromptOptions] function.
 func Test_Confirm_getPromptOptions(t *testing.T) {
-	t.Skip("not implemented")
+	t.Run("with default confirm and deny keys", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		expectedOptions := "[y/N]"
+		require.Equal(t, expectedOptions, confirm.getPromptOptions(), "getPromptOptions() did not return expected options")
+
+		result = true
+		expectedOptions = "[Y/n]"
+		require.Equal(t, expectedOptions, confirm.getPromptOptions(), "getPromptOptions() did not return expected options when value is true")
+	})
+
+	t.Run("with custom confirm and deny keys", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			ConfirmKey(runekeys.UpperO).
+			DenyKey(runekeys.UpperA)
+		expectedOptions := "[o/A]"
+		require.Equal(t, expectedOptions, confirm.getPromptOptions(), "getPromptOptions() did not return expected options with custom keys")
+
+		result = true
+		expectedOptions = "[O/a]"
+		require.Equal(t, expectedOptions, confirm.getPromptOptions(), "getPromptOptions() did not return expected options with custom keys when value is true")
+	})
 }
 
 // Tests for [Confirm.getValueAsRunes] function.
 func Test_Confirm_getValueAsRunes(t *testing.T) {
-	t.Skip("not implemented")
+	t.Run("with default confirm and deny keys", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.Equal(t, []rune{confirm.denyKey}, confirm.getValueAsRunes(), "getValueAsRunes() did not return expected runes when value is false")
+
+		result = true
+		require.Equal(t, []rune{confirm.confirmKey}, confirm.getValueAsRunes(), "getValueAsRunes() did not return expected runes when value is true")
+	})
+
+	t.Run("with custom confirm and deny keys", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			ConfirmKey(runekeys.UpperO).
+			DenyKey(runekeys.UpperA)
+		require.Equal(t, []rune{confirm.denyKey}, confirm.getValueAsRunes(), "getValueAsRunes() did not return expected runes with custom keys when value is false")
+
+		result = true
+		require.Equal(t, []rune{confirm.confirmKey}, confirm.getValueAsRunes(), "getValueAsRunes() did not return expected runes with custom keys when value is true")
+	})
 }
 
 // Tests for [Confirm.getValueAsString] function.
 func Test_Confirm_getValueAsString(t *testing.T) {
-	t.Skip("not implemented")
+	t.Run("with default confirm and deny keys", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.Equal(t, "N", confirm.getValueAsString(), "getValueAsString() did not return expected string when value is false")
+
+		result = true
+		require.Equal(t, "Y", confirm.getValueAsString(), "getValueAsString() did not return expected string when value is true")
+	})
+
+	t.Run("with custom confirm and deny keys", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			ConfirmKey(runekeys.UpperO).
+			DenyKey(runekeys.UpperA)
+		require.Equal(t, "A", confirm.getValueAsString(), "getValueAsString() did not return expected string with custom keys when value is false")
+
+		result = true
+		require.Equal(t, "O", confirm.getValueAsString(), "getValueAsString() did not return expected string with custom keys when value is true")
+	})
 }
 
 // Tests for [Confirm.printFinalPromptLine] function.
@@ -238,53 +359,4 @@ func Test_Confirm_printFinalPromptLine(t *testing.T) {
 // Tests for [Confirm.trimSpace] function.
 func Test_Confirm_trimSpace(t *testing.T) {
 	t.Skip("not implemented")
-}
-
-type funcType int
-
-const (
-	answerFn funcType = iota
-	cursorFn
-	iconFn
-	selectFn
-	titleFn
-)
-
-func changeDefaultFunc(t *testing.T, fnType funcType, newFn func(string) string) {
-	var originalFn func(string) string
-
-	switch fnType {
-	case answerFn:
-		originalFn = defaultFuncs.answerFn
-		defaultFuncs.answerFn = newFn
-	case cursorFn:
-		originalFn = defaultFuncs.cursorFn
-		defaultFuncs.cursorFn = newFn
-	case iconFn:
-		originalFn = defaultFuncs.iconFn
-		defaultFuncs.iconFn = newFn
-	case selectFn:
-		originalFn = defaultFuncs.selectFn
-		defaultFuncs.selectFn = newFn
-	case titleFn:
-		originalFn = defaultFuncs.titleFn
-		defaultFuncs.titleFn = newFn
-	default:
-		t.Fatalf("Unknown function type: %v", fnType)
-	}
-
-	t.Cleanup(func() {
-		switch fnType {
-		case answerFn:
-			defaultFuncs.answerFn = originalFn
-		case cursorFn:
-			defaultFuncs.cursorFn = originalFn
-		case iconFn:
-			defaultFuncs.iconFn = originalFn
-		case selectFn:
-			defaultFuncs.selectFn = originalFn
-		case titleFn:
-			defaultFuncs.titleFn = originalFn
-		}
-	})
 }
