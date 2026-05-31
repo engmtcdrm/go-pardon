@@ -10,7 +10,7 @@ import (
 
 func NewPasswordBasic() {
 	var password string
-	passwordQuestion := pardon.NewPasswordPrompt(&password).
+	passwordQuestion := pardon.NewPassword(&password).
 		Title("Enter your password:")
 
 	if err := passwordQuestion.Ask(); err != nil {

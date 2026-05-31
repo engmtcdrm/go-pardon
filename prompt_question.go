@@ -15,8 +15,8 @@ type Question struct {
 	tui      *tui.InputPrompt[string]
 }
 
-// NewQuestion creates a new Question prompt instance.
-func NewQuestion(value *string) *Question {
+// NewOldQuestion creates a new Question prompt instance.
+func NewOldQuestion(value *string) *Question {
 	return &Question{
 		icon:  eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title: eval[string]{val: "", defaultFn: defaultFuncs.titleFn},

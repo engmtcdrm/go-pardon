@@ -10,7 +10,7 @@ import (
 
 func NewQuestionValidate() {
 	favColor := ""
-	question := pardon.NewStringPrompt(&favColor).
+	question := pardon.NewQuestion(&favColor).
 		Title("What is your favorite color?").
 		ValidateFunc(func(input string) error {
 			if input == "" {

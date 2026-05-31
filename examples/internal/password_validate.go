@@ -11,7 +11,7 @@ import (
 
 func PasswordValidate() {
 	password := []byte{}
-	passwordQuestion := pardon.NewPassword(&password).
+	passwordQuestion := pardon.NewOldPassword(&password).
 		Title("Enter your password:").
 		Validate(func(input []byte) error {
 			if len(input) < 8 {

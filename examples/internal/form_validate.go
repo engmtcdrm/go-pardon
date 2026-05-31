@@ -15,7 +15,7 @@ func FormValidate() {
 	f := pardon.NewForm(
 		pardon.NewConfirm(&continueFlag).
 			Title("Are you sure you want to proceed?"),
-		pardon.NewStringPrompt(&age).
+		pardon.NewQuestion(&age).
 			Title("How old are you?").
 			ValidateFunc(func(answer string) error {
 				if answer == "" {

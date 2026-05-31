@@ -10,7 +10,7 @@ import (
 
 func ReusingPrompt() {
 	favColor := ""
-	question := pardon.NewQuestion(&favColor).
+	question := pardon.NewOldQuestion(&favColor).
 		Title("What is your favorite color?").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)

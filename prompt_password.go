@@ -15,8 +15,8 @@ type Password struct {
 	tui      *tui.InputPrompt[[]byte]
 }
 
-// NewPassword creates a new Password prompt instance.
-func NewPassword(value *[]byte) *Password {
+// NewOldPassword creates a new Password prompt instance.
+func NewOldPassword(value *[]byte) *Password {
 	return &Password{
 		icon:  eval[string]{val: Icons.Password, defaultFn: defaultFuncs.iconFn},
 		title: eval[string]{val: "", defaultFn: defaultFuncs.titleFn},

@@ -6,7 +6,7 @@ import (
 
 func TestQuestionCreation(t *testing.T) {
 	var result string
-	question := NewQuestion(&result)
+	question := NewOldQuestion(&result)
 
 	if question == nil {
 		t.Error("NewQuestion returned nil")
@@ -19,7 +19,7 @@ func TestQuestionCreation(t *testing.T) {
 
 func TestQuestionWithTitle(t *testing.T) {
 	var result string
-	question := NewQuestion(&result).
+	question := NewOldQuestion(&result).
 		Title("What is your name?")
 
 	if question.title.val != "What is your name?" {
@@ -29,7 +29,7 @@ func TestQuestionWithTitle(t *testing.T) {
 
 func TestQuestionWithValue(t *testing.T) {
 	var result string
-	question := NewQuestion(&result)
+	question := NewOldQuestion(&result)
 
 	if question.value != &result {
 		t.Error("Question value pointer not properly set")
@@ -39,7 +39,7 @@ func TestQuestionWithValue(t *testing.T) {
 func TestQuestionValidation(t *testing.T) {
 	t.Run("no title", func(t *testing.T) {
 		var result string
-		prompt := NewQuestion(&result)
+		prompt := NewOldQuestion(&result)
 
 		// Test that title is empty, which should cause validation to fail
 		if prompt.title.val != "" {
@@ -55,7 +55,7 @@ func TestQuestionValidation(t *testing.T) {
 
 	t.Run("no value", func(t *testing.T) {
 		var result string
-		prompt := NewQuestion(&result).
+		prompt := NewOldQuestion(&result).
 			Title("Test question")
 
 		// Verify title is set correctly
@@ -67,7 +67,7 @@ func TestQuestionValidation(t *testing.T) {
 
 func TestQuestionWithValidate(t *testing.T) {
 	var result string
-	question := NewQuestion(&result).
+	question := NewOldQuestion(&result).
 		Title("Enter name:").
 		Validate(func(input string) error {
 			if input == "" {
@@ -85,7 +85,7 @@ func TestQuestionWithValidate(t *testing.T) {
 
 func TestQuestionWithIcon(t *testing.T) {
 	var result string
-	question := NewQuestion(&result).
+	question := NewOldQuestion(&result).
 		Icon("➤ ")
 
 	if question.icon.val != "➤ " {
@@ -95,7 +95,7 @@ func TestQuestionWithIcon(t *testing.T) {
 
 func TestQuestionWithIconFunc(t *testing.T) {
 	var result string
-	question := NewQuestion(&result).
+	question := NewOldQuestion(&result).
 		IconFunc(func(input string) string {
 			return "🔍 "
 		})
@@ -107,7 +107,7 @@ func TestQuestionWithIconFunc(t *testing.T) {
 
 func TestQuestionWithTitleFunc(t *testing.T) {
 	var result string
-	question := NewQuestion(&result).
+	question := NewOldQuestion(&result).
 		TitleFunc(func(input string) string {
 			return "Dynamic: " + input
 		})
@@ -119,7 +119,7 @@ func TestQuestionWithTitleFunc(t *testing.T) {
 
 func TestQuestionWithAnswerFunc(t *testing.T) {
 	var result string
-	question := NewQuestion(&result).
+	question := NewOldQuestion(&result).
 		Title("Test").
 		AnswerFunc(func(answer string) string {
 			return "[" + answer + "]"

@@ -10,7 +10,7 @@ import (
 
 func PasswordKitchesink() {
 	password := []byte{}
-	passwordQuestion := pardon.NewPassword(&password).
+	passwordQuestion := pardon.NewOldPassword(&password).
 		Title("Enter your password:").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)

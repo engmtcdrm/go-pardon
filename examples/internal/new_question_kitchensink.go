@@ -10,7 +10,7 @@ import (
 
 func NewQuestionKitchensink() {
 	favColor := ""
-	question := pardon.NewStringPrompt(&favColor).
+	question := pardon.NewQuestion(&favColor).
 		Title("What is your favorite color?").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)

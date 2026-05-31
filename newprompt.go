@@ -25,8 +25,9 @@ type InputPrompt struct {
 	value    *string
 }
 
-// NewStringPrompt creates an InputPrompt for plaintext string input.
-func NewStringPrompt(value *string) *InputPrompt {
+// NewQuestion creates a new InputPrompt for text input with a question mark
+// icon.
+func NewQuestion(value *string) *InputPrompt {
 	return &InputPrompt{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
@@ -36,8 +37,8 @@ func NewStringPrompt(value *string) *InputPrompt {
 	}
 }
 
-// NewPasswordPrompt creates an InputPrompt for secure password input with masking.
-func NewPasswordPrompt(value *string) *InputPrompt {
+// NewPassword creates an InputPrompt for secure password input with masking.
+func NewPassword(value *string) *InputPrompt {
 	return &InputPrompt{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},

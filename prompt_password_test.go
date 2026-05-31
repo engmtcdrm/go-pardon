@@ -6,7 +6,7 @@ import (
 
 func TestPasswordCreation(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result)
+	password := NewOldPassword(&result)
 
 	if password == nil {
 		t.Error("NewPassword returned nil")
@@ -19,7 +19,7 @@ func TestPasswordCreation(t *testing.T) {
 
 func TestPasswordWithTitle(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result).
+	password := NewOldPassword(&result).
 		Title("Enter password:")
 
 	if password.title.val != "Enter password:" {
@@ -29,7 +29,7 @@ func TestPasswordWithTitle(t *testing.T) {
 
 func TestPasswordWithValue(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result)
+	password := NewOldPassword(&result)
 
 	if password.value != &result {
 		t.Error("Password value pointer not properly set")
@@ -39,7 +39,7 @@ func TestPasswordWithValue(t *testing.T) {
 func TestPasswordValidation(t *testing.T) {
 	t.Run("no title", func(t *testing.T) {
 		var result []byte
-		prompt := NewPassword(&result)
+		prompt := NewOldPassword(&result)
 
 		// Test that title is empty, which should cause validation to fail
 		if prompt.title.val != "" {
@@ -55,7 +55,7 @@ func TestPasswordValidation(t *testing.T) {
 
 	t.Run("no value", func(t *testing.T) {
 		var result []byte
-		prompt := NewPassword(&result).
+		prompt := NewOldPassword(&result).
 			Title("Enter password:")
 
 		// Verify title is set correctly
@@ -67,7 +67,7 @@ func TestPasswordValidation(t *testing.T) {
 
 func TestPasswordWithValidate(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result).
+	password := NewOldPassword(&result).
 		Title("Enter password:").
 		Validate(func(input []byte) error {
 			if len(input) < 6 {
@@ -85,7 +85,7 @@ func TestPasswordWithValidate(t *testing.T) {
 
 func TestPasswordWithIcon(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result).
+	password := NewOldPassword(&result).
 		Icon("🔐 ")
 
 	if password.icon.val != "🔐 " {
@@ -95,7 +95,7 @@ func TestPasswordWithIcon(t *testing.T) {
 
 func TestPasswordWithIconFunc(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result).
+	password := NewOldPassword(&result).
 		IconFunc(func(input string) string {
 			return "🛡️ "
 		})
@@ -107,7 +107,7 @@ func TestPasswordWithIconFunc(t *testing.T) {
 
 func TestPasswordWithTitleFunc(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result).
+	password := NewOldPassword(&result).
 		TitleFunc(func(input string) string {
 			return "Secure: " + input
 		})
@@ -119,7 +119,7 @@ func TestPasswordWithTitleFunc(t *testing.T) {
 
 func TestPasswordWithAnswerFunc(t *testing.T) {
 	var result []byte
-	password := NewPassword(&result).
+	password := NewOldPassword(&result).
 		Title("Password").
 		AnswerFunc(func(answer string) string {
 			return "***hidden***"

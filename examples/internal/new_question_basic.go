@@ -10,7 +10,7 @@ import (
 
 func ExampleNewQuestion() {
 	name := ""
-	question := pardon.NewStringPrompt(&name).
+	question := pardon.NewQuestion(&name).
 		Title("What is your name?")
 
 	if err := question.Ask(); err != nil {

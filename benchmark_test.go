@@ -50,7 +50,7 @@ func BenchmarkQuestionCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewQuestion(&result).
+		_ = NewOldQuestion(&result).
 			Title("Test Question")
 	}
 }
@@ -60,7 +60,7 @@ func BenchmarkPasswordCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = NewPassword(&result).
+		_ = NewOldPassword(&result).
 			Title("Enter Password")
 	}
 }

@@ -9,7 +9,7 @@ import (
 func TestAskValidation(t *testing.T) {
 	t.Run("question with no title should return error", func(t *testing.T) {
 		var result string
-		question := NewQuestion(&result)
+		question := NewOldQuestion(&result)
 
 		err := question.Ask()
 		if err == nil {
@@ -19,7 +19,7 @@ func TestAskValidation(t *testing.T) {
 
 	t.Run("password with no title should return error", func(t *testing.T) {
 		var result []byte
-		password := NewPassword(&result)
+		password := NewOldPassword(&result)
 
 		err := password.Ask()
 		if err == nil {
@@ -58,7 +58,7 @@ func TestAskValidation(t *testing.T) {
 func TestEvalFunctionality(t *testing.T) {
 	t.Run("question with title function", func(t *testing.T) {
 		var result string
-		question := NewQuestion(&result).
+		question := NewOldQuestion(&result).
 			TitleFunc(func(input string) string {
 				return "Dynamic title: " + input
 			})
@@ -72,7 +72,7 @@ func TestEvalFunctionality(t *testing.T) {
 
 	t.Run("question with icon function", func(t *testing.T) {
 		var result string
-		question := NewQuestion(&result).
+		question := NewOldQuestion(&result).
 			IconFunc(func(input string) string {
 				return "📝 "
 			})
@@ -108,7 +108,7 @@ func TestEvalFunctionality(t *testing.T) {
 func TestMethodChaining(t *testing.T) {
 	t.Run("question method chaining", func(t *testing.T) {
 		var result string
-		question := NewQuestion(&result).
+		question := NewOldQuestion(&result).
 			Title("Name?").
 			Icon("👤 ").
 			Value(&result).
@@ -121,7 +121,7 @@ func TestMethodChaining(t *testing.T) {
 
 	t.Run("password method chaining", func(t *testing.T) {
 		var result []byte
-		password := NewPassword(&result).
+		password := NewOldPassword(&result).
 			Title("Password?").
 			Icon("🔒 ").
 			Value(&result).

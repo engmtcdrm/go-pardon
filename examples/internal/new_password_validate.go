@@ -10,7 +10,7 @@ import (
 
 func NewPasswordValidate() {
 	var password string
-	passwordQuestion := pardon.NewPasswordPrompt(&password).
+	passwordQuestion := pardon.NewPassword(&password).
 		Title("Enter your password:").
 		ValidateFunc(func(input string) error {
 			if len(input) < 8 {
