@@ -14,7 +14,7 @@ var (
 	ErrNoPrompt = errors.New("prompt requires a prompt")
 )
 
-type InputPrompt struct {
+type Text struct {
 	icon       eval[string]
 	title      eval[string]
 	answerFn   func(string) string
@@ -27,8 +27,8 @@ type InputPrompt struct {
 
 // NewQuestion creates a new InputPrompt for text input with a question mark
 // icon.
-func NewQuestion(value *string) *InputPrompt {
-	return &InputPrompt{
+func NewQuestion(value *string) *Text {
+	return &Text{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
@@ -38,8 +38,8 @@ func NewQuestion(value *string) *InputPrompt {
 }
 
 // NewPassword creates an InputPrompt for secure password input with masking.
-func NewPassword(value *string) *InputPrompt {
-	return &InputPrompt{
+func NewPassword(value *string) *Text {
+	return &Text{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
@@ -48,80 +48,80 @@ func NewPassword(value *string) *InputPrompt {
 	}
 }
 
-func (p *InputPrompt) AnswerFunc(fn func(string) string) *InputPrompt {
+func (t *Text) AnswerFunc(fn func(string) string) *Text {
 	if fn != nil {
-		p.answerFn = fn
+		t.answerFn = fn
 	}
-	return p
+	return t
 }
 
 // Hide sets whether the input should be hidden (e.g., for password input).
-func (p *InputPrompt) Hide(hide bool) *InputPrompt {
-	p.terminal.Hide = hide
-	return p
+func (t *Text) Hide(hide bool) *Text {
+	t.terminal.Hide = hide
+	return t
 }
 
 // Icon sets the prompt icon.
-func (p *InputPrompt) Icon(s string) *InputPrompt {
-	p.icon.val = s
-	p.icon.fn = nil
-	return p
+func (t *Text) Icon(s string) *Text {
+	t.icon.val = s
+	t.icon.fn = nil
+	return t
 }
 
 // IconFunc sets a dynamic icon function.
-func (p *InputPrompt) IconFunc(fn func(string) string) *InputPrompt {
-	p.icon.fn = fn
-	return p
+func (t *Text) IconFunc(fn func(string) string) *Text {
+	t.icon.fn = fn
+	return t
 }
 
 // Title sets the prompt text.
-func (p *InputPrompt) Title(title string) *InputPrompt {
-	p.title.val = title
-	return p
+func (t *Text) Title(title string) *Text {
+	t.title.val = title
+	return t
 }
 
 // TitleFunc sets a dynamic title function.
-func (p *InputPrompt) TitleFunc(fn func(string) string) *InputPrompt {
-	p.title.fn = fn
-	return p
+func (t *Text) TitleFunc(fn func(string) string) *Text {
+	t.title.fn = fn
+	return t
 }
 
 // Value sets a default input value.
-func (p *InputPrompt) Value(value *string) *InputPrompt {
-	p.value = value
-	return p
+func (t *Text) Value(value *string) *Text {
+	t.value = value
+	return t
 }
 
 // ValidateFunc sets a validation function for the prompt input.
-func (p *InputPrompt) ValidateFunc(fn func(string) error) *InputPrompt {
+func (t *Text) ValidateFunc(fn func(string) error) *Text {
 	if fn != nil {
-		p.validateFn = fn
+		t.validateFn = fn
 	}
-	return p
+	return t
 }
 
 // Ask displays the prompt and waits for input.
-func (p *InputPrompt) Ask() error {
-	if p.title.val == "" && p.title.fn == nil {
+func (t *Text) Ask() error {
+	if t.title.val == "" && t.title.fn == nil {
 		return ErrNoTitle
 	}
 
-	if p.value == nil {
+	if t.value == nil {
 		return ErrNoValue
 	}
 
-	p.prompt = fmt.Sprintf("%s%s ", p.icon.Get(), p.title.Get())
+	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
 
-	if err := p.ask(); err != nil {
+	if err := t.ask(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *InputPrompt) callAnswerFunc(s string) string {
-	if p.answerFn != nil {
-		return p.answerFn(s)
+func (t *Text) callAnswerFunc(s string) string {
+	if t.answerFn != nil {
+		return t.answerFn(s)
 	}
 
 	if defaultFuncs.answerFn != nil {
@@ -133,36 +133,36 @@ func (p *InputPrompt) callAnswerFunc(s string) string {
 
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
-func (p *InputPrompt) ask() error {
-	fmt.Fprint(p.terminal.Out, p.prompt)
+func (t *Text) ask() error {
+	fmt.Fprint(t.terminal.Out, t.prompt)
 
 	for {
-		p.terminal.Reset()
-		line, err := p.terminal.RawRead()
+		t.terminal.Reset()
+		line, err := t.terminal.RawRead()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
-				fmt.Fprint(p.terminal.Out, ansi.ClearLineReset+p.prompt)
+				fmt.Fprint(t.terminal.Out, ansi.ClearLineReset+t.prompt)
 				return err
 			}
 			return err
 		}
 
 		pendingValue := strings.TrimSpace(string(line))
-		if err := p.validateFn(pendingValue); err != nil {
-			p.printErrorMessage(err)
+		if err := t.validateFn(pendingValue); err != nil {
+			t.printErrorMessage(err)
 			continue
 		}
 
-		*p.value = pendingValue
+		*t.value = pendingValue
 		break
 	}
 
-	p.printFinalPromptLine()
+	t.printFinalPromptLine()
 
 	return nil
 }
 
-func (p *InputPrompt) printErrorMessage(err error) {
+func (t *Text) printErrorMessage(err error) {
 	builder := strings.Builder{}
 	// Have to manually jump to the next line, otherwise the error message will
 	// be printed on the same line as the prompt.
@@ -171,7 +171,7 @@ func (p *InputPrompt) printErrorMessage(err error) {
 	// Write error message, move/clear the line above, then reprint the prompt.
 	errMsg := validationErrorMessage(err)
 
-	errMsgLines, err := p.getPromptLines(errMsg)
+	errMsgLines, err := t.getPromptLines(errMsg)
 	if err != nil {
 		panic(err)
 	}
@@ -182,26 +182,26 @@ func (p *InputPrompt) printErrorMessage(err error) {
 	}
 
 	builder.WriteString(resetLineAbove())
-	builder.WriteString(p.prompt)
-	fmt.Fprint(p.terminal.Out, builder.String())
+	builder.WriteString(t.prompt)
+	fmt.Fprint(t.terminal.Out, builder.String())
 }
 
 // printFinalPromptLine handles printing the final prompt line after successful
 // input.
-func (p *InputPrompt) printFinalPromptLine() {
+func (t *Text) printFinalPromptLine() {
 	builder := strings.Builder{}
 	// If the input is not hidden, We need to clear the line, then print the
 	// prompt with the answer function applied.
-	if !p.terminal.Hide {
+	if !t.terminal.Hide {
 		builder.WriteString(ansi.ClearLineReset)
-		builder.WriteString(p.prompt + p.callAnswerFunc(*p.value))
+		builder.WriteString(t.prompt + t.callAnswerFunc(*t.value))
 	}
 
 	// Regardless of being hidden or not we need to move to the next line and
 	// clear it in case there are any validation error messages that are still
 	// visible.
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	fmt.Fprint(p.terminal.Out, builder.String())
+	fmt.Fprint(t.terminal.Out, builder.String())
 }
 
 func validationErrorMessage(err error) string {
@@ -212,10 +212,10 @@ func resetLineAbove() string {
 	return ansi.CursorUp(1) + ansi.ClearLineReset
 }
 
-func (p *InputPrompt) getPromptLines(prompt string) (int, error) {
+func (t *Text) getPromptLines(prompt string) (int, error) {
 	promptLines := 1
 
-	reader, ok := p.terminal.In.(*os.File)
+	reader, ok := t.terminal.In.(*os.File)
 	if !ok {
 		return 0, fmt.Errorf("unable to determine prompt lines: input reader is not a file")
 	}
