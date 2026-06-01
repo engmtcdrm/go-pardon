@@ -10,7 +10,7 @@ import (
 
 func ReusingPrompt() {
 	favColor := ""
-	question := pardon.NewOldQuestion(&favColor).
+	question := pardon.NewQuestion(&favColor).
 		Title("What is your favorite color?").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
@@ -22,7 +22,7 @@ func ReusingPrompt() {
 		AnswerFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.CyanBg, s, ansi.Reset)
 		}).
-		Validate(func(input string) error {
+		ValidateFunc(func(input string) error {
 			if input == "" {
 				return fmt.Errorf("color cannot be empty")
 			}
@@ -45,9 +45,6 @@ func ReusingPrompt() {
 	question = question.
 		Value(&favColor2).
 		Title("What is your second favorite color?")
-		// TitleFunc(func(s string) string {
-		// 	return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
-		// })
 
 	if err := question.Ask(); err != nil {
 		fmt.Printf("Error: %v\n", err)

@@ -10,7 +10,7 @@ import (
 
 func QuestionKitchensink() {
 	favColor := ""
-	question := pardon.NewOldQuestion(&favColor).
+	question := pardon.NewQuestion(&favColor).
 		Title("What is your favorite color?").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
@@ -22,7 +22,7 @@ func QuestionKitchensink() {
 		AnswerFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.CyanBg, s, ansi.Reset)
 		}).
-		Validate(func(input string) error {
+		ValidateFunc(func(input string) error {
 			if input == "" {
 				return fmt.Errorf("color cannot be empty")
 			}

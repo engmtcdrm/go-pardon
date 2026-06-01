@@ -10,9 +10,9 @@ import (
 
 func QuestionValidate() {
 	favColor := ""
-	question := pardon.NewOldQuestion(&favColor).
+	question := pardon.NewQuestion(&favColor).
 		Title("What is your favorite color?").
-		Validate(func(input string) error {
+		ValidateFunc(func(input string) error {
 			if input == "" {
 				return fmt.Errorf("color cannot be empty")
 			}

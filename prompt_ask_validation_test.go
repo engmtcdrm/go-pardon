@@ -9,7 +9,7 @@ import (
 func TestAskValidation(t *testing.T) {
 	t.Run("question with no title should return error", func(t *testing.T) {
 		var result string
-		question := NewOldQuestion(&result)
+		question := NewQuestion(&result)
 
 		err := question.Ask()
 		if err == nil {
@@ -58,7 +58,7 @@ func TestAskValidation(t *testing.T) {
 func TestEvalFunctionality(t *testing.T) {
 	t.Run("question with title function", func(t *testing.T) {
 		var result string
-		question := NewOldQuestion(&result).
+		question := NewQuestion(&result).
 			TitleFunc(func(input string) string {
 				return "Dynamic title: " + input
 			})
@@ -72,7 +72,7 @@ func TestEvalFunctionality(t *testing.T) {
 
 	t.Run("question with icon function", func(t *testing.T) {
 		var result string
-		question := NewOldQuestion(&result).
+		question := NewQuestion(&result).
 			IconFunc(func(input string) string {
 				return "📝 "
 			})
@@ -108,7 +108,7 @@ func TestEvalFunctionality(t *testing.T) {
 func TestMethodChaining(t *testing.T) {
 	t.Run("question method chaining", func(t *testing.T) {
 		var result string
-		question := NewOldQuestion(&result).
+		question := NewQuestion(&result).
 			Title("Name?").
 			Icon("👤 ").
 			Value(&result).
