@@ -215,12 +215,12 @@ func resetLineAbove() string {
 func (t *Text) getPromptLines(prompt string) (int, error) {
 	promptLines := 1
 
-	reader, ok := t.terminal.In.(*os.File)
+	writer, ok := t.terminal.Out.(*os.File)
 	if !ok {
-		return 0, fmt.Errorf("unable to determine prompt lines: input reader is not a file")
+		return 0, fmt.Errorf("unable to determine prompt lines: output writer is not a file")
 	}
 
-	fd := int(reader.Fd())
+	fd := int(writer.Fd())
 	width, _, err := term.GetSize(fd)
 	if err != nil {
 		return 0, err
@@ -228,7 +228,8 @@ func (t *Text) getPromptLines(prompt string) (int, error) {
 
 	promptCharCnt := len(ansi.Strip(prompt))
 
-	// If prompt is wider than terminal calculate number of lines it will take
+	// If prompt is wider than terminal, calculate number of lines it is so we
+	// know how many lines it occupies.
 	if promptCharCnt > width {
 		promptLines = (promptCharCnt / width) + 1
 	}
