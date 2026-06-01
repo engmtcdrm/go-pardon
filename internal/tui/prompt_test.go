@@ -135,9 +135,6 @@ func TestStringBuilderOptimization(t *testing.T) {
 
 // Test error conditions
 func TestErrorHandling(t *testing.T) {
-	// Test that negative values are handled correctly in utility functions
-	RenderClearLines(-1) // Should not panic and should handle gracefully
-
 	// Test Min with edge cases
 	result := Min(-2147483648, 2147483647) // Test with int32 min/max
 	if result != -2147483648 {

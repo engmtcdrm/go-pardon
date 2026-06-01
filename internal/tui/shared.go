@@ -17,26 +17,6 @@ func Min(a, b int) int {
 	return b
 }
 
-// ClearCurrentLine clears the current terminal line.
-func ClearCurrentLine() {
-	fmt.Printf("\r%s", ansi.ClearLine)
-}
-
-// RenderFinalAnswer displays the final formatted prompt result.
-func RenderFinalAnswer(icon, title, answer string) {
-	fmt.Printf("%s%s %s\n", icon, title, answer)
-}
-
-// RenderClearLines clears multiple lines from the cursor position.
-func RenderClearLines(numLines int) {
-	if numLines <= 0 {
-		return
-	}
-
-	sequence := ansi.ClearLine + "\r\n"
-	fmt.Print(strings.Repeat(sequence, numLines))
-}
-
 // RenderClearAndReposition clears lines and renders final answer.
 // Minimizes screen flicker by batching terminal operations.
 func RenderClearAndReposition(linesToErase int, icon, title, answer string) {
