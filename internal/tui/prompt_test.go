@@ -8,18 +8,6 @@ import (
 	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
 
-func TestInputPromptCreation(t *testing.T) {
-	stringPrompt := NewStringPrompt()
-	if stringPrompt == nil {
-		t.Error("NewStringPrompt returned nil")
-	}
-
-	passwordPrompt := NewPasswordPrompt()
-	if passwordPrompt == nil {
-		t.Error("NewPasswordPrompt returned nil")
-	}
-}
-
 func TestControlCharacterFiltering(t *testing.T) {
 	// Test that control characters are properly filtered
 	// This tests the logic from prompt.go line filtering

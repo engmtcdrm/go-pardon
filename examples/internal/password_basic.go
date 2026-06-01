@@ -9,8 +9,8 @@ import (
 )
 
 func PasswordBasic() {
-	password := []byte{}
-	passwordQuestion := pardon.NewOldPassword(&password).
+	var password string
+	passwordQuestion := pardon.NewPassword(&password).
 		Title("Enter your password:")
 
 	if err := passwordQuestion.Ask(); err != nil {
@@ -18,7 +18,7 @@ func PasswordBasic() {
 		return
 	}
 
-	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, string(password), ansi.Reset)
+	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, password, ansi.Reset)
 
 	os.Exit(0)
 }

@@ -10,10 +10,10 @@ import (
 )
 
 func PasswordValidate() {
-	password := []byte{}
-	passwordQuestion := pardon.NewOldPassword(&password).
+	var password string
+	passwordQuestion := pardon.NewPassword(&password).
 		Title("Enter your password:").
-		Validate(func(input []byte) error {
+		ValidateFunc(func(input string) error {
 			if len(input) < 8 {
 				return fmt.Errorf("password must be at least 8 characters long")
 			}
@@ -28,17 +28,12 @@ func PasswordValidate() {
 		return
 	}
 
-	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, string(password), ansi.Reset)
+	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, password, ansi.Reset)
 
 	os.Exit(0)
 }
 
-func containsSpecialChar(input []byte) bool {
+func containsSpecialChar(input string) bool {
 	specialChars := "!@#$%^&*()-_=+[]{}|;:',.<>?/"
-	for _, char := range input {
-		if strings.ContainsRune(specialChars, rune(char)) {
-			return true
-		}
-	}
-	return false
+	return strings.ContainsAny(input, specialChars)
 }

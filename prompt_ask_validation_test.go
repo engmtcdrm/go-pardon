@@ -18,8 +18,8 @@ func TestAskValidation(t *testing.T) {
 	})
 
 	t.Run("password with no title should return error", func(t *testing.T) {
-		var result []byte
-		password := NewOldPassword(&result)
+		var result string
+		password := NewPassword(&result)
 
 		err := password.Ask()
 		if err == nil {
@@ -120,8 +120,8 @@ func TestMethodChaining(t *testing.T) {
 	})
 
 	t.Run("password method chaining", func(t *testing.T) {
-		var result []byte
-		password := NewOldPassword(&result).
+		var result string
+		password := NewPassword(&result).
 			Title("Password?").
 			Icon("🔒 ").
 			Value(&result).

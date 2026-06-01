@@ -9,8 +9,8 @@ import (
 )
 
 func PasswordKitchesink() {
-	password := []byte{}
-	passwordQuestion := pardon.NewOldPassword(&password).
+	var password string
+	passwordQuestion := pardon.NewPassword(&password).
 		Title("Enter your password:").
 		TitleFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
@@ -22,7 +22,7 @@ func PasswordKitchesink() {
 		AnswerFunc(func(s string) string {
 			return fmt.Sprintf("%s%s%s", ansi.BlueBg, s, ansi.Reset)
 		}).
-		Validate(func(input []byte) error {
+		ValidateFunc(func(input string) error {
 			if len(input) < 8 {
 				return fmt.Errorf("password must be at least 8 characters long")
 			}
@@ -37,7 +37,7 @@ func PasswordKitchesink() {
 		return
 	}
 
-	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, string(password), ansi.Reset)
+	fmt.Printf("Entered password is %s%s%s\n", ansi.Green, password, ansi.Reset)
 
 	os.Exit(0)
 }
