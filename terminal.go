@@ -30,6 +30,8 @@ type Terminal struct {
 	// result holds the runes that have been processed and are part of the final
 	// input.
 	result []rune
+
+	CustomHandler func(t *Terminal, r rune) (done bool)
 }
 
 // NewTerminal creates a new Terminal instance with default settings for regular
@@ -188,6 +190,13 @@ func (t *Terminal) processPending() (returnRunes []rune, done bool, err error) {
 
 		if unicode.IsPrint(r) && !unicode.IsControl(r) {
 			t.result = append(t.result, r)
+
+			if t.CustomHandler != nil {
+				if done := t.CustomHandler(t, r); done {
+					return t.result, true, nil
+				}
+			}
+
 			if !t.Confirm {
 				t.print(string(r))
 			} else {

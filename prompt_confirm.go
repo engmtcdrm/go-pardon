@@ -26,7 +26,7 @@ type Confirm struct {
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		terminal:   NewConfirmTerminal(),
+		terminal:   NewTerminal(),
 		value:      value,
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
@@ -49,6 +49,10 @@ func (c *Confirm) Ask() error {
 
 	if c.value == nil {
 		return ErrNoValue
+	}
+
+	c.terminal.CustomHandler = func(t *Terminal, r rune) (done bool) {
+		return c.processLine([]rune{r})
 	}
 
 	if err := c.ask(); err != nil {
