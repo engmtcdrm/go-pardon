@@ -1,6 +1,6 @@
 module github.com/engmtcdrm/go-pardon/examples
 
-go 1.25.10
+go 1.26.3
 
 replace github.com/engmtcdrm/go-pardon => ../
 
