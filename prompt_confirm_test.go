@@ -1,10 +1,15 @@
 package pardon
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"testing"
 
+	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 	"github.com/engmtcdrm/go-pardon/internal/runekeys"
+	"github.com/engmtcdrm/go-pardon/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,50 +47,50 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 }
 
 // Tests for [Confirm.Ask] function.
-// func Test_Confirm_Ask(t *testing.T) {
-// 	t.Run("should return error with no title", func(t *testing.T) {
-// 		var result bool
-// 		confirm := NewConfirm(&result)
+func Test_Confirm_Ask(t *testing.T) {
+	t.Run("should return error with no title", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
 
-// 		err := confirm.Ask()
-// 		require.Error(t, err, "Expected error when asking without title")
-// 		require.ErrorAsf(t, err, &ErrNoTitle, "Expected ErrNoTitle but got: %v", err)
-// 	})
+		err := confirm.Ask()
+		require.Error(t, err, "Expected error when asking without title")
+		require.ErrorAsf(t, err, &ErrNoTitle, "Expected ErrNoTitle but got: %v", err)
+	})
 
-// 	t.Run("should return error with nil value", func(t *testing.T) {
-// 		confirm := NewConfirm(nil).
-// 			Title("Continue?")
-// 		confirm.input.Writer = io.Discard
+	t.Run("should return error with nil value", func(t *testing.T) {
+		confirm := NewConfirm(nil).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
 
-// 		err := confirm.Ask()
-// 		require.Error(t, err, "Expected error when asking with nil value")
-// 		require.ErrorAsf(t, err, &ErrNoValue, "Expected ErrNoValue but got: %v", err)
-// 	})
+		err := confirm.Ask()
+		require.Error(t, err, "Expected error when asking with nil value")
+		require.ErrorAsf(t, err, &ErrNoValue, "Expected ErrNoValue but got: %v", err)
+	})
 
-// 	t.Run("should set value to true when confirmed", func(t *testing.T) {
-// 		var result bool
-// 		confirm := NewConfirm(&result).
-// 			Title("Continue?")
-// 		confirm.input.Writer = io.Discard
-// 		confirm.input.Reader = testutils.CreateValidTestFile(t, string(keys.LowerY))
+	t.Run("should set value to true when confirmed", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
+		confirm.terminal.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
 
-// 		err := confirm.Ask()
-// 		require.NoError(t, err, "Expected no error when asking with valid input")
-// 		require.True(t, result, "Expected result to be true when confirmed")
-// 	})
+		err := confirm.Ask()
+		require.NoError(t, err, "Expected no error when asking with valid input")
+		require.True(t, result, "Expected result to be true when confirmed")
+	})
 
-// 	t.Run("should error when user presses Ctrl+C", func(t *testing.T) {
-// 		var result bool
-// 		confirm := NewConfirm(&result).
-// 			Title("Continue?")
-// 		confirm.input.Writer = io.Discard
-// 		confirm.input.Reader = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+	t.Run("should error when user presses Ctrl+C", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
+		confirm.terminal.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
 
-// 		err := confirm.Ask()
-// 		require.Error(t, err, "Expected error when user presses Ctrl+C")
-// 		require.ErrorAsf(t, err, &ErrUserAborted, "Expected ErrUserAborted but got: %v", err)
-// 	})
-// }
+		err := confirm.Ask()
+		require.Error(t, err, "Expected error when user presses Ctrl+C")
+		require.ErrorAsf(t, err, &ErrUserAborted, "Expected ErrUserAborted but got: %v", err)
+	})
+}
 
 // Tests for [Confirm.ConfirmKey] function.
 func Test_Confirm_ConfirmKey(t *testing.T) {
@@ -249,17 +254,80 @@ func Test_Confirm_Value(t *testing.T) {
 
 // Tests for [Confirm.ask] function.
 func Test_Confirm_ask(t *testing.T) {
-	t.Skip("not implemented")
+	t.Run("should set value to true when confirmed", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
+		confirm.terminal.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
+
+		err := confirm.ask()
+		require.NoError(t, err, "Expected no error when asking with valid input")
+		require.True(t, result, "Expected result to be true when confirmed")
+	})
+
+	t.Run("should error when user presses Ctrl+C", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
+		confirm.terminal.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+
+		err := confirm.ask()
+		require.Error(t, err, "Expected error when user presses Ctrl+C")
+		require.ErrorAsf(t, err, &ErrUserAborted, "Expected ErrUserAborted but got: %v", err)
+	})
+
+	t.Run("should error when In is not os.File", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
+		confirm.terminal.In = bytes.NewBufferString(string(keys.LowerY))
+
+		err := confirm.ask()
+		require.Error(t, err, "Expected error when In is not os.File")
+	})
 }
 
 // Tests for [Confirm.callAnswerFunc] function.
 func Test_Confirm_callAnswerFunc(t *testing.T) {
-	t.Skip("not implemented")
-}
+	var result bool
+	confirmPrompt := NewConfirm(&result)
+	t.Run("should return the string value when no answer function or default answer function is set", func(t *testing.T) {
+		originalDefaultAnswerFunc := defaultFuncs.answerFn
+		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
+		defaultFuncs.answerFn = nil
 
-// Tests for [Confirm.processLine] function.
-func Test_Confirm_processLine(t *testing.T) {
-	t.Skip("not implemented")
+		expectedOutput := "Test Answer"
+		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the input string when no functions are set")
+	})
+
+	t.Run("should return the string transformed by default answer function if set and no prompt-specific function is set", func(t *testing.T) {
+		expectedOutput := "Test Answer"
+		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the string transformed by the default answer function when no prompt-specific function is set")
+	})
+
+	t.Run("should return the string transformed by custom default answer function if set and no prompt-specific function is set", func(t *testing.T) {
+		originalDefaultAnswerFunc := defaultFuncs.answerFn
+		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
+		defaultFuncs.answerFn = func(input string) string {
+			return "[ANSWER: " + input + "]"
+		}
+
+		expectedOutput := "[ANSWER: Test Answer]"
+		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the custom default answer function when no prompt-specific function is set")
+	})
+
+	t.Run("should return the string transformed by the prompt-specific answer function if set", func(t *testing.T) {
+		answerFunc := func(input string) string {
+			return "[ANSWER: " + input + "]"
+		}
+		confirmPrompt.AnswerFunc(answerFunc)
+
+		expectedOutput := "[ANSWER: Test Answer]"
+		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the prompt-specific answer function when it is set")
+	})
 }
 
 // Tests for [Confirm.equal] function.
@@ -353,5 +421,65 @@ func Test_Confirm_getValueAsString(t *testing.T) {
 
 // Tests for [Confirm.printFinalPromptLine] function.
 func Test_Confirm_printFinalPromptLine(t *testing.T) {
-	t.Skip("not implemented")
+	t.Run("should print final prompt line with prompt and answer", func(t *testing.T) {
+		expectedOutput := ansi.ClearLineReset + "[?] Continue? N\n" + ansi.ClearLineReset
+		var result bool
+		confirm := NewConfirm(&result).
+			Title("Continue?")
+		confirm.terminal.Out = &bytes.Buffer{}
+		confirm.prompt = fmt.Sprintf("%s%s ", confirm.icon.Get(), confirm.title.Get())
+		confirm.printFinalPromptLine()
+		require.Equal(t, expectedOutput, confirm.terminal.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
+	})
+}
+
+// Tests for [Confirm.processLine] function.
+func Test_Confirm_processLine(t *testing.T) {
+	t.Run("should return false for empty input", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.False(t, confirm.processLine([]rune{}), "processLine() should return false for empty input")
+	})
+
+	t.Run("should return set value if user enters enter character", func(t *testing.T) {
+		result := true
+		confirm := NewConfirm(&result)
+		require.True(t, *confirm.value, "Initial value should be true")
+
+		require.True(t, confirm.processLine([]rune{runekeys.Enter}), "processLine() should return true when user hits enter key")
+		require.True(t, *confirm.value, "Value should be set to true when user hits enter key")
+	})
+
+	t.Run("should return set value if user enters new line character", func(t *testing.T) {
+		result := true
+		confirm := NewConfirm(&result)
+		require.True(t, *confirm.value, "Initial value should be true")
+
+		require.True(t, confirm.processLine([]rune{runekeys.NewLine}), "processLine() should return true when user hits new line key")
+		require.True(t, *confirm.value, "Value should be set to true when user hits new line key")
+	})
+
+	t.Run("should set value to true when user confirms", func(t *testing.T) {
+		result := false
+		confirm := NewConfirm(&result)
+		require.False(t, *confirm.value, "Initial value should be false")
+
+		require.True(t, confirm.processLine([]rune{confirm.confirmKey}), "processLine() should return true when user confirms")
+		require.True(t, *confirm.value, "Value should be set to true when user confirms")
+	})
+
+	t.Run("should set value to false when user denies", func(t *testing.T) {
+		result := true
+		confirm := NewConfirm(&result)
+		require.True(t, *confirm.value, "Initial value should be true")
+
+		require.True(t, confirm.processLine([]rune{confirm.denyKey}), "processLine() should return true when user denies")
+		require.False(t, *confirm.value, "Value should be set to false when user denies")
+	})
+
+	t.Run("should return false for unrecognized input", func(t *testing.T) {
+		var result bool
+		confirm := NewConfirm(&result)
+		require.False(t, confirm.processLine([]rune{runekeys.UpperO}), "processLine() should return false for unrecognized input")
+	})
 }
