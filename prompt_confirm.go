@@ -35,7 +35,7 @@ func NewConfirm(value *bool) *Confirm {
 	}
 }
 
-// AnswerFunc sets a function to transform the final answer before returning.
+// AnswerFunc sets a function to transform the final answer being displayed.
 func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
 	c.answerFn = fn
 	return c
