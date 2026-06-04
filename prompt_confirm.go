@@ -148,28 +148,6 @@ func (c *Confirm) callAnswerFunc(s string) string {
 	return s
 }
 
-func (c *Confirm) processLine(line []rune) (done bool) {
-	if len(line) == 0 {
-		return false
-	}
-
-	// If user hit enter, use the current value of [Confirm.value] as the input
-	if line[0] == runekeys.Enter || line[0] == runekeys.NewLine {
-		line = c.getValueAsRunes()
-	}
-
-	switch {
-	case c.equal(line[0], c.confirmKey):
-		*c.value = true
-		return true
-	case c.equal(line[0], c.denyKey):
-		*c.value = false
-		return true
-	}
-
-	return false
-}
-
 func (c *Confirm) equal(a rune, b rune) bool {
 	return unicode.ToLower(a) == unicode.ToLower(b)
 }
@@ -206,7 +184,30 @@ func (c *Confirm) getValueAsString() string {
 func (c *Confirm) printFinalPromptLine() {
 	builder := strings.Builder{}
 	builder.WriteString(ansi.ClearLineReset)
-	builder.WriteString(c.prompt + c.callAnswerFunc(c.getValueAsString()))
+	promptAnswer := c.prompt + c.callAnswerFunc(c.getValueAsString())
+	builder.WriteString(promptAnswer)
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Fprint(c.terminal.Out, builder.String())
+}
+
+func (c *Confirm) processLine(line []rune) (done bool) {
+	if len(line) == 0 {
+		return false
+	}
+
+	// If user hit enter, use the current value of [Confirm.value] as the input
+	if line[0] == runekeys.Enter || line[0] == runekeys.NewLine {
+		line = c.getValueAsRunes()
+	}
+
+	switch {
+	case c.equal(line[0], c.confirmKey):
+		*c.value = true
+		return true
+	case c.equal(line[0], c.denyKey):
+		*c.value = false
+		return true
+	}
+
+	return false
 }
