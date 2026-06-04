@@ -74,7 +74,7 @@ func (s *Select[T]) Ask() error {
 		case keys.Enter, keys.NewLine:
 			*s.value = s.options[s.cursorPos].Value
 			visibleOptions := tui.Min(len(s.options), tui.GetTerminalHeight()-3)
-			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.getAnswerFunc(s.options[s.cursorPos].Key))
+			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.callAnswerFunc(s.options[s.cursorPos].Key))
 			return nil
 		case keys.Up:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
@@ -146,9 +146,9 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
-// getAnswerFunc returns the formatted text for the final answer being
+// callAnswerFunc returns the formatted text for the final answer being
 // displayed.
-func (s *Select[T]) getAnswerFunc(answer string) string {
+func (s *Select[T]) callAnswerFunc(answer string) string {
 	if s.answerFn != nil {
 		return s.answerFn(answer)
 	}
@@ -162,7 +162,7 @@ func (s *Select[T]) getAnswerFunc(answer string) string {
 
 // setAnswerFunc configures the answer transformation priority:
 // prompt-specific, global default, or the string itself.
-func (sel *Select[T]) getSelectFunc(s string) string {
+func (sel *Select[T]) callSelectFunc(s string) string {
 	if sel.selectFn != nil {
 		return sel.selectFn(s)
 	}
@@ -207,9 +207,9 @@ func (s *Select[T]) renderOptions(redraw bool) {
 			output.WriteString(ansi.ClearLine)
 
 			if i == s.cursorPos {
-				cursor = s.getSelectFunc(selectCursor)
+				cursor = s.callSelectFunc(selectCursor)
 				output.WriteString(cursor)
-				output.WriteString(s.getSelectFunc(selectedOption.Key))
+				output.WriteString(s.callSelectFunc(selectedOption.Key))
 			} else {
 				output.WriteString(cursor)
 				output.WriteString(selectedOption.Key)
@@ -226,8 +226,8 @@ func (s *Select[T]) renderOptions(redraw bool) {
 			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
 
 			if i == s.cursorPos {
-				cursor = s.getSelectFunc(selectCursor)
-				fmt.Printf("%s%s\n", cursor, s.getSelectFunc(selectedOption.Key))
+				cursor = s.callSelectFunc(selectCursor)
+				fmt.Printf("%s%s\n", cursor, s.callSelectFunc(selectedOption.Key))
 			} else {
 				fmt.Printf("%s%s\n", cursor, selectedOption.Key)
 			}

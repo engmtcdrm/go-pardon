@@ -247,12 +247,12 @@ func Test_Select_getAnswerFunc(t *testing.T) {
 		defaultFuncs.answerFn = nil
 
 		expectedOutput := "Test Answer"
-		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc(expectedOutput), "getAnswerFunc() should return the input string when no functions are set")
+		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the input string when no functions are set")
 	})
 
 	t.Run("should return the string transformed by default answer function if set and no prompt-specific function is set", func(t *testing.T) {
 		expectedOutput := "Test Answer"
-		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc(expectedOutput), "getAnswerFunc() should return the string transformed by the default answer function when no prompt-specific function is set")
+		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the string transformed by the default answer function when no prompt-specific function is set")
 	})
 
 	t.Run("should return the string transformed by custom default answer function if set and no prompt-specific function is set", func(t *testing.T) {
@@ -263,7 +263,7 @@ func Test_Select_getAnswerFunc(t *testing.T) {
 		}
 
 		expectedOutput := "[ANSWER: Test Answer]"
-		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the custom default answer function when no prompt-specific function is set")
+		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the custom default answer function when no prompt-specific function is set")
 	})
 
 	t.Run("should return the string transformed by the prompt-specific answer function if set", func(t *testing.T) {
@@ -273,7 +273,7 @@ func Test_Select_getAnswerFunc(t *testing.T) {
 		selectPrompt.AnswerFunc(answerFunc)
 
 		expectedOutput := "[ANSWER: Test Answer]"
-		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the prompt-specific answer function when it is set")
+		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the prompt-specific answer function when it is set")
 	})
 }
 
@@ -287,12 +287,12 @@ func Test_Select_getSelectFunc(t *testing.T) {
 		defaultFuncs.selectFn = nil
 
 		expectedOutput := "Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc(expectedOutput), "getSelectFunc() should return the input string when no functions are set")
+		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc(expectedOutput), "getSelectFunc() should return the input string when no functions are set")
 	})
 
 	t.Run("should return the string transformed by default selection function if set and no prompt-specific function is set", func(t *testing.T) {
 		expectedOutput := "Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc(expectedOutput), "getSelectFunc() should return the string transformed by the default selection function when no prompt-specific function is set")
+		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc(expectedOutput), "getSelectFunc() should return the string transformed by the default selection function when no prompt-specific function is set")
 	})
 
 	t.Run("should return the string transformed by custom default selection function if set and no prompt-specific function is set", func(t *testing.T) {
@@ -303,7 +303,7 @@ func Test_Select_getSelectFunc(t *testing.T) {
 		}
 
 		expectedOutput := "✓ Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the custom default selection function when no prompt-specific function is set")
+		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the custom default selection function when no prompt-specific function is set")
 	})
 
 	t.Run("should return the string transformed by the prompt-specific selection function if set", func(t *testing.T) {
@@ -313,7 +313,7 @@ func Test_Select_getSelectFunc(t *testing.T) {
 		selectPrompt.SelectFunc(selectFunc)
 
 		expectedOutput := "✓ Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the prompt-specific selection function when it is set")
+		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the prompt-specific selection function when it is set")
 	})
 }
 
