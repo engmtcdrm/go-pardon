@@ -48,11 +48,31 @@ func NewPassword(value *string) *Text {
 	}
 }
 
+// AnswerFunc sets a function to format the final answer being displayed.
 func (t *Text) AnswerFunc(fn func(string) string) *Text {
 	if fn != nil {
 		t.answerFn = fn
 	}
 	return t
+}
+
+// Ask displays the prompt and waits for input.
+func (t *Text) Ask() error {
+	if t.title.val == "" && t.title.fn == nil {
+		return ErrNoTitle
+	}
+
+	if t.value == nil {
+		return ErrNoValue
+	}
+
+	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
+
+	if err := t.ask(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Hide sets whether the input should be hidden (e.g., for password input).
@@ -86,12 +106,6 @@ func (t *Text) TitleFunc(fn func(string) string) *Text {
 	return t
 }
 
-// Value sets a default input value.
-func (t *Text) Value(value *string) *Text {
-	t.value = value
-	return t
-}
-
 // ValidateFunc sets a validation function for the prompt input.
 func (t *Text) ValidateFunc(fn func(string) error) *Text {
 	if fn != nil {
@@ -100,35 +114,10 @@ func (t *Text) ValidateFunc(fn func(string) error) *Text {
 	return t
 }
 
-// Ask displays the prompt and waits for input.
-func (t *Text) Ask() error {
-	if t.title.val == "" && t.title.fn == nil {
-		return ErrNoTitle
-	}
-
-	if t.value == nil {
-		return ErrNoValue
-	}
-
-	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
-
-	if err := t.ask(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *Text) callAnswerFunc(s string) string {
-	if t.answerFn != nil {
-		return t.answerFn(s)
-	}
-
-	if defaultFuncs.answerFn != nil {
-		return defaultFuncs.answerFn(s)
-	}
-
-	return s
+// Value sets a default input value.
+func (t *Text) Value(value *string) *Text {
+	t.value = value
+	return t
 }
 
 // ask handles the core logic of displaying the prompt, reading user input,
@@ -160,6 +149,43 @@ func (t *Text) ask() error {
 	t.printFinalPromptLine()
 
 	return nil
+}
+
+func (t *Text) callAnswerFunc(s string) string {
+	if t.answerFn != nil {
+		return t.answerFn(s)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(s)
+	}
+
+	return s
+}
+
+func (t *Text) getPromptLines(prompt string) (int, error) {
+	promptLines := 1
+
+	writer, ok := t.terminal.Out.(*os.File)
+	if !ok {
+		return 0, fmt.Errorf("unable to determine prompt lines: output writer is not a file")
+	}
+
+	fd := int(writer.Fd())
+	width, _, err := term.GetSize(fd)
+	if err != nil {
+		return 0, err
+	}
+
+	promptCharCnt := len(ansi.Strip(prompt))
+
+	// If prompt is wider than terminal, calculate number of lines it is so we
+	// know how many lines it occupies.
+	if promptCharCnt > width {
+		promptLines = (promptCharCnt / width) + 1
+	}
+
+	return promptLines, nil
 }
 
 func (t *Text) printErrorMessage(err error) {
@@ -194,7 +220,8 @@ func (t *Text) printFinalPromptLine() {
 	// prompt with the answer function applied.
 	if !t.terminal.Hide {
 		builder.WriteString(ansi.ClearLineReset)
-		builder.WriteString(t.prompt + t.callAnswerFunc(*t.value))
+		promptAnswer := t.prompt + t.callAnswerFunc(*t.value)
+		builder.WriteString(promptAnswer)
 	}
 
 	// Regardless of being hidden or not we need to move to the next line and
@@ -204,35 +231,10 @@ func (t *Text) printFinalPromptLine() {
 	fmt.Fprint(t.terminal.Out, builder.String())
 }
 
-func validationErrorMessage(err error) string {
-	return fmt.Sprintf("%s%s* %v%s", ansi.ClearLineReset, ansi.RedBg, err, ansi.Reset)
-}
-
 func resetLineAbove() string {
 	return ansi.CursorUp(1) + ansi.ClearLineReset
 }
 
-func (t *Text) getPromptLines(prompt string) (int, error) {
-	promptLines := 1
-
-	writer, ok := t.terminal.Out.(*os.File)
-	if !ok {
-		return 0, fmt.Errorf("unable to determine prompt lines: output writer is not a file")
-	}
-
-	fd := int(writer.Fd())
-	width, _, err := term.GetSize(fd)
-	if err != nil {
-		return 0, err
-	}
-
-	promptCharCnt := len(ansi.Strip(prompt))
-
-	// If prompt is wider than terminal, calculate number of lines it is so we
-	// know how many lines it occupies.
-	if promptCharCnt > width {
-		promptLines = (promptCharCnt / width) + 1
-	}
-
-	return promptLines, nil
+func validationErrorMessage(err error) string {
+	return fmt.Sprintf("%s%s* %v%s", ansi.ClearLineReset, ansi.RedBg, err, ansi.Reset)
 }
