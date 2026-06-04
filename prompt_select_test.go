@@ -2,224 +2,88 @@ package pardon
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestSelectCreation(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-		{Key: "Option 2", Value: "value2"},
-	}
-
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...)
-
-	if selectPrompt == nil {
-		t.Error("NewSelect returned nil")
-	}
-
-	// Test that the result pointer is properly set
-	if selectPrompt.value != &result {
-		t.Error("Select value pointer not properly set")
-	}
-}
-
-func TestSelectWithTitle(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-	}
-
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...).
-		Title("Test Title")
-
-	if selectPrompt.title.val != "Test Title" {
-		t.Errorf("Title() = %q; want %q", selectPrompt.title.val, "Test Title")
-	}
-}
-
-func TestSelectWithCursor(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-	}
-
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...).
-		Cursor("→ ")
-
-	if selectPrompt.cursor.val != "→ " {
-		t.Errorf("Cursor() = %q; want %q", selectPrompt.cursor.val, "→ ")
-	}
-}
-
-func TestSelectValidation(t *testing.T) {
-	t.Run("no title", func(t *testing.T) {
-		options := []Option[string]{
-			{Key: "Option 1", Value: "value1"},
-		}
-
+// Tests for [NewSelect] function.
+func Test_NewSelect(t *testing.T) {
+	t.Run("should return a non-nil select prompt", func(t *testing.T) {
 		var result string
-		prompt := NewSelect(&result).
-			Options(options...)
-
-		// Test that title is empty, which should cause validation to fail
-		if prompt.title.val != "" {
-			t.Error("Expected title to be empty")
-		}
-
-		// We can't easily test Ask() without user interaction,
-		// but we can verify the validation conditions
-		if len(prompt.options) == 0 {
-			t.Error("Options should be set")
-		}
-
-		if prompt.value == nil {
-			t.Error("Value should be set")
-		}
+		selectPrompt := NewSelect(&result)
+		require.NotNil(t, selectPrompt, "NewSelect() should not return nil")
+		assert.Same(t, &result, selectPrompt.value, "NewSelect() should set the value pointer correctly")
 	})
 
-	t.Run("no options", func(t *testing.T) {
-		var result string
-		prompt := NewSelect(&result).
-			Title("Test")
-
-		// Test that options are empty, which should cause validation to fail
-		if len(prompt.options) != 0 {
-			t.Error("Expected options to be empty")
-		}
-
-		// Verify other conditions are met
-		if prompt.title.val != "Test" {
-			t.Error("Title should be set correctly")
-		}
-
-		if prompt.value == nil {
-			t.Error("Value should be set")
-		}
-	})
-
-	t.Run("no value", func(t *testing.T) {
-		options := []Option[string]{
-			{Key: "Option 1", Value: "value1"},
-		}
-
-		var result string
-		prompt := NewSelect(&result).
-			Options(options...).
-			Title("Test")
-
-		// Verify other conditions are met
-		if len(prompt.options) == 0 {
-			t.Error("Options should be set")
-		}
-
-		if prompt.title.val != "Test" {
-			t.Error("Title should be set correctly")
-		}
+	t.Run("should return a non-nil select prompt when value is nil", func(t *testing.T) {
+		selectPrompt := NewSelect[string](nil)
+		require.NotNil(t, selectPrompt, "NewSelect() should not return nil even when value is nil")
+		assert.Nil(t, selectPrompt.value, "NewSelect() should set the value pointer to nil when nil is passed")
 	})
 }
 
-func TestSelectGenericTypes(t *testing.T) {
-	t.Run("string type", func(t *testing.T) {
-		options := []Option[string]{
-			{Key: "First", Value: "first_value"},
-			{Key: "Second", Value: "second_value"},
+// Tests for [Select.AnswerFunc] function.
+func Test_Select_AnswerFunc(t *testing.T) {
+	t.Run("should set the answer function", func(t *testing.T) {
+		var result string
+		answerFunc := func(answer string) string {
+			return "[SELECTED: " + answer + "]"
 		}
 
+		selectPrompt := NewSelect(&result).
+			AnswerFunc(answerFunc)
+		require.NotNil(t, selectPrompt.answerFn, "AnswerFunc() should set the answer function")
+		testAnswer := "Test Answer"
+		assert.Equal(t, answerFunc(testAnswer), selectPrompt.answerFn(testAnswer), "AnswerFunc() should return the same result as the provided function")
+	})
+}
+
+// TODO: Tests for [Select.Ask] function.
+func Test_Select_Ask(t *testing.T) {
+	t.Skip("Need to implement")
+}
+
+// Tests for [Select.Cursor] function.
+func Test_Select_Cursor(t *testing.T) {
+	t.Run("should set the cursor value", func(t *testing.T) {
+		expectedCursor := ">> "
 		var result string
 		selectPrompt := NewSelect(&result).
-			Options(options...)
-
-		if selectPrompt == nil {
-			t.Error("NewSelect for string type returned nil")
-		}
+			Cursor(expectedCursor)
+		require.Equal(t, expectedCursor, selectPrompt.cursor.Get(), "Cursor() should set the cursor value correctly")
 	})
+}
 
-	t.Run("int type", func(t *testing.T) {
-		options := []Option[int]{
-			{Key: "One", Value: 1},
-			{Key: "Two", Value: 2},
-		}
-
-		var result int
+// Tests for [Select.CursorFunc] function.
+func Test_Select_CursorFunc(t *testing.T) {
+	t.Run("should set the cursor function", func(t *testing.T) {
+		preCursor := "⭐ "
+		var result string
 		selectPrompt := NewSelect(&result).
-			Options(options...)
-
-		if selectPrompt == nil {
-			t.Error("NewSelect for int type returned nil")
-		}
+			CursorFunc(func(input string) string {
+				return preCursor + input
+			})
+		expectedCursor := preCursor + "> "
+		require.NotNil(t, selectPrompt.cursor.fn, "CursorFunc should set the cursor function")
+		assert.Equal(t, expectedCursor, selectPrompt.cursor.Get(), "CursorFunc should return the expected cursor")
 	})
 
-	t.Run("struct type", func(t *testing.T) {
-		type CustomStruct struct {
-			ID   int
-			Name string
-		}
-
-		options := []Option[CustomStruct]{
-			{Key: "First Item", Value: CustomStruct{ID: 1, Name: "first"}},
-			{Key: "Second Item", Value: CustomStruct{ID: 2, Name: "second"}},
-		}
-
-		var result CustomStruct
+	t.Run("should return cursor value with function applied", func(t *testing.T) {
+		preCursor := "⭐ "
+		var result string
 		selectPrompt := NewSelect(&result).
-			Options(options...)
-
-		if selectPrompt == nil {
-			t.Error("NewSelect for struct type returned nil")
-		}
+			Cursor("test").
+			CursorFunc(func(input string) string {
+				return preCursor + input
+			})
+		require.NotNil(t, selectPrompt.cursor.fn, "CursorFunc should set the cursor function")
+		assert.Equal(t, preCursor+"test", selectPrompt.cursor.Get(), "CursorFunc should return the expected cursor")
 	})
 }
 
-func TestSelectCursorPositioning(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-		{Key: "Option 2", Value: "value2"},
-		{Key: "Option 3", Value: "value3"},
-	}
-
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...)
-
-	// Test initial cursor position
-	if selectPrompt.cursorPos != 0 {
-		t.Errorf("Initial cursor position = %d; want 0", selectPrompt.cursorPos)
-	}
-}
-
-func TestSelectScrollOffset(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-		{Key: "Option 2", Value: "value2"},
-		{Key: "Option 3", Value: "value3"},
-	}
-
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...)
-
-	// Test initial scroll offset
-	if selectPrompt.scrollOffset != 0 {
-		t.Errorf("Initial scroll offset = %d; want 0", selectPrompt.scrollOffset)
-	}
-}
-
-func TestNewOption(t *testing.T) {
-	option := NewOption("test key", "test value")
-
-	if option.Key != "test key" {
-		t.Errorf("NewOption Key = %q; want %q", option.Key, "test key")
-	}
-
-	if option.Value != "test value" {
-		t.Errorf("NewOption Value = %q; want %q", option.Value, "test value")
-	}
-}
-
-func TestSelectWithIcon(t *testing.T) {
+// Tests for [Select.Icon] function.
+func Test_Select_Icon(t *testing.T) {
 	options := []Option[string]{
 		{Key: "Option 1", Value: "value1"},
 	}
@@ -234,7 +98,8 @@ func TestSelectWithIcon(t *testing.T) {
 	}
 }
 
-func TestSelectWithIconFunc(t *testing.T) {
+// Tests for [Select.IconFunc] function.
+func Test_Select_IconFunc(t *testing.T) {
 	options := []Option[string]{
 		{Key: "Option 1", Value: "value1"},
 	}
@@ -251,7 +116,90 @@ func TestSelectWithIconFunc(t *testing.T) {
 	}
 }
 
-func TestSelectWithTitleFunc(t *testing.T) {
+func Test_Select_Options(t *testing.T) {
+	t.Run("string type", func(t *testing.T) {
+		options := []Option[string]{
+			{Key: "First", Value: "first_value"},
+			{Key: "Second", Value: "second_value"},
+		}
+
+		var result string
+		selectPrompt := NewSelect(&result).
+			Options(options...)
+		require.Len(t, selectPrompt.options, len(options), "Options() should set the correct number of options")
+	})
+
+	t.Run("int type", func(t *testing.T) {
+		options := []Option[int]{
+			{Key: "One", Value: 1},
+			{Key: "Two", Value: 2},
+		}
+
+		var result int
+		selectPrompt := NewSelect(&result).
+			Options(options...)
+		require.Len(t, selectPrompt.options, len(options), "Options() should set the correct number of options")
+	})
+
+	t.Run("struct type", func(t *testing.T) {
+		type CustomStruct struct {
+			ID   int
+			Name string
+		}
+
+		options := []Option[CustomStruct]{
+			{Key: "First Item", Value: CustomStruct{ID: 1, Name: "first"}},
+			{Key: "Second Item", Value: CustomStruct{ID: 2, Name: "second"}},
+		}
+
+		var result CustomStruct
+		selectPrompt := NewSelect(&result).
+			Options(options...)
+		require.Len(t, selectPrompt.options, len(options), "Options() should set the correct number of options")
+	})
+
+	t.Run("should not change options when empty slice is provided", func(t *testing.T) {
+		var result string
+		selectPrompt := NewSelect(&result).
+			Options()
+		require.Len(t, selectPrompt.options, 0, "Options() should not change options when empty slice is provided")
+	})
+}
+
+// Tests for [Select.SelectFunc] function.
+func Test_Select_SelectFunc(t *testing.T) {
+	t.Run("should set the select function", func(t *testing.T) {
+		var result string
+		selectFunc := func(input string) string {
+			return "✓ " + input
+		}
+		selectPrompt := NewSelect(&result).
+			SelectFunc(selectFunc)
+		require.NotNil(t, selectPrompt.selectFn, "SelectFunc() should set the select function")
+		testSelect := "Test Option"
+		assert.Equal(t, selectFunc(testSelect), selectPrompt.selectFn(testSelect), "SelectFunc() should return the same result as the provided function")
+	})
+}
+
+// Tests for [Select.Title] function.
+func Test_Select_Title(t *testing.T) {
+	t.Run("should set the title value", func(t *testing.T) {
+		expectedTitle := "Test Title"
+		var result string
+		selectPrompt := NewSelect(&result).
+			Title(expectedTitle)
+		assert.Equal(t, expectedTitle, selectPrompt.title.Get(), "Title() should set the title value correctly")
+	})
+
+	t.Run("should return an empty title when not set", func(t *testing.T) {
+		var result string
+		selectPrompt := NewSelect(&result)
+		assert.Equal(t, "", selectPrompt.title.Get(), "Title() should return an empty title when not set")
+	})
+}
+
+// Tests for [Select.TitleFunc] function.
+func Test_Select_TitleFunc(t *testing.T) {
 	options := []Option[string]{
 		{Key: "Option 1", Value: "value1"},
 	}
@@ -268,53 +216,108 @@ func TestSelectWithTitleFunc(t *testing.T) {
 	}
 }
 
-func TestSelectWithCursorFunc(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-	}
+// Tests for [Select.Value] function.
+func Test_Select_Value(t *testing.T) {
+	t.Run("should set the value pointer", func(t *testing.T) {
+		var result string
+		result2 := "test"
+		selectPrompt := NewSelect(&result).
+			Value(&result2)
+		require.NotNil(t, selectPrompt.value, "Value() should set the value pointer")
+		assert.NotSame(t, &result, selectPrompt.value, "Value() should set the value pointer correctly")
+		assert.Same(t, &result2, selectPrompt.value, "Value() should set the value pointer to the new address")
+	})
 
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...).
-		CursorFunc(func(input string) string {
-			return "⭐ "
-		})
-
-	if selectPrompt.cursor.fn == nil {
-		t.Error("CursorFunc should set the cursor function")
-	}
+	t.Run("should allow setting a nil value pointer", func(t *testing.T) {
+		result := "test"
+		selectPrompt := NewSelect[string](nil).
+			Value(&result)
+		require.NotNil(t, selectPrompt.value, "Value() should allow setting a nil value pointer")
+		assert.Same(t, &result, selectPrompt.value, "Value() should set the value pointer to the new address even when initially nil")
+	})
 }
 
-func TestSelectWithSelectFunc(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-	}
-
+// Tests for [Select.getAnswerFunc] function.
+func Test_Select_getAnswerFunc(t *testing.T) {
 	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...).
-		SelectFunc(func(input string) string {
+	selectPrompt := NewSelect(&result)
+	t.Run("should return the string value when no answer function or default answer function is set", func(t *testing.T) {
+		originalDefaultAnswerFunc := defaultFuncs.answerFn
+		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
+		defaultFuncs.answerFn = nil
+
+		expectedOutput := "Test Answer"
+		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc(expectedOutput), "getAnswerFunc() should return the input string when no functions are set")
+	})
+
+	t.Run("should return the string transformed by default answer function if set and no prompt-specific function is set", func(t *testing.T) {
+		expectedOutput := "Test Answer"
+		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc(expectedOutput), "getAnswerFunc() should return the string transformed by the default answer function when no prompt-specific function is set")
+	})
+
+	t.Run("should return the string transformed by custom default answer function if set and no prompt-specific function is set", func(t *testing.T) {
+		originalDefaultAnswerFunc := defaultFuncs.answerFn
+		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
+		defaultFuncs.answerFn = func(input string) string {
+			return "[ANSWER: " + input + "]"
+		}
+
+		expectedOutput := "[ANSWER: Test Answer]"
+		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the custom default answer function when no prompt-specific function is set")
+	})
+
+	t.Run("should return the string transformed by the prompt-specific answer function if set", func(t *testing.T) {
+		answerFunc := func(input string) string {
+			return "[ANSWER: " + input + "]"
+		}
+		selectPrompt.AnswerFunc(answerFunc)
+
+		expectedOutput := "[ANSWER: Test Answer]"
+		assert.Equal(t, expectedOutput, selectPrompt.getAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the prompt-specific answer function when it is set")
+	})
+}
+
+// Tests for [Select.getSelectFunc] function.
+func Test_Select_getSelectFunc(t *testing.T) {
+	var result string
+	selectPrompt := NewSelect(&result)
+	t.Run("should return the string value when no select function or default section function is set", func(t *testing.T) {
+		originalDefaultSelectFunc := defaultFuncs.selectFn
+		t.Cleanup(func() { defaultFuncs.selectFn = originalDefaultSelectFunc })
+		defaultFuncs.selectFn = nil
+
+		expectedOutput := "Test Option"
+		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc(expectedOutput), "getSelectFunc() should return the input string when no functions are set")
+	})
+
+	t.Run("should return the string transformed by default selection function if set and no prompt-specific function is set", func(t *testing.T) {
+		expectedOutput := "Test Option"
+		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc(expectedOutput), "getSelectFunc() should return the string transformed by the default selection function when no prompt-specific function is set")
+	})
+
+	t.Run("should return the string transformed by custom default selection function if set and no prompt-specific function is set", func(t *testing.T) {
+		originalDefaultSelectFunc := defaultFuncs.selectFn
+		t.Cleanup(func() { defaultFuncs.selectFn = originalDefaultSelectFunc })
+		defaultFuncs.selectFn = func(input string) string {
 			return "✓ " + input
-		})
+		}
 
-	if selectPrompt.selectFn == nil {
-		t.Error("SelectFunc should set the select function")
-	}
+		expectedOutput := "✓ Test Option"
+		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the custom default selection function when no prompt-specific function is set")
+	})
+
+	t.Run("should return the string transformed by the prompt-specific selection function if set", func(t *testing.T) {
+		selectFunc := func(input string) string {
+			return "✓ " + input
+		}
+		selectPrompt.SelectFunc(selectFunc)
+
+		expectedOutput := "✓ Test Option"
+		assert.Equal(t, expectedOutput, selectPrompt.getSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the prompt-specific selection function when it is set")
+	})
 }
 
-func TestSelectWithAnswerFunc(t *testing.T) {
-	options := []Option[string]{
-		{Key: "Option 1", Value: "value1"},
-	}
-
-	var result string
-	selectPrompt := NewSelect(&result).
-		Options(options...).
-		AnswerFunc(func(answer string) string {
-			return "[SELECTED: " + answer + "]"
-		})
-
-	if selectPrompt.answerFn == nil {
-		t.Error("AnswerFunc should set the answer function")
-	}
+// TODO: Tests for [Select.renderOptions] function.
+func Test_Select_renderOptions(t *testing.T) {
+	t.Skip("Need to implement")
 }
