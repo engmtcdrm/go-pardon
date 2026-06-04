@@ -35,97 +35,10 @@ func NewSelect[T comparable](value *T) *Select[T] {
 	}
 }
 
-// Title sets the prompt title text that will be displayed to the user.
-func (s *Select[T]) Title(title string) *Select[T] {
-	s.title.val = title
-	return s
-}
-
-// TitleFunc sets a function to dynamically format the prompt title.
-func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
-	s.title.fn = fn
-	return s
-}
-
-// Cursor sets the cursor symbol displayed next to the selected option.
-func (s *Select[T]) Cursor(cursor string) *Select[T] {
-	s.cursor.val = cursor
-	s.cursor.fn = nil
-	return s
-}
-
-// CursorFunc sets a function to dynamically format the cursor symbol.
-func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T] {
-	s.cursor.fn = fn
-	return s
-}
-
-// Options sets the list of available options for selection.
-func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
-	if len(options) == 0 {
-		return s
-	}
-
-	s.options = options
-	return s
-}
-
-// Value sets the pointer where the selected option's value will be stored.
-func (s *Select[T]) Value(value *T) *Select[T] {
-	s.value = value
-	return s
-}
-
-// Icon sets the icon displayed before the prompt title.
-func (s *Select[T]) Icon(icon string) *Select[T] {
-	s.icon.val = icon
-	s.icon.fn = nil
-	return s
-}
-
-// IconFunc sets a function to dynamically format the prompt icon.
-func (s *Select[T]) IconFunc(fn func(string) string) *Select[T] {
-	s.icon.fn = fn
-	return s
-}
-
 // AnswerFunc sets a function to format the final answer display.
 func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
 	s.answerFn = fn
 	return s
-}
-
-// SelectFunc sets a function to format option text during selection.
-func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
-	s.selectFn = fn
-	return s
-}
-
-// setAnswerFunc configures the answer transformation priority:
-// prompt-specific, global default, or the string itself.
-func (sel *Select[T]) getSelectFunc(s string) string {
-	if sel.selectFn != nil {
-		return sel.selectFn(s)
-	}
-
-	if defaultFuncs.selectFn != nil {
-		return defaultFuncs.selectFn(s)
-	}
-
-	return s
-}
-
-// getAnswerFunc returns the formatted text for the final answer display.
-func (s *Select[T]) getAnswerFunc(answer string) string {
-	if s.answerFn != nil {
-		return s.answerFn(answer)
-	}
-
-	if defaultFuncs.answerFn != nil {
-		return defaultFuncs.answerFn(answer)
-	}
-
-	return answer
 }
 
 // Ask displays the select prompt and waits for user selection.
@@ -171,6 +84,94 @@ func (s *Select[T]) Ask() error {
 			s.renderOptions(true)
 		}
 	}
+}
+
+// Cursor sets the cursor symbol displayed next to the selected option.
+func (s *Select[T]) Cursor(cursor string) *Select[T] {
+	s.cursor.val = cursor
+	s.cursor.fn = nil
+	return s
+}
+
+// CursorFunc sets a function to dynamically format the cursor symbol.
+func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T] {
+	s.cursor.fn = fn
+	return s
+}
+
+// Icon sets the icon displayed before the prompt title.
+func (s *Select[T]) Icon(icon string) *Select[T] {
+	s.icon.val = icon
+	s.icon.fn = nil
+	return s
+}
+
+// IconFunc sets a function to dynamically format the prompt icon.
+func (s *Select[T]) IconFunc(fn func(string) string) *Select[T] {
+	s.icon.fn = fn
+	return s
+}
+
+// Options sets the list of available options for selection.
+func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
+	if len(options) == 0 {
+		return s
+	}
+
+	s.options = options
+	return s
+}
+
+// SelectFunc sets a function to format option text during selection.
+func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
+	s.selectFn = fn
+	return s
+}
+
+// Title sets the prompt title text that will be displayed to the user.
+func (s *Select[T]) Title(title string) *Select[T] {
+	s.title.val = title
+	return s
+}
+
+// TitleFunc sets a function to dynamically format the prompt title.
+func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
+	s.title.fn = fn
+	return s
+}
+
+// Value sets the pointer where the selected option's value will be stored.
+func (s *Select[T]) Value(value *T) *Select[T] {
+	s.value = value
+	return s
+}
+
+// getAnswerFunc returns the formatted text for the final answer being
+// displayed.
+func (s *Select[T]) getAnswerFunc(answer string) string {
+	if s.answerFn != nil {
+		return s.answerFn(answer)
+	}
+
+	if defaultFuncs.answerFn != nil {
+		return defaultFuncs.answerFn(answer)
+	}
+
+	return answer
+}
+
+// setAnswerFunc configures the answer transformation priority:
+// prompt-specific, global default, or the string itself.
+func (sel *Select[T]) getSelectFunc(s string) string {
+	if sel.selectFn != nil {
+		return sel.selectFn(s)
+	}
+
+	if defaultFuncs.selectFn != nil {
+		return defaultFuncs.selectFn(s)
+	}
+
+	return s
 }
 
 // renderOptions displays the list of available options to the user.
