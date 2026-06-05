@@ -1,20 +1,83 @@
 package pardon
 
 import (
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// Tests for [NewPassword] function.
+func Test_NewPassword(t *testing.T) {
+	t.Run("should create a new password prompt with valid value pointer", func(t *testing.T) {
+		var result string
+		password := NewPassword(&result)
+		require.NotNil(t, password, "NewPassword should not return nil")
+		require.NotNil(t, password.value, "Password value pointer should not be nil")
+	})
+
+	t.Run("should create a new password prompt with a nil value pointer", func(t *testing.T) {
+		password := NewPassword(nil)
+		require.NotNil(t, password, "NewPassword should not return nil even with nil value pointer")
+		require.Nil(t, password.value, "Password value pointer should be nil when initialized with nil")
+	})
+}
+
 // Tests for [NewQuestion] function.
 func Test_NewQuestion(t *testing.T) {
-	t.Run("should create a new question", func(t *testing.T) {
+	t.Run("should create a new question with valid value pointer", func(t *testing.T) {
 		var result string
 		question := NewQuestion(&result)
 		require.NotNil(t, question)
 		assert.NotEmpty(t, question.icon.val)
 		assert.Equal(t, &result, question.value)
+	})
+
+	t.Run("should create a new question with a nil value pointer", func(t *testing.T) {
+		question := NewQuestion(nil)
+		require.NotNil(t, question)
+		assert.NotEmpty(t, question.icon.val)
+		assert.Nil(t, question.value)
+	})
+}
+
+// Tests for [Text.AnswerFunc] method.
+func Test_Text_AnswerFunc(t *testing.T) {
+	t.Run("using default answer function", func(t *testing.T) {
+		var result string
+		confirm := NewQuestion(&result).
+			Title("Continue?")
+		confirm.terminal.Out = io.Discard
+		assert.Nil(t, confirm.answerFn, "Default answer function should be nil")
+	})
+
+	t.Run("using custom answer function", func(t *testing.T) {
+		var result string
+		customFn := func(s string) string {
+			return "Custom: " + s
+		}
+		confirm := NewQuestion(&result).
+			Title("Continue?").
+			AnswerFunc(customFn)
+		confirm.terminal.Out = io.Discard
+		assert.Equal(t, customFn("Test"), confirm.answerFn("Test"), "Custom answer function did not return expected result")
+	})
+}
+
+// TODO: Tests for [Text.Ask] function.
+func Test_Text_Ask(t *testing.T) {
+	t.Skip("Need to implement")
+}
+
+// Tests for [Text.Hide] function.
+func Test_Text_Hide(t *testing.T) {
+	t.Run("should set hide to true", func(t *testing.T) {
+		var result string
+		text := NewQuestion(&result).
+			Title("Enter password:").
+			Hide(true)
+		assert.True(t, text.terminal.Hide, "Hide should be set to true")
 	})
 }
 
@@ -115,18 +178,5 @@ func TestQuestionWithTitleFunc(t *testing.T) {
 
 	if question.title.fn == nil {
 		t.Error("TitleFunc should set the title function")
-	}
-}
-
-func TestQuestionWithAnswerFunc(t *testing.T) {
-	var result string
-	question := NewQuestion(&result).
-		Title("Test").
-		AnswerFunc(func(answer string) string {
-			return "[" + answer + "]"
-		})
-
-	if question.answerFn == nil {
-		t.Error("AnswerFunc should set the answer function")
 	}
 }
