@@ -10,10 +10,6 @@ import (
 	"golang.org/x/term"
 )
 
-var (
-	ErrNoPrompt = errors.New("prompt requires a prompt")
-)
-
 type Text struct {
 	icon       eval[string]
 	title      eval[string]
@@ -25,6 +21,17 @@ type Text struct {
 	value    *string
 }
 
+// NewPassword creates an InputPrompt for secure password input with masking.
+func NewPassword(value *string) *Text {
+	return &Text{
+		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		validateFn: func(s string) error { return nil },
+		terminal:   NewHiddenTerminal(),
+		value:      value,
+	}
+}
+
 // NewQuestion creates a new InputPrompt for text input with a question mark
 // icon.
 func NewQuestion(value *string) *Text {
@@ -33,17 +40,6 @@ func NewQuestion(value *string) *Text {
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		validateFn: func(s string) error { return nil },
 		terminal:   NewTerminal(),
-		value:      value,
-	}
-}
-
-// NewPassword creates an InputPrompt for secure password input with masking.
-func NewPassword(value *string) *Text {
-	return &Text{
-		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		validateFn: func(s string) error { return nil },
-		terminal:   NewHiddenTerminal(),
 		value:      value,
 	}
 }
