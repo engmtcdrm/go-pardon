@@ -93,6 +93,7 @@ func (t *Text) IconFunc(fn func(string) string) *Text {
 // Title sets the prompt text.
 func (t *Text) Title(title string) *Text {
 	t.title.val = title
+	t.title.fn = nil
 	return t
 }
 
