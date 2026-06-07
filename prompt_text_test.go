@@ -244,7 +244,7 @@ func Test_Text_ask(t *testing.T) {
 	t.Skip("Need to implement")
 }
 
-// TODO: Tests for [Text.getPromptLines] function.
+// Tests for [Text.getPromptLines] function.
 func Test_Text_getPromptLines(t *testing.T) {
 	t.Run("should return 1 when prompt line fits within terminal width", func(t *testing.T) {
 		mockTTY := testutils.CreatePTYWithSize(t, "", 20, 10)
