@@ -15,7 +15,8 @@ import (
 // character to the content to ensure that the file is properly terminated for
 // reading.
 func CreateValidTestFile(t *testing.T, content string) *os.File {
-	// content += "\x04"
+	t.Helper()
+
 	testFile := filepath.Join(t.TempDir(), "test_input.txt")
 
 	err := os.WriteFile(testFile, []byte(content), 0644)
@@ -31,6 +32,8 @@ func CreateValidTestFile(t *testing.T, content string) *os.File {
 // EOF character to the content, which can be used to test how the code handles
 // unexpected end of input.
 func CreateInvalidTestFile(t *testing.T, content string) *os.File {
+	t.Helper()
+
 	testFile := filepath.Join(t.TempDir(), "test_input.txt")
 
 	f, err := os.Create(testFile)
@@ -47,6 +50,8 @@ func CreateInvalidTestFile(t *testing.T, content string) *os.File {
 // reader in tests. The master is closed after writing so the slave will
 // observe EOF when appropriate.
 func CreatePTY(t *testing.T, content string) *os.File {
+	t.Helper()
+
 	m, s, err := pty.Open()
 	require.NoError(t, err, "failed to open pty")
 	t.Cleanup(func() { s.Close() })
@@ -63,4 +68,20 @@ func CreatePTY(t *testing.T, content string) *os.File {
 	}()
 
 	return s
+}
+
+// CreatePTYWithSize creates a pseudo-terminal pair with the specified size and
+// writes the provided content to the master end. The returned slave *os.File
+// can be used as a terminal reader in tests that require specific terminal
+// dimensions. The master is closed after writing so the slave will observe EOF
+// when appropriate.
+func CreatePTYWithSize(t *testing.T, content string, columns, rows int) *os.File {
+	t.Helper()
+
+	mockTTY := CreatePTY(t, content)
+
+	err := pty.Setsize(mockTTY, &pty.Winsize{Cols: uint16(columns), Rows: uint16(rows)})
+	require.NoError(t, err, "failed to set pty size")
+
+	return mockTTY
 }
