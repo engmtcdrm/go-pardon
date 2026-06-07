@@ -49,6 +49,7 @@ func CreateInvalidTestFile(t *testing.T, content string) *os.File {
 func CreatePTY(t *testing.T, content string) *os.File {
 	m, s, err := pty.Open()
 	require.NoError(t, err, "failed to open pty")
+	t.Cleanup(func() { s.Close() })
 
 	// Write content as if typed by a user to ensure ordering of bytes so
 	// that the reader processes printable runes before the newline is
