@@ -164,6 +164,10 @@ func (t *Text) getPromptLines(prompt string) (int, error) {
 		return 0, err
 	}
 
+	if width == 0 {
+		return 0, fmt.Errorf("unable to determine prompt lines: terminal width is 0")
+	}
+
 	promptCharCnt := len(ansi.Strip(prompt))
 
 	// If prompt is wider than terminal, calculate number of lines it is so we
