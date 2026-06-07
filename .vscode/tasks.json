@@ -1,0 +1,137 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "go",
+			"label": "test: Run Tests",
+			"icon":{
+				"id": "beaker",
+				"color": "terminal.ansiGreen"
+			},
+			"command": "test",
+			"args": [
+				"-timeout",
+				"30s",
+				"${input:testDirectory}",
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"detail": "go test -timeout 30s ./..."
+		},
+		{
+			"type": "go",
+			"label": "test: Run Tests - Verbose",
+			"icon":{
+				"id": "beaker",
+				"color": "terminal.ansiGreen"
+			},
+			"command": "test",
+			"args": [
+				"-v",
+				"-timeout",
+				"30s",
+				"${input:testDirectory}",
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"detail": "go test -v -timeout 30s ./..."
+		},
+		{
+			"type": "shell",
+			"label": "test: Run Tests with Coverage",
+			"icon":{
+				"id": "beaker",
+				"color": "terminal.ansiGreen"
+			},
+			"command": "go",
+			"args": [
+				"test",
+				"${input:testDirectory}",
+				"-coverprofile=coverage.out",
+				"&&",
+				"go",
+				"tool",
+				"cover",
+				"-html=coverage.out",
+				"-o",
+				"coverage.html"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"detail": "run go test with coverage and generate HTML report"
+		},
+		{
+			"type": "shell",
+			"label": "doc: Generate Documentation",
+			"icon":{
+				"id": "book",
+				"color": "terminal.ansiCyan"
+			},
+			"command": "${workspaceFolder}/scripts/generate-docs.sh",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Generate README.md files using gomarkdoc"
+		},
+		{
+			"type": "shell",
+			"label": "examples: Run",
+			"icon":{
+				"id": "terminal",
+				"color": "terminal.ansiMagenta"
+			},
+			"command": "go run .",
+			"options": {
+				"cwd": "${workspaceFolder}/examples"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Run example application in the 'examples' directory"
+		},
+		{
+			"type": "shell",
+			"label": "examples: Build",
+			"icon":{
+				"id": "build",
+				"color": "terminal.ansiMagenta"
+			},
+			"command": "${workspaceFolder}/scripts/build-examples.sh",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Build example application in the 'examples' directory"
+		},
+	],
+	"inputs": [
+		{
+			"id": "testDirectory",
+			"type": "pickString",
+			"description": "Enter the directory to run tests in (e.g., ./pkg/service)",
+			"options": [
+				".",
+				"./internal/tui",
+				"./..."
+			],
+			"default": "./..."
+		}
+	]
+}
