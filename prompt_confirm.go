@@ -16,9 +16,9 @@ type Confirm struct {
 	value      *bool
 	icon       eval[string]
 	title      eval[string]
+	answer     eval[string]
 	confirmKey rune
 	denyKey    rune
-	answerFn   func(string) string
 	prompt     string
 	promptOpts string
 }
@@ -30,6 +30,7 @@ func NewConfirm(value *bool) *Confirm {
 		value:      value,
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		answer:     eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
 		confirmKey: runekeys.UpperY,
 		denyKey:    runekeys.UpperN,
 	}
@@ -37,7 +38,7 @@ func NewConfirm(value *bool) *Confirm {
 
 // AnswerFunc sets a function to transform the final answer being displayed.
 func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
-	c.answerFn = fn
+	c.answer.fn = fn
 	return c
 }
 
@@ -134,20 +135,6 @@ func (c *Confirm) ask() error {
 	return nil
 }
 
-// callAnswerFunc configures the answer transformation priority:
-// prompt-specific, global default, or the string itself.
-func (c *Confirm) callAnswerFunc(s string) string {
-	if c.answerFn != nil {
-		return c.answerFn(s)
-	}
-
-	if defaultFuncs.answerFn != nil {
-		return defaultFuncs.answerFn(s)
-	}
-
-	return s
-}
-
 func (c *Confirm) equal(a rune, b rune) bool {
 	return unicode.ToLower(a) == unicode.ToLower(b)
 }
@@ -184,7 +171,8 @@ func (c *Confirm) getValueAsString() string {
 func (c *Confirm) printFinalPromptLine() {
 	builder := strings.Builder{}
 	builder.WriteString(ansi.ClearLineReset)
-	promptAnswer := c.prompt + c.callAnswerFunc(c.getValueAsString())
+	c.answer.val = c.getValueAsString()
+	promptAnswer := c.prompt + c.answer.Get()
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Fprint(c.terminal.Out, builder.String())

@@ -30,7 +30,7 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.terminal.Out = io.Discard
-		assert.Nil(t, confirmPrompt.answerFn, "Default answer function should be nil")
+		assert.Nil(t, confirmPrompt.answer.fn, "Default answer function should be nil")
 	})
 
 	t.Run("using custom answer function", func(t *testing.T) {
@@ -42,7 +42,8 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 			Title("Continue?").
 			AnswerFunc(customFn)
 		confirmPrompt.terminal.Out = io.Discard
-		assert.Equal(t, customFn("Test"), confirmPrompt.answerFn("Test"), "Custom answer function did not return expected result")
+		confirmPrompt.answer.val = "Test"
+		assert.Equal(t, customFn("Test"), confirmPrompt.answer.Get(), "Custom answer function did not return expected result")
 	})
 }
 
@@ -287,46 +288,6 @@ func Test_Confirm_ask(t *testing.T) {
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")
-	})
-}
-
-// Tests for [Confirm.callAnswerFunc] function.
-func Test_Confirm_callAnswerFunc(t *testing.T) {
-	var result bool
-	confirmPrompt := NewConfirm(&result)
-	t.Run("should return the string value when no answer function or default answer function is set", func(t *testing.T) {
-		originalDefaultAnswerFunc := defaultFuncs.answerFn
-		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
-		defaultFuncs.answerFn = nil
-
-		expectedOutput := "Test Answer"
-		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the input string when no functions are set")
-	})
-
-	t.Run("should return the string transformed by default answer function if set and no prompt-specific function is set", func(t *testing.T) {
-		expectedOutput := "Test Answer"
-		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the string transformed by the default answer function when no prompt-specific function is set")
-	})
-
-	t.Run("should return the string transformed by custom default answer function if set and no prompt-specific function is set", func(t *testing.T) {
-		originalDefaultAnswerFunc := defaultFuncs.answerFn
-		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
-		defaultFuncs.answerFn = func(input string) string {
-			return "[ANSWER: " + input + "]"
-		}
-
-		expectedOutput := "[ANSWER: Test Answer]"
-		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the custom default answer function when no prompt-specific function is set")
-	})
-
-	t.Run("should return the string transformed by the prompt-specific answer function if set", func(t *testing.T) {
-		answerFunc := func(input string) string {
-			return "[ANSWER: " + input + "]"
-		}
-		confirmPrompt.AnswerFunc(answerFunc)
-
-		expectedOutput := "[ANSWER: Test Answer]"
-		assert.Equal(t, expectedOutput, confirmPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the prompt-specific answer function when it is set")
 	})
 }
 
