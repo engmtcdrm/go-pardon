@@ -22,6 +22,14 @@ func Test_NewPassword(t *testing.T) {
 		require.NotNil(t, password, "NewPassword should not return nil even with nil value pointer")
 		require.Nil(t, password.value, "Password value pointer should be nil when initialized with nil")
 	})
+
+	t.Run("should return error for empty input for Question", func(t *testing.T) {
+		var result string
+		question := NewQuestion(&result)
+
+		err := question.validateFn("test")
+		require.NoError(t, err, "validateFn should not return an error for valid input")
+	})
 }
 
 // Tests for [NewQuestion] function.
@@ -39,6 +47,14 @@ func Test_NewQuestion(t *testing.T) {
 		require.NotNil(t, question)
 		assert.NotEmpty(t, question.icon.val)
 		assert.Nil(t, question.value)
+	})
+
+	t.Run("should return error for empty input for Password", func(t *testing.T) {
+		var result string
+		password := NewPassword(&result)
+
+		err := password.validateFn("")
+		require.NoError(t, err, "validateFn should not return an error for valid input")
 	})
 }
 
@@ -72,12 +88,22 @@ func Test_Text_Ask(t *testing.T) {
 
 // Tests for [Text.Hide] function.
 func Test_Text_Hide(t *testing.T) {
-	t.Run("should set hide to true", func(t *testing.T) {
+	t.Run("should set hide to false on Question prompts", func(t *testing.T) {
 		var result string
-		text := NewQuestion(&result).
-			Title("Enter password:").
-			Hide(true)
-		assert.True(t, text.terminal.Hide, "Hide should be set to true")
+		textPrompt := NewQuestion(&result)
+		require.False(t, textPrompt.terminal.Hide, "Hide should be false by default for Question prompts")
+
+		textPrompt = textPrompt.Hide(true)
+		assert.True(t, textPrompt.terminal.Hide, "Hide should be set to true")
+	})
+
+	t.Run("should set hide to true on Password prompts", func(t *testing.T) {
+		var result string
+		passwordPrompt := NewPassword(&result)
+		require.True(t, passwordPrompt.terminal.Hide, "Hide should be true by default for Password prompts")
+
+		passwordPrompt = passwordPrompt.Hide(false)
+		assert.False(t, passwordPrompt.terminal.Hide, "Hide should be set to false")
 	})
 }
 
