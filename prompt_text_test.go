@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -245,7 +246,54 @@ func Test_Text_ask(t *testing.T) {
 
 // TODO: Tests for [Text.getPromptLines] function.
 func Test_Text_getPromptLines(t *testing.T) {
-	t.Skip("Need to implement")
+	t.Run("should return 1 when prompt line fits within terminal width", func(t *testing.T) {
+		mockTTY := testutils.CreatePTYWithSize(t, "", 20, 10)
+
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = mockTTY
+
+		lines, err := questionPrompt.getPromptLines("Short prompt?")
+		assert.NoError(t, err, "getPromptLines should not return an error")
+		assert.Equal(t, 1, lines, "getPromptLines should return 1 for short prompt")
+	})
+
+	t.Run("should return correct number of lines for prompt that exceeds terminal width", func(t *testing.T) {
+		mockTTY := testutils.CreatePTYWithSize(t, "", 5, 10)
+
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = mockTTY
+
+		lines, err := questionPrompt.getPromptLines("Short prompt?")
+		assert.NoError(t, err, "getPromptLines should not return an error")
+		assert.Equal(t, 3, lines, "getPromptLines should return 3 for prompt that exceeds terminal width")
+	})
+
+	t.Run("should return an error if output writer is not a file", func(t *testing.T) {
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = &bytes.Buffer{}
+
+		_, err := questionPrompt.getPromptLines("Short prompt?")
+		assert.Error(t, err, "getPromptLines should return an error if output writer is not a file")
+	})
+
+	t.Run("should return an error if terminal width is 0", func(t *testing.T) {
+		mockTTY := testutils.CreatePTYWithSize(t, "", 0, 10)
+
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = mockTTY
+
+		_, err := questionPrompt.getPromptLines("Short prompt?")
+		assert.Error(t, err, "getPromptLines should return an error if terminal width is 0")
+	})
+
+	t.Run("should return an error if terminal size cannot be determined", func(t *testing.T) {
+		// Use a regular file (not a PTY) so term.GetSize will fail with ENOTTY.
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = testutils.CreateValidTestFile(t, "not a pty")
+
+		_, err := questionPrompt.getPromptLines("Short prompt?")
+		assert.Error(t, err, "getPromptLines should return an error if terminal size cannot be determined")
+	})
 }
 
 // TODO: Tests for [Text.printErrorMessage] function.
@@ -253,7 +301,7 @@ func Test_Text_printErrorMessage(t *testing.T) {
 	t.Skip("Need to implement")
 }
 
-// TODO: Tests for [Text.printFinalPromptLine] function.
+// Tests for [Text.printFinalPromptLine] function.
 func Test_Text_printFinalPromptLine(t *testing.T) {
 	t.Run("should print final prompt line with prompt and answer", func(t *testing.T) {
 		expectedOutput := ansi.ClearLineReset + "[?] What is your name? Bobby\n" + ansi.ClearLineReset
