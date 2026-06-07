@@ -13,7 +13,7 @@ import (
 type Text struct {
 	icon       eval[string]
 	title      eval[string]
-	answerFn   func(string) string
+	answer     eval[string]
 	validateFn func(string) error
 
 	terminal *Terminal
@@ -26,6 +26,7 @@ func NewPassword(value *string) *Text {
 	return &Text{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
 		validateFn: func(s string) error { return nil },
 		terminal:   NewHiddenTerminal(),
 		value:      value,
@@ -38,6 +39,7 @@ func NewQuestion(value *string) *Text {
 	return &Text{
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
 		validateFn: func(s string) error { return nil },
 		terminal:   NewTerminal(),
 		value:      value,
@@ -47,7 +49,7 @@ func NewQuestion(value *string) *Text {
 // AnswerFunc sets a function to format the final answer being displayed.
 func (t *Text) AnswerFunc(fn func(string) string) *Text {
 	if fn != nil {
-		t.answerFn = fn
+		t.answer.fn = fn
 	}
 	return t
 }
@@ -148,18 +150,6 @@ func (t *Text) ask() error {
 	return nil
 }
 
-func (t *Text) callAnswerFunc(s string) string {
-	if t.answerFn != nil {
-		return t.answerFn(s)
-	}
-
-	if defaultFuncs.answerFn != nil {
-		return defaultFuncs.answerFn(s)
-	}
-
-	return s
-}
-
 func (t *Text) getPromptLines(prompt string) (int, error) {
 	promptLines := 1
 
@@ -217,7 +207,8 @@ func (t *Text) printFinalPromptLine() {
 	// prompt with the answer function applied.
 	if !t.terminal.Hide {
 		builder.WriteString(ansi.ClearLineReset)
-		promptAnswer := t.prompt + t.callAnswerFunc(*t.value)
+		t.answer.val = *t.value
+		promptAnswer := t.prompt + t.answer.Get()
 		builder.WriteString(promptAnswer)
 	}
 
@@ -226,12 +217,4 @@ func (t *Text) printFinalPromptLine() {
 	// visible.
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Fprint(t.terminal.Out, builder.String())
-}
-
-func resetLineAbove() string {
-	return ansi.CursorUp(1) + ansi.ClearLineReset
-}
-
-func validationErrorMessage(err error) string {
-	return fmt.Sprintf("%s%s* %v%s", ansi.ClearLineReset, ansi.RedBg, err, ansi.Reset)
 }
