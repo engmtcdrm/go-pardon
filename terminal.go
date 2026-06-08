@@ -223,6 +223,16 @@ func (t *Terminal) rawReadline(f *os.File) ([]rune, error) {
 			continue
 		}
 
+		// idx := bytes.IndexAny(buf[:n], "\n\r")
+
+		// If we found a newline/carriage return anywhere in the buffer,
+		// move the file offset back so the next read will return any bytes
+		// that follow the newline. The number of bytes to move back is
+		// (idx+1 - n) which is <= 0.
+		// if idx >= 0 {
+		// 	_, _ = f.Seek(int64(idx+1-n), io.SeekCurrent)
+		// }
+
 		t.pending = append(t.pending, buf[:n]...)
 
 		if returnRunes, done, err := t.processPending(); done {
