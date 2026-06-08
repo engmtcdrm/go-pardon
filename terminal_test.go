@@ -54,8 +54,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 			t.Skip("pty tests skipped on Windows. Pty is not supported.")
 		}
 
-		f := testutils.CreatePTY(t, "hello\n")
-		defer f.Close()
+		_, f := testutils.CreateWritePTY(t, "hello\n")
 
 		terminal := NewTerminal()
 		terminal.Out = io.Discard
