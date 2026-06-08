@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 	"github.com/engmtcdrm/go-pardon/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -246,9 +247,102 @@ func Test_Text_Value(t *testing.T) {
 	})
 }
 
-// TODO: Tests for [Text.ask] function.
+// Tests for [Text.ask] function.
 func Test_Text_ask(t *testing.T) {
-	t.Skip("Need to implement")
+	const promptTitle = "What is your name?"
+	const expectedResult = "Bobby"
+	t.Run("should set value to true when confirmed", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result).
+			Title(promptTitle)
+		questionPrompt.terminal.Out = io.Discard
+		questionPrompt.terminal.In = testutils.CreateValidTestFile(t, expectedResult+"\r")
+
+		err := questionPrompt.ask()
+		require.NoError(t, err, "Expected no error when asking with valid input")
+		require.Equal(t, expectedResult, result, "Expected result to be 'Bobby' when confirmed")
+	})
+
+	t.Run("should error when user presses Ctrl+C", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result).
+			Title(promptTitle)
+		questionPrompt.terminal.Out = io.Discard
+		questionPrompt.terminal.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+
+		err := questionPrompt.ask()
+		require.Error(t, err, "Expected error when user presses Ctrl+C")
+		require.ErrorAsf(t, err, &ErrUserAborted, "Expected ErrUserAborted but got: %v", err)
+	})
+
+	t.Run("should error when In is not os.File", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result).
+			Title(promptTitle)
+		questionPrompt.terminal.Out = io.Discard
+		questionPrompt.terminal.In = bytes.NewBufferString(string(keys.LowerY))
+
+		err := questionPrompt.ask()
+		require.Error(t, err, "Expected error when In is not os.File")
+	})
+
+	t.Run("should print error message when validation fails", func(t *testing.T) {
+		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
+		t.Cleanup(func() {
+			mockPTY.Close()
+			mockTTY.Close()
+		})
+
+		var result string
+		questionPrompt := NewQuestion(&result).
+			Title(promptTitle).
+			ValidateFunc(func(input string) error {
+				if input == expectedResult {
+					return errors.New("validation failed")
+				}
+
+				return nil
+			})
+		questionPrompt.terminal.Out = mockTTY
+		// Buffer size is 8 so need to pad two empty spaces to emulate stdin clearing the line after validation error is printed.
+		questionPrompt.terminal.In = testutils.CreateValidTestFile(t, expectedResult+"\n  "+expectedResult+"2\r")
+
+		err := questionPrompt.ask()
+		require.NoError(t, err, "Expected no error when validation fails")
+		require.Equal(t, expectedResult+"2", result, "Expected result to be 'Bobby2' after correcting validation error")
+	})
+}
+
+func TestFiles(t *testing.T) {
+	const expectedResult = "Bobby"
+	f := testutils.CreateValidTestFile(t, expectedResult+"\n"+expectedResult+"2\r")
+	pending := make([]byte, 0)
+	for {
+		var buf [8]byte
+		// TODO: There is a bug here where if you use "bobby\rBobby2\r" it will
+		// read "bobby\rBo" and during the next read truncate part of Bobby2.
+		// Figure out a way to fix this.
+		n, err := f.Read(buf[:])
+		if err != nil && err != io.EOF {
+			t.Fatalf("Unexpected error reading file: %v", err)
+		}
+
+		if n == 0 {
+			if err == io.EOF {
+				break
+			}
+			continue
+		}
+
+		idx := bytes.IndexAny(buf[:n], "\n\r")
+
+		if idx > 0 {
+			f.Seek(int64(idx-(n-1)), io.SeekCurrent)
+		}
+		t.Logf("Read %d bytes: %q, idx: %d", n, buf[:n], idx)
+
+		pending = append(pending, buf[:n]...)
+	}
 }
 
 // Tests for [Text.getPromptLines] function.
