@@ -2,6 +2,7 @@ package pardon
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"testing"
@@ -247,7 +248,7 @@ func Test_Text_ask(t *testing.T) {
 // Tests for [Text.getPromptLines] function.
 func Test_Text_getPromptLines(t *testing.T) {
 	t.Run("should return 1 when prompt line fits within terminal width", func(t *testing.T) {
-		mockTTY := testutils.CreatePTYWithSize(t, "", 20, 10)
+		_, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
 
 		questionPrompt := NewQuestion(nil)
 		questionPrompt.terminal.Out = mockTTY
@@ -258,7 +259,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 	})
 
 	t.Run("should return correct number of lines for prompt that exceeds terminal width", func(t *testing.T) {
-		mockTTY := testutils.CreatePTYWithSize(t, "", 5, 10)
+		_, mockTTY := testutils.CreatePTYWithSize(t, 5, 10)
 
 		questionPrompt := NewQuestion(nil)
 		questionPrompt.terminal.Out = mockTTY
@@ -277,7 +278,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 	})
 
 	t.Run("should return an error if terminal width is 0", func(t *testing.T) {
-		mockTTY := testutils.CreatePTYWithSize(t, "", 0, 10)
+		_, mockTTY := testutils.CreatePTYWithSize(t, 0, 10)
 
 		questionPrompt := NewQuestion(nil)
 		questionPrompt.terminal.Out = mockTTY
@@ -296,9 +297,47 @@ func Test_Text_getPromptLines(t *testing.T) {
 	})
 }
 
-// TODO: Tests for [Text.printErrorMessage] function.
+// Tests for [Text.printErrorMessage] function.
 func Test_Text_printErrorMessage(t *testing.T) {
-	t.Skip("Need to implement")
+	t.Run("should print error message with correct formatting", func(t *testing.T) {
+		expectedErrorMessage := errors.New("Test error")
+		expected := "\r\n" + validationErrorMessage(expectedErrorMessage) + resetLineAbove()
+
+		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
+
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.printErrorMessage(expectedErrorMessage)
+		_ = mockTTY.Close() // Close the TTY to signal we're done reading output
+
+		output := testutils.ReadPTYOutput(t, mockPTY, 128)
+		assert.Equal(t, expected, output, "printErrorMessage did not print the expected error message with correct formatting")
+	})
+
+	t.Run("should return an error if output writer is not a file", func(t *testing.T) {
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = &bytes.Buffer{}
+
+		errorMessage := errors.New("Test error")
+		assert.Panics(t, func() {
+			questionPrompt.printErrorMessage(errorMessage)
+		})
+	})
+
+	t.Run("should handle error that exceeds terminal width", func(t *testing.T) {
+		longErrorMessage := errors.New("This is a very long error message that should exceed the terminal width and be handled properly")
+		expected := "\r\n" + validationErrorMessage(longErrorMessage) + ansi.CursorUp(1) + resetLineAbove()
+
+		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 60, 10)
+
+		questionPrompt := NewQuestion(nil)
+		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.printErrorMessage(longErrorMessage)
+		_ = mockTTY.Close() // Close the TTY to signal we're done reading output
+
+		output := testutils.ReadPTYOutput(t, mockPTY, 128)
+		assert.Equal(t, expected, output, "printErrorMessage did not handle long error message correctly")
+	})
 }
 
 // Tests for [Text.printFinalPromptLine] function.
