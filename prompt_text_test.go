@@ -199,23 +199,29 @@ func Test_Text_TitleFunc(t *testing.T) {
 	})
 }
 
-// TODO: Tests for [Text.ValidateFunc] function.
+// Tests for [Text.ValidateFunc] function.
 func Test_Text_ValidateFunc(t *testing.T) {
-	var result string
-	question := NewQuestion(&result).
-		Title("Enter name:").
-		ValidateFunc(func(input string) error {
-			if input == "" {
-				return ErrNoValue
+	t.Run("should be valid regardless of input when using default validate function", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result)
+		assert.NoError(t, questionPrompt.validateFn(""), "Default validate function should not return an error for empty input")
+		assert.NoError(t, questionPrompt.validateFn("test"), "Default validate function should not return an error for non-empty input")
+	})
+
+	t.Run("should set custom validation function", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result)
+		require.NoError(t, questionPrompt.validateFn("test"), "Original validate function should not return an error for valid input")
+
+		questionPrompt = questionPrompt.ValidateFunc(func(input string) error {
+			if input == "test" {
+				return errors.New("input cannot be 'test'")
 			}
 			return nil
 		})
-
-	// Validate functionality test - we can't easily test the actual input
-	// but we can verify the question was configured properly
-	if question == nil {
-		t.Error("Question with validation returned nil")
-	}
+		assert.Error(t, questionPrompt.validateFn("test"), "Custom validate function should return an error for input 'test'")
+		assert.NoError(t, questionPrompt.validateFn("valid input"), "Custom validate function should not return an error for valid input")
+	})
 }
 
 // Tests for [Text.Value] function.
