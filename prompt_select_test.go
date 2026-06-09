@@ -33,9 +33,9 @@ func Test_Select_AnswerFunc(t *testing.T) {
 
 		selectPrompt := NewSelect(&result).
 			AnswerFunc(answerFunc)
-		require.NotNil(t, selectPrompt.answerFn, "AnswerFunc() should set the answer function")
+		require.NotNil(t, selectPrompt.answer.fn, "AnswerFunc() should set the answer function")
 		testAnswer := "Test Answer"
-		assert.Equal(t, answerFunc(testAnswer), selectPrompt.answerFn(testAnswer), "AnswerFunc() should return the same result as the provided function")
+		assert.Equal(t, answerFunc(testAnswer), selectPrompt.answer.fn(testAnswer), "AnswerFunc() should return the same result as the provided function")
 	})
 }
 
@@ -234,46 +234,6 @@ func Test_Select_Value(t *testing.T) {
 			Value(&result)
 		require.NotNil(t, selectPrompt.value, "Value() should allow setting a nil value pointer")
 		assert.Same(t, &result, selectPrompt.value, "Value() should set the value pointer to the new address even when initially nil")
-	})
-}
-
-// Tests for [Select.getAnswerFunc] function.
-func Test_Select_getAnswerFunc(t *testing.T) {
-	var result string
-	selectPrompt := NewSelect(&result)
-	t.Run("should return the string value when no answer function or default answer function is set", func(t *testing.T) {
-		originalDefaultAnswerFunc := defaultFuncs.answerFn
-		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
-		defaultFuncs.answerFn = nil
-
-		expectedOutput := "Test Answer"
-		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the input string when no functions are set")
-	})
-
-	t.Run("should return the string transformed by default answer function if set and no prompt-specific function is set", func(t *testing.T) {
-		expectedOutput := "Test Answer"
-		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc(expectedOutput), "getAnswerFunc() should return the string transformed by the default answer function when no prompt-specific function is set")
-	})
-
-	t.Run("should return the string transformed by custom default answer function if set and no prompt-specific function is set", func(t *testing.T) {
-		originalDefaultAnswerFunc := defaultFuncs.answerFn
-		t.Cleanup(func() { defaultFuncs.answerFn = originalDefaultAnswerFunc })
-		defaultFuncs.answerFn = func(input string) string {
-			return "[ANSWER: " + input + "]"
-		}
-
-		expectedOutput := "[ANSWER: Test Answer]"
-		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the custom default answer function when no prompt-specific function is set")
-	})
-
-	t.Run("should return the string transformed by the prompt-specific answer function if set", func(t *testing.T) {
-		answerFunc := func(input string) string {
-			return "[ANSWER: " + input + "]"
-		}
-		selectPrompt.AnswerFunc(answerFunc)
-
-		expectedOutput := "[ANSWER: Test Answer]"
-		assert.Equal(t, expectedOutput, selectPrompt.callAnswerFunc("Test Answer"), "getAnswerFunc() should return the string transformed by the prompt-specific answer function when it is set")
 	})
 }
 

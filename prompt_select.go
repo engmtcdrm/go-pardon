@@ -16,11 +16,12 @@ type Select[T comparable] struct {
 	icon         eval[string]
 	title        eval[string]
 	cursor       eval[string]
+	answer       eval[string]
 	cursorPos    int
 	scrollOffset int
 	options      []Option[T]
-	answerFn     func(string) string
 	selectFn     func(string) string
+	terminal     *Terminal
 	value        *T
 }
 
@@ -30,6 +31,7 @@ func NewSelect[T comparable](value *T) *Select[T] {
 		icon:    eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:   eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		cursor:  eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
+		answer:  eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
 		options: make([]Option[T], 0),
 		value:   value,
 	}
@@ -37,7 +39,7 @@ func NewSelect[T comparable](value *T) *Select[T] {
 
 // AnswerFunc sets a function to format the final answer display.
 func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
-	s.answerFn = fn
+	s.answer.fn = fn
 	return s
 }
 
@@ -73,8 +75,9 @@ func (s *Select[T]) Ask() error {
 			return ErrUserAborted
 		case keys.Enter, keys.NewLine:
 			*s.value = s.options[s.cursorPos].Value
+			s.answer.val = s.options[s.cursorPos].Key
 			visibleOptions := tui.Min(len(s.options), tui.GetTerminalHeight()-3)
-			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.callAnswerFunc(s.options[s.cursorPos].Key))
+			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return nil
 		case keys.Up:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
@@ -146,20 +149,6 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
-// callAnswerFunc returns the formatted text for the final answer being
-// displayed.
-func (s *Select[T]) callAnswerFunc(answer string) string {
-	if s.answerFn != nil {
-		return s.answerFn(answer)
-	}
-
-	if defaultFuncs.answerFn != nil {
-		return defaultFuncs.answerFn(answer)
-	}
-
-	return answer
-}
-
 // setAnswerFunc configures the answer transformation priority:
 // prompt-specific, global default, or the string itself.
 func (sel *Select[T]) callSelectFunc(s string) string {
@@ -187,39 +176,11 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		s.scrollOffset = s.cursorPos - termHeight + 1
 	}
 
-	selectCursor := s.cursor.Get()
-	visibleLines := tui.Min(selectSize, termHeight)
-
 	if redraw {
-		// For terminal optimization: build entire output first, then write atomically
-		var output strings.Builder
-
-		// Move cursor up to start position
-		output.WriteString(ansi.CursorUp(visibleLines))
-
-		// Build all lines in memory first
-		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
-			selectedOption := s.options[i]
-			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
-
-			// Clear line and build content
-			output.WriteString("\r")
-			output.WriteString(ansi.ClearLine)
-
-			if i == s.cursorPos {
-				cursor = s.callSelectFunc(selectCursor)
-				output.WriteString(cursor)
-				output.WriteString(s.callSelectFunc(selectedOption.Key))
-			} else {
-				output.WriteString(cursor)
-				output.WriteString(selectedOption.Key)
-			}
-			output.WriteString("\n")
-		}
-
-		// Write everything at once to minimize flicker
-		fmt.Print(output.String())
+		s.redraw(selectSize, termHeight)
 	} else {
+		selectCursor := s.cursor.Get()
+
 		// Initial render without redraw
 		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := s.options[i]
@@ -233,4 +194,38 @@ func (s *Select[T]) renderOptions(redraw bool) {
 			}
 		}
 	}
+}
+
+func (s *Select[T]) redraw(selectSize, termHeight int) {
+	selectCursor := s.cursor.Get()
+	visibleLines := tui.Min(selectSize, termHeight)
+
+	// For terminal optimization: build entire output first, then write atomically
+	var output strings.Builder
+
+	// Move cursor up to start position
+	output.WriteString(ansi.CursorUp(visibleLines))
+
+	// Build all lines in memory first
+	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
+		selectedOption := s.options[i]
+		cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
+
+		// Clear line and build content
+		output.WriteString("\r")
+		output.WriteString(ansi.ClearLine)
+
+		if i == s.cursorPos {
+			cursor = s.callSelectFunc(selectCursor)
+			output.WriteString(cursor)
+			output.WriteString(s.callSelectFunc(selectedOption.Key))
+		} else {
+			output.WriteString(cursor)
+			output.WriteString(selectedOption.Key)
+		}
+		output.WriteString("\n")
+	}
+
+	// Write everything at once to minimize flicker
+	fmt.Print(output.String())
 }
