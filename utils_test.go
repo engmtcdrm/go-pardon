@@ -11,6 +11,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Tests for [getTerminalHeight] function.
+func Test_getTerminalHeight(t *testing.T) {
+	height := getTerminalHeight()
+
+	// Should return a reasonable default or actual terminal height
+	if height < 10 || height > 200 {
+		t.Errorf("GetTerminalHeight() = %d; expected a reasonable value between 10 and 200", height)
+	}
+
+	height = getTerminalHeight()
+
+	// Test that we get a reasonable default or actual height
+	if height < 5 {
+		t.Error("Terminal height should be at least 5 lines")
+	}
+
+	if height > 300 {
+		t.Error("Terminal height seems unreasonably large")
+	}
+}
+
 // Tests for [min] function.
 func Test_min(t *testing.T) {
 	tests := []struct {

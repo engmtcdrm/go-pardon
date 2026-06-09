@@ -79,8 +79,8 @@ func (s *Select[T]) Ask() error {
 		case keys.Enter, keys.NewLine:
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
-			visibleOptions := min(len(s.options), tui.GetTerminalHeight()-3)
-			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
+			visibleOptions := min(len(s.options), getTerminalHeight()-3)
+			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return nil
 		case keys.Up:
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
@@ -190,7 +190,7 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 
 // renderOptions displays the list of available options to the user.
 func (s *Select[T]) renderOptions(redraw bool) {
-	termHeight := tui.GetTerminalHeight()
+	termHeight := getTerminalHeight()
 	termHeight = termHeight - 3 // Space for prompt and cursor movement
 	selectSize := len(s.options)
 

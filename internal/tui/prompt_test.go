@@ -69,19 +69,6 @@ func TestPasswordMasking(t *testing.T) {
 	}
 }
 
-func TestTerminalHeight(t *testing.T) {
-	height := GetTerminalHeight()
-
-	// Test that we get a reasonable default or actual height
-	if height < 5 {
-		t.Error("Terminal height should be at least 5 lines")
-	}
-
-	if height > 300 {
-		t.Error("Terminal height seems unreasonably large")
-	}
-}
-
 // Test string builder capacity optimization
 func TestStringBuilderOptimization(t *testing.T) {
 	// This tests the concept of pre-allocating string builder capacity
