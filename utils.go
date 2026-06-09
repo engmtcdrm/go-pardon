@@ -7,6 +7,14 @@ import (
 	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
 
+// min returns the smaller of two integers.
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func resetLineAbove() string {
 	return ansi.CursorUp(1) + ansi.ClearLineReset
 }

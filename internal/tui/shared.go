@@ -9,14 +9,6 @@ import (
 	"golang.org/x/term"
 )
 
-// Min returns the smaller of two integers.
-func Min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // RenderClearAndReposition clears lines and renders final answer.
 // Minimizes screen flicker by batching terminal operations.
 func RenderClearAndReposition(linesToErase int, icon, title, answer string) {

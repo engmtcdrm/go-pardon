@@ -69,32 +69,6 @@ func TestPasswordMasking(t *testing.T) {
 	}
 }
 
-func TestMinFunction(t *testing.T) {
-	// More comprehensive testing of the Min function
-	tests := []struct {
-		name     string
-		a, b     int
-		expected int
-	}{
-		{"Both positive", 5, 3, 3},
-		{"Both negative", -5, -3, -5},
-		{"Mixed positive/negative", 5, -3, -3},
-		{"Zero and positive", 0, 5, 0},
-		{"Zero and negative", 0, -5, -5},
-		{"Large numbers", 1000000, 999999, 999999},
-		{"Equal numbers", 42, 42, 42},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := Min(tt.a, tt.b)
-			if result != tt.expected {
-				t.Errorf("Min(%d, %d) = %d; want %d", tt.a, tt.b, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestTerminalHeight(t *testing.T) {
 	height := GetTerminalHeight()
 
@@ -130,14 +104,5 @@ func TestStringBuilderOptimization(t *testing.T) {
 	if buf.Cap() != initialCap {
 		t.Logf("Buffer capacity changed from %d to %d (this is informational, not an error)",
 			initialCap, buf.Cap())
-	}
-}
-
-// Test error conditions
-func TestErrorHandling(t *testing.T) {
-	// Test Min with edge cases
-	result := Min(-2147483648, 2147483647) // Test with int32 min/max
-	if result != -2147483648 {
-		t.Errorf("Min with extreme values failed: got %d", result)
 	}
 }

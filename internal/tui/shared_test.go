@@ -4,30 +4,6 @@ import (
 	"testing"
 )
 
-func TestMin(t *testing.T) {
-	tests := []struct {
-		name     string
-		a, b     int
-		expected int
-	}{
-		{"a smaller than b", 3, 7, 3},
-		{"b smaller than a", 10, 5, 5},
-		{"equal values", 4, 4, 4},
-		{"negative values", -3, -7, -7},
-		{"zero values", 0, 0, 0},
-		{"negative and positive", -5, 3, -5},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := Min(tt.a, tt.b)
-			if result != tt.expected {
-				t.Errorf("Min(%d, %d) = %d; want %d", tt.a, tt.b, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestGetTerminalHeight(t *testing.T) {
 	height := GetTerminalHeight()
 
