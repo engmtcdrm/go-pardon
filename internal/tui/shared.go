@@ -51,8 +51,3 @@ func GetTerminalHeight() int {
 	}
 	return termHeight
 }
-
-// RenderFormattedOutput creates formatted output with ANSI clear sequences.
-func RenderFormattedOutput(question, result string) string {
-	return fmt.Sprintf("%s\r%s %s\n", ansi.ClearToBegin, question, result)
-}
