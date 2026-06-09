@@ -29,6 +29,7 @@ type Select[T comparable] struct {
 // NewSelect creates a new Select prompt instance.
 func NewSelect[T comparable](value *T) *Select[T] {
 	return &Select[T]{
+		terminal:   NewTerminal(),
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		cursor:     eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
@@ -60,14 +61,14 @@ func (s *Select[T]) Ask() error {
 	}
 
 	defer func() {
-		fmt.Print(ansi.ShowCursor)
+		fmt.Fprint(s.terminal.Out, ansi.ShowCursor)
 	}()
 
 	// Print the question
-	fmt.Printf("%s%s\n", s.icon.Get(), s.title.Get())
+	fmt.Fprintf(s.terminal.Out, "%s%s\n", s.icon.Get(), s.title.Get())
 
 	s.renderOptions(false)
-	fmt.Print(ansi.HideCursor)
+	fmt.Fprint(s.terminal.Out, ansi.HideCursor)
 
 	for {
 		keyCode := tui.GetInput()
@@ -78,7 +79,7 @@ func (s *Select[T]) Ask() error {
 		case keys.Enter, keys.NewLine:
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
-			visibleOptions := tui.Min(len(s.options), tui.GetTerminalHeight()-3)
+			visibleOptions := min(len(s.options), tui.GetTerminalHeight()-3)
 			tui.RenderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return nil
 		case keys.Up:
@@ -153,7 +154,7 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 
 func (s *Select[T]) redraw(selectSize, termHeight int) {
 	selectCursor := s.cursor.Get()
-	visibleLines := tui.Min(selectSize, termHeight)
+	visibleLines := min(selectSize, termHeight)
 
 	// For terminal optimization: build entire output first, then write atomically
 	var output strings.Builder
@@ -162,7 +163,7 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	output.WriteString(ansi.CursorUp(visibleLines))
 
 	// Build all lines in memory first
-	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
+	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
 		selectedOption := s.options[i]
 		cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
 
@@ -184,7 +185,7 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	}
 
 	// Write everything at once to minimize flicker
-	fmt.Print(output.String())
+	fmt.Fprint(s.terminal.Out, output.String())
 }
 
 // renderOptions displays the list of available options to the user.
@@ -206,17 +207,17 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		selectCursor := s.cursor.Get()
 
 		// Initial render without redraw
-		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
+		for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := s.options[i]
 
 			if i != s.cursorPos {
 				cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
-				fmt.Printf("%s%s\n", cursor, selectedOption.Key)
+				fmt.Fprintf(s.terminal.Out, "%s%s\n", cursor, selectedOption.Key)
 				continue
 			}
 
 			s.selectEval.val = selectedOption.Key
-			fmt.Printf("%s%s\n", selectCursor, s.selectEval.Get())
+			fmt.Fprintf(s.terminal.Out, "%s%s\n", selectCursor, s.selectEval.Get())
 		}
 	}
 }
