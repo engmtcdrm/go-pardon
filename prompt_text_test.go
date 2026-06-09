@@ -88,7 +88,7 @@ func Test_Text_AnswerFunc(t *testing.T) {
 	})
 }
 
-// TODO: Tests for [Text.Ask] function.
+// Tests for [Text.Ask] function.
 func Test_Text_Ask(t *testing.T) {
 	t.Run("should return error if title is not set", func(t *testing.T) {
 		var result string
@@ -102,6 +102,29 @@ func Test_Text_Ask(t *testing.T) {
 			Title("Enter value:")
 		err := textPrompt.Ask()
 		require.ErrorIs(t, err, ErrNoValue, "Ask should return ErrNoValue if value pointer is not set")
+	})
+
+	t.Run("should return no error for valid input", func(t *testing.T) {
+		var result string
+		textPrompt := NewQuestion(&result).
+			Title("Enter value:")
+		textPrompt.terminal.Out = io.Discard
+		textPrompt.terminal.In = testutils.CreateValidTestFile(t, "test input\r")
+
+		err := textPrompt.Ask()
+		require.NoError(t, err, "Ask should not return an error for valid input")
+		require.Equal(t, "test input", result, "Value pointer should be set to the user input")
+	})
+
+	t.Run("should return ErrUserAborted when user presses Ctrl+C", func(t *testing.T) {
+		var result string
+		textPrompt := NewQuestion(&result).
+			Title("Enter value:")
+		textPrompt.terminal.Out = io.Discard
+		textPrompt.terminal.In = testutils.CreateValidTestFile(t, "test input"+string(keys.CtrlC))
+
+		err := textPrompt.Ask()
+		require.ErrorIs(t, err, ErrUserAborted, "Ask should return ErrUserAborted when user presses Ctrl+C")
 	})
 }
 
