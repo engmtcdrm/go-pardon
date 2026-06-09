@@ -175,9 +175,9 @@ func Test_Select_SelectFunc(t *testing.T) {
 		}
 		selectPrompt := NewSelect(&result).
 			SelectFunc(selectFunc)
-		require.NotNil(t, selectPrompt.selectFn, "SelectFunc() should set the select function")
+		require.NotNil(t, selectPrompt.selectEval.fn, "SelectFunc() should set the select function")
 		testSelect := "Test Option"
-		assert.Equal(t, selectFunc(testSelect), selectPrompt.selectFn(testSelect), "SelectFunc() should return the same result as the provided function")
+		assert.Equal(t, selectFunc(testSelect), selectPrompt.selectEval.fn(testSelect), "SelectFunc() should return the same result as the provided function")
 	})
 }
 
@@ -237,44 +237,9 @@ func Test_Select_Value(t *testing.T) {
 	})
 }
 
-// Tests for [Select.getSelectFunc] function.
-func Test_Select_getSelectFunc(t *testing.T) {
-	var result string
-	selectPrompt := NewSelect(&result)
-	t.Run("should return the string value when no select function or default section function is set", func(t *testing.T) {
-		originalDefaultSelectFunc := defaultFuncs.selectFn
-		t.Cleanup(func() { defaultFuncs.selectFn = originalDefaultSelectFunc })
-		defaultFuncs.selectFn = nil
-
-		expectedOutput := "Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc(expectedOutput), "getSelectFunc() should return the input string when no functions are set")
-	})
-
-	t.Run("should return the string transformed by default selection function if set and no prompt-specific function is set", func(t *testing.T) {
-		expectedOutput := "Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc(expectedOutput), "getSelectFunc() should return the string transformed by the default selection function when no prompt-specific function is set")
-	})
-
-	t.Run("should return the string transformed by custom default selection function if set and no prompt-specific function is set", func(t *testing.T) {
-		originalDefaultSelectFunc := defaultFuncs.selectFn
-		t.Cleanup(func() { defaultFuncs.selectFn = originalDefaultSelectFunc })
-		defaultFuncs.selectFn = func(input string) string {
-			return "✓ " + input
-		}
-
-		expectedOutput := "✓ Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the custom default selection function when no prompt-specific function is set")
-	})
-
-	t.Run("should return the string transformed by the prompt-specific selection function if set", func(t *testing.T) {
-		selectFunc := func(input string) string {
-			return "✓ " + input
-		}
-		selectPrompt.SelectFunc(selectFunc)
-
-		expectedOutput := "✓ Test Option"
-		assert.Equal(t, expectedOutput, selectPrompt.callSelectFunc("Test Option"), "getSelectFunc() should return the string transformed by the prompt-specific selection function when it is set")
-	})
+// TODO: Tests for [Select.redraw] function.
+func Test_Select_redraw(t *testing.T) {
+	t.Skip("Need to implement")
 }
 
 // TODO: Tests for [Select.renderOptions] function.

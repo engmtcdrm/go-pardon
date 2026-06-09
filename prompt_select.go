@@ -13,27 +13,29 @@ import (
 
 // Select represents a multiple-choice selection prompt.
 type Select[T comparable] struct {
+	terminal     *Terminal
 	icon         eval[string]
 	title        eval[string]
 	cursor       eval[string]
 	answer       eval[string]
-	cursorPos    int
-	scrollOffset int
+	selectEval   eval[string] // cannot use select because it is a reserved keyword
 	options      []Option[T]
 	selectFn     func(string) string
-	terminal     *Terminal
+	cursorPos    int
+	scrollOffset int
 	value        *T
 }
 
 // NewSelect creates a new Select prompt instance.
 func NewSelect[T comparable](value *T) *Select[T] {
 	return &Select[T]{
-		icon:    eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title:   eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		cursor:  eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
-		answer:  eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
-		options: make([]Option[T], 0),
-		value:   value,
+		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
+		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+		cursor:     eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
+		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
+		selectEval: eval[string]{val: "", defaultFn: defaultFuncs.selectFn},
+		options:    make([]Option[T], 0),
+		value:      value,
 	}
 }
 
@@ -127,7 +129,7 @@ func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
 
 // SelectFunc sets a function to format option text during selection.
 func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
-	s.selectFn = fn
+	s.selectEval.fn = fn
 	return s
 }
 
@@ -149,18 +151,40 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
-// setAnswerFunc configures the answer transformation priority:
-// prompt-specific, global default, or the string itself.
-func (sel *Select[T]) callSelectFunc(s string) string {
-	if sel.selectFn != nil {
-		return sel.selectFn(s)
+func (s *Select[T]) redraw(selectSize, termHeight int) {
+	selectCursor := s.cursor.Get()
+	visibleLines := tui.Min(selectSize, termHeight)
+
+	// For terminal optimization: build entire output first, then write atomically
+	var output strings.Builder
+
+	// Move cursor up to start position
+	output.WriteString(ansi.CursorUp(visibleLines))
+
+	// Build all lines in memory first
+	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
+		selectedOption := s.options[i]
+		cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
+
+		// Clear line and build content
+		output.WriteString("\r")
+		output.WriteString(ansi.ClearLine)
+
+		if i != s.cursorPos {
+			output.WriteString(cursor)
+			output.WriteString(selectedOption.Key)
+			output.WriteString("\n")
+			continue
+		}
+
+		s.selectEval.val = selectedOption.Key
+		output.WriteString(selectCursor)
+		output.WriteString(s.selectEval.Get())
+		output.WriteString("\n")
 	}
 
-	if defaultFuncs.selectFn != nil {
-		return defaultFuncs.selectFn(s)
-	}
-
-	return s
+	// Write everything at once to minimize flicker
+	fmt.Print(output.String())
 }
 
 // renderOptions displays the list of available options to the user.
@@ -184,48 +208,15 @@ func (s *Select[T]) renderOptions(redraw bool) {
 		// Initial render without redraw
 		for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
 			selectedOption := s.options[i]
-			cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
 
-			if i == s.cursorPos {
-				cursor = s.callSelectFunc(selectCursor)
-				fmt.Printf("%s%s\n", cursor, s.callSelectFunc(selectedOption.Key))
-			} else {
+			if i != s.cursorPos {
+				cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
 				fmt.Printf("%s%s\n", cursor, selectedOption.Key)
+				continue
 			}
+
+			s.selectEval.val = selectedOption.Key
+			fmt.Printf("%s%s\n", selectCursor, s.selectEval.Get())
 		}
 	}
-}
-
-func (s *Select[T]) redraw(selectSize, termHeight int) {
-	selectCursor := s.cursor.Get()
-	visibleLines := tui.Min(selectSize, termHeight)
-
-	// For terminal optimization: build entire output first, then write atomically
-	var output strings.Builder
-
-	// Move cursor up to start position
-	output.WriteString(ansi.CursorUp(visibleLines))
-
-	// Build all lines in memory first
-	for i := s.scrollOffset; i < tui.Min(s.scrollOffset+termHeight, selectSize); i++ {
-		selectedOption := s.options[i]
-		cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
-
-		// Clear line and build content
-		output.WriteString("\r")
-		output.WriteString(ansi.ClearLine)
-
-		if i == s.cursorPos {
-			cursor = s.callSelectFunc(selectCursor)
-			output.WriteString(cursor)
-			output.WriteString(s.callSelectFunc(selectedOption.Key))
-		} else {
-			output.WriteString(cursor)
-			output.WriteString(selectedOption.Key)
-		}
-		output.WriteString("\n")
-	}
-
-	// Write everything at once to minimize flicker
-	fmt.Print(output.String())
 }
