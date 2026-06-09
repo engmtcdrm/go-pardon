@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/engmtcdrm/go-pardon/internal/keys"
@@ -50,10 +49,6 @@ func Test_NewConfirmTerminal(t *testing.T) {
 // Tests for [Terminal.RawRead] function.
 func Test_Terminal_RawRead(t *testing.T) {
 	t.Run("should read input from the In and return it as a slice of runes", func(t *testing.T) {
-		if runtime.GOOS == "windows" {
-			t.Skip("pty tests skipped on Windows. Pty is not supported.")
-		}
-
 		_, f := testutils.CreateWritePTY(t, "hello\n")
 
 		terminal := NewTerminal()

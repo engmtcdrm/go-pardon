@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -28,6 +29,10 @@ func CreateValidTestFile(t *testing.T, content string) *os.File {
 
 	f, err := os.Open(testFile)
 	require.NoError(t, err, "failed to open test file")
+	t.Cleanup(func() {
+		f.Close()
+	})
+
 	return f
 }
 
@@ -46,6 +51,10 @@ func CreateInvalidTestFile(t *testing.T, content string) *os.File {
 	_, err = f.WriteString(content)
 	require.NoError(t, err, "failed to write to test file")
 
+	t.Cleanup(func() {
+		f.Close()
+	})
+
 	return f
 }
 
@@ -56,6 +65,10 @@ func CreateInvalidTestFile(t *testing.T, content string) *os.File {
 // Both files are automatically closed after the test completes.
 func CreatePTY(t *testing.T) (master *os.File, slave *os.File) {
 	t.Helper()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("pty is not supported on Windows")
+	}
 
 	m, s, err := pty.Open()
 	require.NoError(t, err, "failed to open pty")
