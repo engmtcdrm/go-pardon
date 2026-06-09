@@ -1,4 +1,4 @@
-package tui
+package pardon
 
 import (
 	"os"
@@ -25,9 +25,9 @@ var (
 	inputBuffer []byte
 )
 
-// GetInput reads raw keyboard input from the terminal.
+// getInput reads raw keyboard input from the terminal.
 // Handles buffered input, raw mode, and ANSI escape sequences.
-func GetInput() byte {
+func getInput() byte {
 	// If we have buffered input from a paste operation, return it first
 	if len(inputBuffer) > 0 {
 		result := inputBuffer[0]

@@ -8,7 +8,6 @@ import (
 	"github.com/mattn/go-runewidth"
 
 	"github.com/engmtcdrm/go-pardon/internal/keys"
-	"github.com/engmtcdrm/go-pardon/internal/tui"
 )
 
 // Select represents a multiple-choice selection prompt.
@@ -71,7 +70,7 @@ func (s *Select[T]) Ask() error {
 	fmt.Fprint(s.terminal.Out, ansi.HideCursor)
 
 	for {
-		keyCode := tui.GetInput()
+		keyCode := getInput()
 
 		switch keyCode {
 		case keys.CtrlC:
