@@ -57,12 +57,14 @@
 			"args": [
 				"test",
 				"${input:testDirectory}",
-				"-coverprofile=coverage.out",
-				"&&",
+				"-coverprofile",
+				"coverage.out",
+				";",
 				"go",
 				"tool",
 				"cover",
-				"-html=coverage.out",
+				"-html",
+				"coverage.out",
 				"-o",
 				"coverage.html"
 			],
