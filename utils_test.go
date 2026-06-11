@@ -43,9 +43,8 @@ func Test_min(t *testing.T) {
 		{"b smaller than a", 10, 5, 5},
 		{"equal values", 4, 4, 4},
 		{"negative values", -3, -7, -7},
-		{"zero values", 0, 0, 0},
 		{"negative and positive", -5, 3, -5},
-		// -2147483648, 2147483647
+		{"zero values", 0, 0, 0},
 	}
 
 	for _, tt := range tests {
