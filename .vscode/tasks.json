@@ -130,7 +130,6 @@
 			"description": "Enter the directory to run tests in (e.g., ./pkg/service)",
 			"options": [
 				".",
-				"./internal/tui",
 				"./..."
 			],
 			"default": "./..."
