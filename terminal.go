@@ -64,6 +64,44 @@ func NewConfirmTerminal() *Terminal {
 	return input
 }
 
+// setTerminalToRawMode attempts to put the terminal into raw mode and returns
+// the input file, file descriptor, old terminal state (if raw mode was set),
+// and any error encountered.  If the input is not a terminal, it returns the
+// file and a no-op restore function without error. The caller should defer the
+// restore function to ensure that the terminal state is properly restored after
+// raw input is processed.
+func (t *Terminal) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
+	inputFile, ok := t.In.(*os.File)
+	if !ok {
+		return nil, func() {
+			// No cleanup needed since we didn't set raw mode
+		}, fmt.Errorf("unable to read input: input reader is not a file")
+	}
+
+	// MakeRaw put the terminal connected to the given file descriptor
+	// into raw mode
+	fd := int(inputFile.Fd())
+
+	// If the reader is not connected to a terminal (e.g., during tests
+	// where we use PTYs or files), don't attempt to set raw mode and just
+	// return the file and descriptor.
+	if !term.IsTerminal(fd) {
+		return inputFile, func() {
+			// No cleanup needed since we didn't set raw mode
+		}, nil
+	}
+
+	oldState, err := term.MakeRaw(fd)
+	if err != nil {
+		return inputFile, func() {
+			// No cleanup needed since we didn't set raw mode
+		}, err
+	}
+	return inputFile, func() {
+		term.Restore(fd, oldState)
+	}, nil
+}
+
 // RawRead reads input from the terminal in raw mode. It handles special keys
 // like Enter, Backspace, etc., and returns the input as a slice of runes. If
 // the input is interrupted (e.g., by Ctrl+C), it returns an error.
@@ -71,30 +109,13 @@ func NewConfirmTerminal() *Terminal {
 // [Terminal.Reset] must be called before invoking this function to ensure that
 // any previous input does not interfere with the new input.
 func (t *Terminal) RawRead() ([]rune, error) {
-	reader, ok := t.In.(*os.File)
-	if !ok {
-		return nil, fmt.Errorf("unable to read input: input reader is not a file")
-	}
-
-	// MakeRaw put the terminal connected to the given file descriptor
-	// into raw mode
-	fd := int(reader.Fd())
-
-	// If the reader is not connected to a terminal (e.g., during tests
-	// where we use PTYs or files), fall back to rawReadline which reads
-	// directly from the provided file without attempting to put the
-	// descriptor into raw mode.
-	if !term.IsTerminal(fd) {
-		return t.rawReadline(reader)
-	}
-
-	oldState, err := term.MakeRaw(fd)
+	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
 		return nil, err
 	}
-	defer term.Restore(fd, oldState)
+	defer restoreTerminal()
 
-	return t.rawReadline(reader)
+	return t.rawReadline(inputFile)
 }
 
 // Reset clears the pending input and the result. This should be called prior
@@ -262,30 +283,15 @@ func (t *Terminal) GetTerminalHeight() int {
 // getInput reads raw keyboard input from the terminal.
 // Handles buffered input, raw mode, and ANSI escape sequences.
 func (t *Terminal) GetInput() (byte, error) {
-	f, ok := t.In.(*os.File)
-	if !ok {
-		return 0, fmt.Errorf("invalid input file")
-	}
-
-	// Use stdin file descriptor for cross-platform compatibility
-	fd := int(f.Fd())
-
-	// Save the original terminal state
-	oldState, err := term.MakeRaw(fd)
+	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
-		// Fallback if raw mode fails - read normally
-		readBytes := make([]byte, 1)
-		_, readErr := f.Read(readBytes)
-		if readErr != nil {
-			return 0, readErr
-		}
-		return readBytes[0], nil
+		return 0, err
 	}
-	defer term.Restore(fd, oldState)
+	defer restoreTerminal()
 
 	// Read input - use a larger buffer to handle paste operations
 	readBytes := make([]byte, 8) // Increased to 4KB to handle larger pastes
-	read, err := f.Read(readBytes)
+	read, err := inputFile.Read(readBytes)
 	if err != nil {
 		// Handle read error, it might be due to signal interruption
 		return 0, err
