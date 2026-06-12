@@ -258,3 +258,65 @@ func (t *Terminal) GetTerminalHeight() int {
 
 	return termHeight
 }
+
+// getInput reads raw keyboard input from the terminal.
+// Handles buffered input, raw mode, and ANSI escape sequences.
+func (t *Terminal) GetInput() (byte, error) {
+	f, ok := t.In.(*os.File)
+	if !ok {
+		return 0, fmt.Errorf("invalid input file")
+	}
+
+	// Use stdin file descriptor for cross-platform compatibility
+	fd := int(f.Fd())
+
+	// Save the original terminal state
+	oldState, err := term.MakeRaw(fd)
+	if err != nil {
+		// Fallback if raw mode fails - read normally
+		readBytes := make([]byte, 1)
+		_, readErr := f.Read(readBytes)
+		if readErr != nil {
+			return 0, readErr
+		}
+		return readBytes[0], nil
+	}
+	defer term.Restore(fd, oldState)
+
+	// Read input - use a larger buffer to handle paste operations
+	readBytes := make([]byte, 8) // Increased to 4KB to handle larger pastes
+	read, err := f.Read(readBytes)
+	if err != nil {
+		// Handle read error, it might be due to signal interruption
+		return 0, err
+	}
+
+	// If we read more than 3 bytes, it's likely a paste operation
+	if read > 3 {
+		// Buffer all characters except the first one
+		t.pending = append(t.pending, readBytes[1:read]...)
+		lastInputWasEscSeq = false
+		return readBytes[0], nil
+	}
+
+	// Handle escape sequences (arrow keys)
+	if read == 3 && readBytes[0] == keys.Escape && readBytes[1] == keys.LeftBracket {
+		// This is a proper ANSI escape sequence (ESC[X)
+		if _, ok := navigationKeys[readBytes[2]]; ok {
+			lastInputWasEscSeq = true
+			return readBytes[2], nil
+		}
+		// If it's an escape sequence but not a navigation key, ignore it
+		lastInputWasEscSeq = false
+		return 0, nil
+	}
+
+	// For any other input (1, 2, or 3 bytes that aren't escape sequences),
+	// return the first byte which contains the actual character
+	lastInputWasEscSeq = false
+	if read > 0 {
+		return readBytes[0], nil
+	}
+
+	return 0, nil
+}

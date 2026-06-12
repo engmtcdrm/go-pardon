@@ -70,7 +70,10 @@ func (s *Select[T]) Ask() error {
 	fmt.Fprint(s.terminal.Out, ansi.HideCursor)
 
 	for {
-		keyCode := getInput()
+		keyCode, err := s.terminal.GetInput()
+		if err != nil {
+			return err
+		}
 
 		switch keyCode {
 		case keys.CtrlC:
