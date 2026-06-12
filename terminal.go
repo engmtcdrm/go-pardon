@@ -243,3 +243,18 @@ func (t *Terminal) rawReadline(f *os.File) ([]rune, error) {
 	t.print("\n")
 	return t.result, nil
 }
+
+func (t *Terminal) GetTerminalHeight() int {
+	termHeight := 25 // Default height
+
+	f, ok := t.Out.(*os.File)
+	if !ok {
+		return termHeight
+	}
+
+	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
+		termHeight = height
+	}
+
+	return termHeight
+}

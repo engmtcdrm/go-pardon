@@ -2,30 +2,11 @@ package pardon
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/internal/keys"
-	"golang.org/x/term"
 )
-
-// getTerminalHeight returns the terminal height, defaulting to 25.
-func getTerminalHeight() int {
-	termHeight := 25 // Default height
-	if _, height, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
-		termHeight = height
-	}
-	return termHeight
-}
-
-// min returns the smaller of two integers.
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
 
 // renderClearAndReposition clears lines and renders final answer.
 // Minimizes screen flicker by batching terminal operations.

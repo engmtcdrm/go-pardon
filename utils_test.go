@@ -11,52 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tests for [getTerminalHeight] function.
-func Test_getTerminalHeight(t *testing.T) {
-	height := getTerminalHeight()
-
-	// Should return a reasonable default or actual terminal height
-	if height < 10 || height > 200 {
-		t.Errorf("GetTerminalHeight() = %d; expected a reasonable value between 10 and 200", height)
-	}
-
-	height = getTerminalHeight()
-
-	// Test that we get a reasonable default or actual height
-	if height < 5 {
-		t.Error("Terminal height should be at least 5 lines")
-	}
-
-	if height > 300 {
-		t.Error("Terminal height seems unreasonably large")
-	}
-}
-
-// Tests for [min] function.
-func Test_min(t *testing.T) {
-	tests := []struct {
-		name     string
-		a, b     int
-		expected int
-	}{
-		{"a smaller than b", 3, 7, 3},
-		{"b smaller than a", 10, 5, 5},
-		{"equal values", 4, 4, 4},
-		{"negative values", -3, -7, -7},
-		{"negative and positive", -5, 3, -5},
-		{"zero values", 0, 0, 0},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := min(tt.a, tt.b)
-			if result != tt.expected {
-				t.Errorf("Min(%d, %d) = %d; want %d", tt.a, tt.b, result, tt.expected)
-			}
-		})
-	}
-}
-
 // Tests for [resetLineAbove] function.
 func Test_resetLineAbove(t *testing.T) {
 	expected := ansi.CursorUp(1) + ansi.ClearLineReset
