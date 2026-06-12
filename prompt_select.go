@@ -78,7 +78,7 @@ func (s *Select[T]) Ask() error {
 		case keys.Enter, keys.NewLine:
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
-			visibleOptions := min(len(s.options), getTerminalHeight()-3)
+			visibleOptions := min(len(s.options), s.terminal.GetTerminalHeight()-3)
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return nil
 		case keys.Up:
@@ -187,18 +187,20 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	fmt.Fprint(s.terminal.Out, output.String())
 }
 
-// renderOptions displays the list of available options to the user.
-func (s *Select[T]) renderOptions(redraw bool) {
-	termHeight := getTerminalHeight()
-	termHeight = termHeight - 3 // Space for prompt and cursor movement
-	selectSize := len(s.options)
-
-	// Ensure scroll offset follows cursor movement
+func (s *Select[T]) updateScrollOffset(termHeight int) {
 	if s.cursorPos < s.scrollOffset {
 		s.scrollOffset = s.cursorPos
 	} else if s.cursorPos >= s.scrollOffset+termHeight {
 		s.scrollOffset = s.cursorPos - termHeight + 1
 	}
+}
+
+// renderOptions displays the list of available options to the user.
+func (s *Select[T]) renderOptions(redraw bool) {
+	termHeight := s.terminal.GetTerminalHeight() - 3
+	selectSize := len(s.options)
+
+	s.updateScrollOffset(termHeight)
 
 	if redraw {
 		s.redraw(selectSize, termHeight)
