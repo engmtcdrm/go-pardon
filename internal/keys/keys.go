@@ -25,3 +25,14 @@ const (
 	UpperO = byte('O')
 	UpperY = byte('Y')
 )
+
+var (
+	// Navigation defines a map of byte keycodes for navigation actions.
+	// These keys are used for cursor movement and selection in interactive prompts.
+	Navigation = map[byte]bool{
+		Up:    true,
+		Down:  true,
+		Left:  true,
+		Right: true,
+	}
+)
