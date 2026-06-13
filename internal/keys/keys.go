@@ -27,11 +27,8 @@ const (
 )
 
 var (
-	CtrlC2     = New(CtrlC)
-	Enter2     = New(Enter)
-	NewLine2   = New(NewLine)
-	UpArrow    = New(Escape, LeftBracket, UpperA)
-	DownArrow  = New(Escape, LeftBracket, UpperB)
-	RightArrow = New(Escape, LeftBracket, UpperC)
-	LeftArrow  = New(Escape, LeftBracket, UpperD)
+	UpArrow    = []byte{Escape, LeftBracket, UpperA}
+	DownArrow  = []byte{Escape, LeftBracket, UpperB}
+	RightArrow = []byte{Escape, LeftBracket, UpperC}
+	LeftArrow  = []byte{Escape, LeftBracket, UpperD}
 )
