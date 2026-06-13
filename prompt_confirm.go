@@ -1,13 +1,13 @@
 package pardon
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/internal/runekeys"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
@@ -17,8 +17,8 @@ type Confirm struct {
 	icon       eval[string]
 	title      eval[string]
 	answer     eval[string]
-	confirmKey rune
-	denyKey    rune
+	confirmKey []byte
+	denyKey    []byte
 	prompt     string
 	promptOpts string
 }
@@ -26,13 +26,13 @@ type Confirm struct {
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		terminal:   NewConfirmTerminal(),
+		terminal:   NewTerminal(),
 		value:      value,
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		answer:     eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
-		confirmKey: runekeys.UpperY,
-		denyKey:    runekeys.UpperN,
+		confirmKey: []byte{keys.UpperY},
+		denyKey:    []byte{keys.UpperN},
 	}
 }
 
@@ -52,10 +52,6 @@ func (c *Confirm) Ask() error {
 		return ErrNoValue
 	}
 
-	c.terminal.CustomHandler = func(t *Terminal, r rune) (done bool) {
-		return c.processLine([]rune{r})
-	}
-
 	if err := c.ask(); err != nil {
 		return err
 	}
@@ -65,14 +61,14 @@ func (c *Confirm) Ask() error {
 
 // ConfirmKey sets the rune that represents the confirmation key (e.g., 'Y' for
 // yes).
-func (c *Confirm) ConfirmKey(r rune) *Confirm {
-	c.confirmKey = r
+func (c *Confirm) ConfirmKey(key byte) *Confirm {
+	c.confirmKey = []byte{key}
 	return c
 }
 
 // DenyKey sets the rune that represents the denial key (e.g., 'N' for no).
-func (c *Confirm) DenyKey(r rune) *Confirm {
-	c.denyKey = r
+func (c *Confirm) DenyKey(key byte) *Confirm {
+	c.denyKey = []byte{key}
 	return c
 }
 
@@ -115,7 +111,7 @@ func (c *Confirm) ask() error {
 
 	for {
 		c.terminal.Reset()
-		line, err := c.terminal.RawRead()
+		input, err := c.terminal.RawRead2()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
 				c.terminal.Print(ansi.ClearLineReset + c.prompt)
@@ -125,39 +121,51 @@ func (c *Confirm) ask() error {
 			return err
 		}
 
-		if done := c.processLine(line); done {
-			break
+		if done := c.processInput(input); done {
+			c.printFinalPromptLine()
+			return nil
 		}
 	}
-
-	c.printFinalPromptLine()
-
-	return nil
-}
-
-func (c *Confirm) equal(a rune, b rune) bool {
-	return unicode.ToLower(a) == unicode.ToLower(b)
 }
 
 func (c *Confirm) getPromptOptions() string {
-	var confirmKey, denyKey rune
+	var confirmKey, denyKey []byte
 	if *c.value {
-		confirmKey = unicode.ToUpper(c.confirmKey)
-		denyKey = unicode.ToLower(c.denyKey)
+		confirmKey = bytes.ToUpper(c.confirmKey)
+		denyKey = bytes.ToLower(c.denyKey)
 	} else {
-		confirmKey = unicode.ToLower(c.confirmKey)
-		denyKey = unicode.ToUpper(c.denyKey)
+		confirmKey = bytes.ToLower(c.confirmKey)
+		denyKey = bytes.ToUpper(c.denyKey)
 	}
 
-	return fmt.Sprintf("[%c/%c]", confirmKey, denyKey)
+	builder := strings.Builder{}
+	builder.WriteString("[")
+
+	if len(confirmKey) > 0 {
+		builder.Write(confirmKey)
+	} else {
+		builder.WriteString("?")
+	}
+
+	builder.WriteString("/")
+
+	if len(denyKey) > 0 {
+		builder.Write(denyKey)
+	} else {
+		builder.WriteString("?")
+	}
+
+	builder.WriteString("]")
+
+	return builder.String()
 }
 
-func (c *Confirm) getValueAsRunes() []rune {
+func (c *Confirm) getValueAsBytes() []byte {
 	if *c.value {
-		return []rune{c.confirmKey}
+		return c.confirmKey
 	}
 
-	return []rune{c.denyKey}
+	return c.denyKey
 }
 
 func (c *Confirm) getValueAsString() string {
@@ -178,21 +186,21 @@ func (c *Confirm) printFinalPromptLine() {
 	c.terminal.Print(builder.String())
 }
 
-func (c *Confirm) processLine(line []rune) (done bool) {
+func (c *Confirm) processInput(line []byte) (done bool) {
 	if len(line) == 0 {
 		return false
 	}
 
 	// If user hit enter, use the current value of [Confirm.value] as the input
-	if line[0] == runekeys.Enter || line[0] == runekeys.NewLine {
-		line = c.getValueAsRunes()
+	if line[0] == keys.Enter || line[0] == keys.NewLine {
+		line = c.getValueAsBytes()
 	}
 
 	switch {
-	case c.equal(line[0], c.confirmKey):
+	case bytes.EqualFold(c.confirmKey, line):
 		*c.value = true
 		return true
-	case c.equal(line[0], c.denyKey):
+	case bytes.EqualFold(c.denyKey, line):
 		*c.value = false
 		return true
 	}

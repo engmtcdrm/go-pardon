@@ -119,7 +119,7 @@ func (t *Terminal) RawRead() ([]rune, error) {
 // The caller is responsible for processing the bytes and handling special keys.
 // As well as wrapping this call in a for loop to continue reading until the
 // desired input is complete.
-func (t *Terminal) ReadRaw2() ([]byte, error) {
+func (t *Terminal) RawRead2() ([]byte, error) {
 	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
 		return nil, err

@@ -1,6 +1,7 @@
 package pardon
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -79,7 +80,7 @@ func (s *Select[T]) ask() error {
 	s.renderOptions(false)
 
 	for {
-		input, err := s.terminal.ReadRaw2()
+		input, err := s.terminal.RawRead2()
 		if err != nil {
 			return err
 		}
@@ -89,18 +90,18 @@ func (s *Select[T]) ask() error {
 		}
 
 		switch {
-		case keys.CtrlC2.Equal(input):
+		case bytes.Equal([]byte{keys.CtrlC}, input):
 			return ErrUserAborted
-		case keys.Enter2.Equal(input), keys.NewLine2.Equal(input):
+		case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
 			visibleOptions := min(len(s.options), s.terminal.GetTerminalHeight()-3)
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return nil
-		case keys.UpArrow.Equal(input):
+		case bytes.Equal(keys.UpArrow, input):
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 			s.renderOptions(true)
-		case keys.DownArrow.Equal(input):
+		case bytes.Equal(keys.DownArrow, input):
 			s.cursorPos = (s.cursorPos + 1) % len(s.options)
 			s.renderOptions(true)
 		}

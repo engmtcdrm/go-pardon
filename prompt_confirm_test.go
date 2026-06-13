@@ -104,8 +104,8 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 	t.Run("custom confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(runekeys.UpperO)
-		require.Equal(t, runekeys.UpperO, confirmPrompt.confirmKey, "Custom confirm key should be 'O'")
+			ConfirmKey(keys.UpperO)
+		require.True(t, bytes.Equal(confirmPrompt.confirmKey, []byte{keys.UpperO}), "Custom confirm key should be 'O'")
 	})
 }
 
@@ -114,14 +114,14 @@ func Test_Confirm_DenyKey(t *testing.T) {
 	t.Run("default deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.Equal(t, runekeys.UpperN, confirmPrompt.denyKey, "Default deny key should be 'N'")
+		require.True(t, bytes.Equal(confirmPrompt.denyKey, []byte{keys.UpperN}), "Default deny key should be 'N'")
 	})
 
 	t.Run("custom deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			DenyKey(runekeys.UpperO)
-		require.Equal(t, runekeys.UpperO, confirmPrompt.denyKey, "Custom deny key should be 'O'")
+			DenyKey(keys.UpperO)
+		require.True(t, bytes.Equal(confirmPrompt.denyKey, []byte{keys.UpperO}), "Custom deny key should be 'O'")
 	})
 }
 
@@ -291,22 +291,6 @@ func Test_Confirm_ask(t *testing.T) {
 	})
 }
 
-// Tests for [Confirm.equal] function.
-func Test_Confirm_equal(t *testing.T) {
-	t.Run("should return true when values match", func(t *testing.T) {
-		confirmPrompt := NewConfirm(nil)
-		require.True(t, confirmPrompt.equal(runekeys.UpperY, runekeys.UpperY), "Expected equal to return true")
-		require.True(t, confirmPrompt.equal(runekeys.UpperN, runekeys.UpperN), "Expected equal to return true")
-	})
-
-	t.Run("should return false when values do not match", func(t *testing.T) {
-		confirmPrompt := NewConfirm(nil)
-
-		require.False(t, confirmPrompt.equal(runekeys.UpperO, runekeys.UpperY), "Expected equal to return false")
-		require.False(t, confirmPrompt.equal(runekeys.UpperO, runekeys.UpperN), "Expected equal to return false")
-	})
-}
-
 // Tests for [Confirm.getPromptOptions] function.
 func Test_Confirm_getPromptOptions(t *testing.T) {
 	t.Run("with default confirm and deny keys", func(t *testing.T) {
@@ -323,8 +307,8 @@ func Test_Confirm_getPromptOptions(t *testing.T) {
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(runekeys.UpperO).
-			DenyKey(runekeys.UpperA)
+			ConfirmKey(keys.UpperO).
+			DenyKey(keys.UpperA)
 		expectedOptions := "[o/A]"
 		require.Equal(t, expectedOptions, confirmPrompt.getPromptOptions(), "getPromptOptions() did not return expected options with custom keys")
 
@@ -334,26 +318,26 @@ func Test_Confirm_getPromptOptions(t *testing.T) {
 	})
 }
 
-// Tests for [Confirm.getValueAsRunes] function.
-func Test_Confirm_getValueAsRunes(t *testing.T) {
+// Tests for [Confirm.getValueAsBytes] function.
+func Test_Confirm_getValueAsBytes(t *testing.T) {
 	t.Run("with default confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.Equal(t, []rune{confirmPrompt.denyKey}, confirmPrompt.getValueAsRunes(), "getValueAsRunes() did not return expected runes when value is false")
+		require.True(t, bytes.Equal(confirmPrompt.denyKey, confirmPrompt.getValueAsBytes()), "getValueAsBytes() did not return expected bytes when value is false")
 
 		result = true
-		require.Equal(t, []rune{confirmPrompt.confirmKey}, confirmPrompt.getValueAsRunes(), "getValueAsRunes() did not return expected runes when value is true")
+		require.True(t, bytes.Equal(confirmPrompt.confirmKey, confirmPrompt.getValueAsBytes()), "getValueAsBytes() did not return expected bytes when value is true")
 	})
 
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(runekeys.UpperO).
-			DenyKey(runekeys.UpperA)
-		require.Equal(t, []rune{confirmPrompt.denyKey}, confirmPrompt.getValueAsRunes(), "getValueAsRunes() did not return expected runes with custom keys when value is false")
+			ConfirmKey(keys.UpperO).
+			DenyKey(keys.UpperA)
+		require.True(t, bytes.Equal(confirmPrompt.denyKey, confirmPrompt.getValueAsBytes()), "getValueAsBytes() did not return expected bytes with custom keys when value is false")
 
 		result = true
-		require.Equal(t, []rune{confirmPrompt.confirmKey}, confirmPrompt.getValueAsRunes(), "getValueAsRunes() did not return expected runes with custom keys when value is true")
+		require.True(t, bytes.Equal(confirmPrompt.confirmKey, confirmPrompt.getValueAsBytes()), "getValueAsBytes() did not return expected bytes with custom keys when value is true")
 	})
 }
 
@@ -371,8 +355,8 @@ func Test_Confirm_getValueAsString(t *testing.T) {
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(runekeys.UpperO).
-			DenyKey(runekeys.UpperA)
+			ConfirmKey(keys.UpperO).
+			DenyKey(keys.UpperA)
 		require.Equal(t, "A", confirmPrompt.getValueAsString(), "getValueAsString() did not return expected string with custom keys when value is false")
 
 		result = true
@@ -399,7 +383,7 @@ func Test_Confirm_processLine(t *testing.T) {
 	t.Run("should return false for empty input", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.False(t, confirmPrompt.processLine([]rune{}), "processLine() should return false for empty input")
+		require.False(t, confirmPrompt.processInput([]byte{}), "processLine() should return false for empty input")
 	})
 
 	t.Run("should return set value if user enters enter character", func(t *testing.T) {
@@ -407,7 +391,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		require.True(t, confirmPrompt.processLine([]rune{runekeys.Enter}), "processLine() should return true when user hits enter key")
+		require.True(t, confirmPrompt.processInput([]byte{keys.Enter}), "processLine() should return true when user hits enter key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits enter key")
 	})
 
@@ -416,7 +400,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		require.True(t, confirmPrompt.processLine([]rune{runekeys.NewLine}), "processLine() should return true when user hits new line key")
+		require.True(t, confirmPrompt.processInput([]byte{keys.NewLine}), "processLine() should return true when user hits new line key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits new line key")
 	})
 
@@ -425,7 +409,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.False(t, *confirmPrompt.value, "Initial value should be false")
 
-		require.True(t, confirmPrompt.processLine([]rune{confirmPrompt.confirmKey}), "processLine() should return true when user confirms")
+		require.True(t, confirmPrompt.processInput(confirmPrompt.confirmKey), "processLine() should return true when user confirms")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user confirms")
 	})
 
@@ -434,13 +418,13 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		require.True(t, confirmPrompt.processLine([]rune{confirmPrompt.denyKey}), "processLine() should return true when user denies")
+		require.True(t, confirmPrompt.processInput(confirmPrompt.denyKey), "processLine() should return true when user denies")
 		require.False(t, *confirmPrompt.value, "Value should be set to false when user denies")
 	})
 
 	t.Run("should return false for unrecognized input", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.False(t, confirmPrompt.processLine([]rune{runekeys.UpperO}), "processLine() should return false for unrecognized input")
+		require.False(t, confirmPrompt.processInput([]byte{keys.UpperO}), "processLine() should return false for unrecognized input")
 	})
 }
