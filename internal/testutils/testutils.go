@@ -47,13 +47,12 @@ func CreateInvalidTestFile(t *testing.T, content string) *os.File {
 
 	f, err := os.Create(testFile)
 	require.NoError(t, err, "failed to create test file")
-
-	_, err = f.WriteString(content)
-	require.NoError(t, err, "failed to write to test file")
-
 	t.Cleanup(func() {
 		f.Close()
 	})
+
+	_, err = f.WriteString(content)
+	require.NoError(t, err, "failed to write to test file")
 
 	return f
 }
