@@ -11,7 +11,7 @@ import (
 	"github.com/mattn/go-runewidth"
 	"golang.org/x/term"
 
-	"github.com/engmtcdrm/go-pardon/internal/keys"
+	"github.com/engmtcdrm/go-pardon/keys"
 )
 
 // Select represents a multiple-choice selection prompt.

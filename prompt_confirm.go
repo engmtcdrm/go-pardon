@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/internal/keys"
+	"github.com/engmtcdrm/go-pardon/keys"
 )
 
 // Confirm represents a yes/no confirmation prompt for user decisions.

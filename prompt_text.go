@@ -9,7 +9,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/internal/keys"
+	"github.com/engmtcdrm/go-pardon/keys"
 	"golang.org/x/term"
 )
 

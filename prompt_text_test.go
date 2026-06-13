@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/internal/keys"
 	"github.com/engmtcdrm/go-pardon/internal/testutils"
+	"github.com/engmtcdrm/go-pardon/keys"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
