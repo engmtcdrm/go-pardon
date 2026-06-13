@@ -237,9 +237,9 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 	}
 
 	switch {
-	case bytes.Equal([]byte{keys.CtrlC}, input):
+	case bytes.Equal(input, keys.CtrlC):
 		return true, ErrUserAborted
-	case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
+	case bytes.Equal(input, keys.Enter), bytes.Equal(input, keys.Newline):
 		if err := t.validateFn(string(t.pendingValue)); err != nil {
 			t.printErrorMessage(err)
 			return false, nil
@@ -249,7 +249,7 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 
 		t.printFinalPromptLine()
 		return true, nil
-	case bytes.Equal([]byte{keys.Delete}, input), bytes.Equal([]byte{keys.Backspace}, input):
+	case bytes.Equal(input, keys.Delete), bytes.Equal(input, keys.Backspace):
 		if len(t.pendingValue) > 0 {
 			// Remove last UTF-8 rune (safe for multi-byte characters).
 			_, size := utf8.DecodeLastRune(t.pendingValue)

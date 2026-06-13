@@ -19,7 +19,7 @@ func Test_NewTerminal(t *testing.T) {
 
 // Tests for [TerminalInput.RawRead] function.
 func Test_Terminal_RawRead(t *testing.T) {
-	t.Run("should read input from the In and return it as a slice of runes", func(t *testing.T) {
+	t.Run("should read input from the In and return it as a slice of bytes", func(t *testing.T) {
 		_, f := testutils.CreateWritePTY(t, "hello\n")
 
 		terminal := NewTerminalInput()

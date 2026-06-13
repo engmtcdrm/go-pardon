@@ -72,7 +72,7 @@ func Test_Confirm_Ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.LowerY))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.LowerY.String())
 
 		err := confirmPrompt.Ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -84,7 +84,7 @@ func Test_Confirm_Ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.CtrlC.String())
 
 		err := confirmPrompt.Ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -97,14 +97,14 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 	t.Run("default confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, bytes.Equal(confirmPrompt.confirmKey, []byte{keys.UpperY}), "Default confirm key should be 'Y'")
+		require.True(t, bytes.Equal(confirmPrompt.confirmKey, keys.UpperY), "Default confirm key should be 'Y'")
 	})
 
 	t.Run("custom confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			ConfirmKey(keys.UpperO)
-		require.True(t, bytes.Equal(confirmPrompt.confirmKey, []byte{keys.UpperO}), "Custom confirm key should be 'O'")
+		require.True(t, bytes.Equal(confirmPrompt.confirmKey, keys.UpperO), "Custom confirm key should be 'O'")
 	})
 }
 
@@ -113,14 +113,14 @@ func Test_Confirm_DenyKey(t *testing.T) {
 	t.Run("default deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, bytes.Equal(confirmPrompt.denyKey, []byte{keys.UpperN}), "Default deny key should be 'N'")
+		require.True(t, bytes.Equal(confirmPrompt.denyKey, keys.UpperN), "Default deny key should be 'N'")
 	})
 
 	t.Run("custom deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			DenyKey(keys.UpperO)
-		require.True(t, bytes.Equal(confirmPrompt.denyKey, []byte{keys.UpperO}), "Custom deny key should be 'O'")
+		require.True(t, bytes.Equal(confirmPrompt.denyKey, keys.UpperO), "Custom deny key should be 'O'")
 	})
 }
 
@@ -259,7 +259,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.LowerY))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.LowerY.String())
 
 		err := confirmPrompt.ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -271,7 +271,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.CtrlC.String())
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -283,7 +283,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = bytes.NewBufferString(string(keys.LowerY))
+		confirmPrompt.In.Reader = bytes.NewBufferString(keys.LowerY.String())
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")
@@ -392,7 +392,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		done, err := confirmPrompt.processInput([]byte{keys.Enter})
+		done, err := confirmPrompt.processInput(keys.Enter)
 		require.True(t, done, "processLine() should return true when user hits enter key")
 		require.NoError(t, err, "processLine() should not return an error when user hits enter key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits enter key")
@@ -403,7 +403,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		done, err := confirmPrompt.processInput([]byte{keys.NewLine})
+		done, err := confirmPrompt.processInput(keys.Newline)
 		require.True(t, done, "processLine() should return true when user hits new line key")
 		require.NoError(t, err, "processLine() should not return an error when user hits new line key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits new line key")
@@ -434,7 +434,7 @@ func Test_Confirm_processLine(t *testing.T) {
 	t.Run("should return false for unrecognized input", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		done, err := confirmPrompt.processInput([]byte{keys.UpperO})
+		done, err := confirmPrompt.processInput(keys.UpperO)
 		require.False(t, done, "processLine() should return false for unrecognized input")
 		require.NoError(t, err, "processLine() should not return an error for unrecognized input")
 	})

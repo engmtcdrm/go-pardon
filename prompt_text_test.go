@@ -306,7 +306,7 @@ func Test_Text_ask(t *testing.T) {
 		questionPrompt := NewQuestion(&result).
 			Title(promptTitle)
 		questionPrompt.Out = io.Discard
-		questionPrompt.In.Reader = bytes.NewBufferString(string(keys.LowerY))
+		questionPrompt.In.Reader = bytes.NewBufferString(keys.LowerY.String())
 
 		err := questionPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")

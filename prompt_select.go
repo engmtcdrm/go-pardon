@@ -166,9 +166,9 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 	}
 
 	switch {
-	case bytes.Equal([]byte{keys.CtrlC}, input):
+	case bytes.Equal(input, keys.CtrlC):
 		return true, ErrUserAborted
-	case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
+	case bytes.Equal(input, keys.Enter), bytes.Equal(input, keys.Newline):
 		*s.value = s.options[s.cursorPos].Value
 		s.answer.val = s.options[s.cursorPos].Key
 		visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)

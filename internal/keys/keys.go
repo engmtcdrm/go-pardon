@@ -1,34 +1,38 @@
 package keys
 
 const (
-	CtrlC     = byte(3)
-	Backspace = byte(8)
-	Escape    = byte(27)
-	Delete    = byte(127)
+	escape = byte(27)
 
-	Up    = UpperA
-	Down  = UpperB
-	Right = UpperC
-	Left  = UpperD
+	leftBracket = byte('[')
 
-	Enter       = byte('\r')
-	LeftBracket = byte('[')
-	LowerN      = byte('n')
-	LowerY      = byte('y')
-	NewLine     = byte('\n') // Additional for cross-platform compatibility
-
-	UpperA = byte('A')
-	UpperB = byte('B')
-	UpperC = byte('C')
-	UpperD = byte('D')
-	UpperN = byte('N')
-	UpperO = byte('O')
-	UpperY = byte('Y')
+	upperA = byte('A')
+	upperB = byte('B')
+	upperC = byte('C')
+	upperD = byte('D')
+	upperN = byte('N')
+	upperO = byte('O')
+	upperY = byte('Y')
 )
 
 var (
-	UpArrow    = []byte{Escape, LeftBracket, UpperA}
-	DownArrow  = []byte{Escape, LeftBracket, UpperB}
-	RightArrow = []byte{Escape, LeftBracket, UpperC}
-	LeftArrow  = []byte{Escape, LeftBracket, UpperD}
+	CtrlC       = New(3)
+	Backspace   = New(8)
+	Escape      = New(27)
+	Delete      = New(127)
+	Enter       = New('\r')
+	Newline     = New('\n')
+	LeftBracket = New(leftBracket)
+
+	LowerN = New('n')
+	LowerY = New('y')
+
+	UpperA = New(upperA)
+	UpperN = New(upperN)
+	UpperO = New(upperO)
+	UpperY = New(upperY)
+
+	UpArrow    = New(escape, leftBracket, upperA)
+	DownArrow  = New(escape, leftBracket, upperB)
+	RightArrow = New(escape, leftBracket, upperC)
+	LeftArrow  = New(escape, leftBracket, upperD)
 )

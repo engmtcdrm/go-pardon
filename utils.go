@@ -1,12 +1,19 @@
 package pardon
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
+
+// equal compares a byte slice to a variadic list of bytes for equality. It
+// calls [bytes.Equal] under the hood but provides a more convenient interface
+// for comparing against single byte values without needing to create a slice.
+func equal(a []byte, b ...byte) bool {
+	return bytes.Equal(a, b)
+}
 
 // renderClearAndReposition clears lines and renders final answer.
 // Minimizes screen flicker by batching terminal operations.
@@ -48,14 +55,4 @@ func resetLineAbove() string {
 
 func validationErrorMessage(err error) string {
 	return fmt.Sprintf("%s%s* %v%s", ansi.ClearLineReset, ansi.RedBg, err, ansi.Reset)
-}
-
-// https://www.climagic.org/mirrors/VT100_Escape_Codes.html
-func validateEscapeSequence(b byte) bool {
-	switch b {
-	case keys.LeftBracket, keys.UpperO:
-		return true
-	default:
-		return false
-	}
 }

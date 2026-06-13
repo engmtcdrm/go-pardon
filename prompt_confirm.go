@@ -23,8 +23,8 @@ type Confirm struct {
 	icon       eval[string]
 	title      eval[string]
 	answer     eval[string]
-	confirmKey []byte
-	denyKey    []byte
+	confirmKey keys.Key
+	denyKey    keys.Key
 	prompt     string
 	promptOpts string
 }
@@ -38,8 +38,8 @@ func NewConfirm(value *bool) *Confirm {
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		answer:     eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
-		confirmKey: []byte{keys.UpperY},
-		denyKey:    []byte{keys.UpperN},
+		confirmKey: keys.UpperY,
+		denyKey:    keys.UpperN,
 	}
 }
 
@@ -66,16 +66,17 @@ func (c *Confirm) Ask() error {
 	return nil
 }
 
-// ConfirmKey sets the rune that represents the confirmation key (e.g., 'Y' for
-// yes).
-func (c *Confirm) ConfirmKey(key byte) *Confirm {
-	c.confirmKey = []byte{key}
+// ConfirmKey sets the [keys.Key] that represents the confirmation key (e.g.,
+// 'Y' for yes).
+func (c *Confirm) ConfirmKey(key keys.Key) *Confirm {
+	c.confirmKey = key
 	return c
 }
 
-// DenyKey sets the rune that represents the denial key (e.g., 'N' for no).
-func (c *Confirm) DenyKey(key byte) *Confirm {
-	c.denyKey = []byte{key}
+// DenyKey sets the [keys.Key] that represents the denial key (e.g., 'N' for
+// no).
+func (c *Confirm) DenyKey(key keys.Key) *Confirm {
+	c.denyKey = key
 	return c
 }
 
@@ -192,12 +193,12 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 	}
 
 	// If user hit enter, use the current value of [Confirm.value] as the input
-	if input[0] == keys.Enter || input[0] == keys.NewLine {
+	if bytes.Equal(keys.Enter, input) || bytes.Equal(keys.Newline, input) {
 		input = c.getValueAsBytes()
 	}
 
 	switch {
-	case bytes.Equal([]byte{keys.CtrlC}, input):
+	case bytes.Equal(input, keys.CtrlC):
 		return true, ErrUserAborted
 	case bytes.EqualFold(c.confirmKey, input):
 		*c.value = true

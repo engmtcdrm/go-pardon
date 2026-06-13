@@ -1,15 +1,15 @@
 package keys
 
-func IsFeEscapeSequence(bytes []byte) bool {
-	if len(bytes) != 2 {
+func IsFeEscapeSequence(key Key) bool {
+	if len(key) != 2 {
 		return false
 	}
 
-	if bytes[0] != Escape {
+	if key[0] != escape {
 		return false
 	}
 
-	if bytes[1] < 0x40 || bytes[1] > 0x5F {
+	if key[1] < 0x40 || key[1] > 0x5F {
 		return false
 	}
 
