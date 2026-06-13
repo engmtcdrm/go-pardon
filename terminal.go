@@ -64,7 +64,62 @@ func NewConfirmTerminal() *Terminal {
 	return input
 }
 
-func (t *Terminal) GetInput() ([]byte, error) {
+// GetTerminalHeight returns the height of the terminal in rows. If the terminal
+// size cannot be determined, it returns a default height of 25 rows.
+func (t *Terminal) GetTerminalHeight() int {
+	termHeight := 25 // Default height
+
+	f, ok := t.Out.(*os.File)
+	if !ok {
+		return termHeight
+	}
+
+	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
+		termHeight = height
+	}
+
+	return termHeight
+}
+
+// Print writes the given arguments to the terminal output.
+func (t *Terminal) Print(a ...any) {
+	fmt.Fprint(t.Out, a...)
+}
+
+// Printf formats according to a format specifier and writes to the terminal
+// output.
+func (t *Terminal) Printf(format string, a ...any) {
+	fmt.Fprintf(t.Out, format, a...)
+}
+
+// Println writes the given arguments to the terminal output, followed by a
+// newline.
+func (t *Terminal) Println(a ...any) {
+	fmt.Fprintln(t.Out, a...)
+}
+
+// RawRead reads input from the terminal in raw mode. It handles special keys
+// like Enter, Backspace, etc., and returns the input as a slice of runes. If
+// the input is interrupted (e.g., by Ctrl+C), it returns an error.
+//
+// [Terminal.Reset] must be called before invoking this function to ensure that
+// any previous input does not interfere with the new input.
+func (t *Terminal) RawRead() ([]rune, error) {
+	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
+	if err != nil {
+		return nil, err
+	}
+	defer restoreTerminal()
+
+	return t.rawReadline(inputFile)
+}
+
+// RawRead2 reads input from the terminal in raw mode and returns the raw bytes.
+//
+// The caller is responsible for processing the bytes and handling special keys.
+// As well as wrapping this call in a for loop to continue reading until the
+// desired input is complete.
+func (t *Terminal) ReadRaw2() ([]byte, error) {
 	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
 		return nil, err
@@ -84,49 +139,6 @@ func (t *Terminal) GetInput() ([]byte, error) {
 	}
 
 	return buf[:n], nil
-}
-
-func (t *Terminal) GetTerminalHeight() int {
-	termHeight := 25 // Default height
-
-	f, ok := t.Out.(*os.File)
-	if !ok {
-		return termHeight
-	}
-
-	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
-		termHeight = height
-	}
-
-	return termHeight
-}
-
-func (t *Terminal) Print(a ...any) {
-	fmt.Fprint(t.Out, a...)
-}
-
-func (t *Terminal) Printf(format string, a ...any) {
-	fmt.Fprintf(t.Out, format, a...)
-}
-
-func (t *Terminal) Println(a ...any) {
-	fmt.Fprintln(t.Out, a...)
-}
-
-// RawRead reads input from the terminal in raw mode. It handles special keys
-// like Enter, Backspace, etc., and returns the input as a slice of runes. If
-// the input is interrupted (e.g., by Ctrl+C), it returns an error.
-//
-// [Terminal.Reset] must be called before invoking this function to ensure that
-// any previous input does not interfere with the new input.
-func (t *Terminal) RawRead() ([]rune, error) {
-	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
-	if err != nil {
-		return nil, err
-	}
-	defer restoreTerminal()
-
-	return t.rawReadline(inputFile)
 }
 
 // Reset clears the pending input and the result. This should be called prior

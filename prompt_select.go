@@ -79,7 +79,7 @@ func (s *Select[T]) ask() error {
 	s.renderOptions(false)
 
 	for {
-		input, err := s.terminal.GetInput()
+		input, err := s.terminal.ReadRaw2()
 		if err != nil {
 			return err
 		}
