@@ -64,8 +64,6 @@ func (t *Text) Ask() error {
 		return ErrNoValue
 	}
 
-	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
-
 	if err := t.ask(); err != nil {
 		return err
 	}
@@ -122,14 +120,15 @@ func (t *Text) Value(value *string) *Text {
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
 func (t *Text) ask() error {
-	fmt.Fprint(t.terminal.Out, t.prompt)
+	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
+	t.terminal.Print(t.prompt)
 
 	for {
 		t.terminal.Reset()
 		line, err := t.terminal.RawRead()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
-				fmt.Fprint(t.terminal.Out, ansi.ClearLineReset+t.prompt)
+				t.terminal.Print(ansi.ClearLineReset + t.prompt)
 				return err
 			}
 			return err
@@ -200,7 +199,7 @@ func (t *Text) printErrorMessage(err error) {
 
 	builder.WriteString(resetLineAbove())
 	builder.WriteString(t.prompt)
-	fmt.Fprint(t.terminal.Out, builder.String())
+	t.terminal.Print(builder.String())
 }
 
 // printFinalPromptLine handles printing the final prompt line after successful
@@ -220,5 +219,5 @@ func (t *Text) printFinalPromptLine() {
 	// clear it in case there are any validation error messages that are still
 	// visible.
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	fmt.Fprint(t.terminal.Out, builder.String())
+	t.terminal.Print(builder.String())
 }

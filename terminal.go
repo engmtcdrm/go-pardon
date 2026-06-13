@@ -31,10 +31,6 @@ type Terminal struct {
 	// input.
 	result []rune
 
-	// lastInputWasEscSeq tracks whether the previous input was part of an escape sequence.
-	// This helps with proper handling of multi-byte terminal input sequences.
-	lastInputWasEscSeq bool
-
 	CustomHandler func(t *Terminal, r rune) (done bool)
 }
 
@@ -68,42 +64,53 @@ func NewConfirmTerminal() *Terminal {
 	return input
 }
 
-// setTerminalToRawMode attempts to put the terminal into raw mode and returns
-// the input file, file descriptor, old terminal state (if raw mode was set),
-// and any error encountered.  If the input is not a terminal, it returns the
-// file and a no-op restore function without error. The caller should defer the
-// restore function to ensure that the terminal state is properly restored after
-// raw input is processed.
-func (t *Terminal) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
-	inputFile, ok := t.In.(*os.File)
-	if !ok {
-		return nil, func() {
-			// No cleanup needed since we didn't set raw mode
-		}, fmt.Errorf("unable to read input: input reader is not a file")
-	}
-
-	// MakeRaw put the terminal connected to the given file descriptor
-	// into raw mode
-	fd := int(inputFile.Fd())
-
-	// If the reader is not connected to a terminal (e.g., during tests
-	// where we use PTYs or files), don't attempt to set raw mode and just
-	// return the file and descriptor.
-	if !term.IsTerminal(fd) {
-		return inputFile, func() {
-			// No cleanup needed since we didn't set raw mode
-		}, nil
-	}
-
-	oldState, err := term.MakeRaw(fd)
+func (t *Terminal) GetInput() ([]byte, error) {
+	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
-		return inputFile, func() {
-			// No cleanup needed since we didn't set raw mode
-		}, err
+		return nil, err
 	}
-	return inputFile, func() {
-		term.Restore(fd, oldState)
-	}, nil
+	defer restoreTerminal()
+
+	var buf [8]byte
+	n, err := inputFile.Read(buf[:])
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	if n == 0 {
+		if err == io.EOF {
+			return nil, nil
+		}
+	}
+
+	return buf[:n], nil
+}
+
+func (t *Terminal) GetTerminalHeight() int {
+	termHeight := 25 // Default height
+
+	f, ok := t.Out.(*os.File)
+	if !ok {
+		return termHeight
+	}
+
+	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
+		termHeight = height
+	}
+
+	return termHeight
+}
+
+func (t *Terminal) Print(a ...any) {
+	fmt.Fprint(t.Out, a...)
+}
+
+func (t *Terminal) Printf(format string, a ...any) {
+	fmt.Fprintf(t.Out, format, a...)
+}
+
+func (t *Terminal) Println(a ...any) {
+	fmt.Fprintln(t.Out, a...)
 }
 
 // RawRead reads input from the terminal in raw mode. It handles special keys
@@ -137,7 +144,7 @@ func (t *Terminal) handleErase() {
 	t.pending = t.pending[1:]
 	if len(t.result) > 0 {
 		t.result = t.result[:len(t.result)-1]
-		t.print("\b \b")
+		t.printInput("\b \b")
 	}
 }
 
@@ -175,10 +182,11 @@ func (t *Terminal) handleEscapeSequence() (doBreak bool) {
 	return false
 }
 
-// print writes the given arguments to the terminal if [Terminal.Hide] is false.
-func (t *Terminal) print(a ...any) {
+// printInput writes the given arguments to the terminal if [Terminal.Hide] is
+// false.
+func (t *Terminal) printInput(a ...any) {
 	if !t.Hide {
-		fmt.Fprint(t.Out, a...)
+		t.Print(a...)
 	}
 }
 
@@ -223,7 +231,7 @@ func (t *Terminal) processPending() (returnRunes []rune, done bool, err error) {
 			}
 
 			if !t.Confirm {
-				t.print(string(r))
+				t.printInput(string(r))
 			} else {
 				return t.result, true, nil
 			}
@@ -265,68 +273,44 @@ func (t *Terminal) rawReadline(f *os.File) ([]rune, error) {
 		}
 	}
 
-	t.print("\n")
+	t.printInput("\n")
 	return t.result, nil
 }
 
-func (t *Terminal) GetTerminalHeight() int {
-	termHeight := 25 // Default height
-
-	f, ok := t.Out.(*os.File)
+// setTerminalToRawMode attempts to put the terminal into raw mode and returns
+// the input file, file descriptor, old terminal state (if raw mode was set),
+// and any error encountered.  If the input is not a terminal, it returns the
+// file and a no-op restore function without error. The caller should defer the
+// restore function to ensure that the terminal state is properly restored after
+// raw input is processed.
+func (t *Terminal) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
+	inputFile, ok := t.In.(*os.File)
 	if !ok {
-		return termHeight
+		return nil, func() {
+			// No cleanup needed since we didn't set raw mode
+		}, fmt.Errorf("unable to read input: input reader is not a file")
 	}
 
-	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
-		termHeight = height
+	// MakeRaw put the terminal connected to the given file descriptor
+	// into raw mode
+	fd := int(inputFile.Fd())
+
+	// If the reader is not connected to a terminal (e.g., during tests
+	// where we use PTYs or files), don't attempt to set raw mode and just
+	// return the file and descriptor.
+	if !term.IsTerminal(fd) {
+		return inputFile, func() {
+			// No cleanup needed since we didn't set raw mode
+		}, nil
 	}
 
-	return termHeight
-}
-
-// getInput reads raw keyboard input from the terminal.
-// Handles buffered input, raw mode, and ANSI escape sequences.
-func (t *Terminal) GetInput() (byte, error) {
-	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
+	oldState, err := term.MakeRaw(fd)
 	if err != nil {
-		return 0, err
+		return inputFile, func() {
+			// No cleanup needed since we didn't set raw mode
+		}, err
 	}
-	defer restoreTerminal()
-
-	// Read input - use a larger buffer to handle paste operations
-	readBytes := make([]byte, 8) // Increased to 4KB to handle larger pastes
-	read, err := inputFile.Read(readBytes)
-	if err != nil {
-		// Handle read error, it might be due to signal interruption
-		return 0, err
-	}
-
-	// If we read more than 3 bytes, it's likely a paste operation
-	if read > 3 {
-		// Buffer all characters except the first one
-		t.pending = append(t.pending, readBytes[1:read]...)
-		t.lastInputWasEscSeq = false
-		return readBytes[0], nil
-	}
-
-	// Handle escape sequences (arrow keys)
-	if read == 3 && readBytes[0] == keys.Escape && readBytes[1] == keys.LeftBracket {
-		// This is a proper ANSI escape sequence (ESC[X)
-		if _, ok := keys.Navigation[readBytes[2]]; ok {
-			t.lastInputWasEscSeq = true
-			return readBytes[2], nil
-		}
-		// If it's an escape sequence but not a navigation key, ignore it
-		t.lastInputWasEscSeq = false
-		return 0, nil
-	}
-
-	// For any other input (1, 2, or 3 bytes that aren't escape sequences),
-	// return the first byte which contains the actual character
-	t.lastInputWasEscSeq = false
-	if read > 0 {
-		return readBytes[0], nil
-	}
-
-	return 0, nil
+	return inputFile, func() {
+		term.Restore(fd, oldState)
+	}, nil
 }

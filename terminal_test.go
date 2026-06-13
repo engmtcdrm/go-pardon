@@ -173,7 +173,7 @@ func Test_Terminal_print(t *testing.T) {
 		inputText := "hello"
 		expected := "hello"
 		terminal.Out = &bytes.Buffer{}
-		terminal.print(inputText)
+		terminal.printInput(inputText)
 		require.Equal(t, expected, terminal.Out.(*bytes.Buffer).String())
 	})
 
@@ -182,7 +182,7 @@ func Test_Terminal_print(t *testing.T) {
 		inputText := "hello"
 		expected := ""
 		terminal.Out = &bytes.Buffer{}
-		terminal.print(inputText)
+		terminal.printInput(inputText)
 		require.Equal(t, expected, terminal.Out.(*bytes.Buffer).String())
 	})
 }

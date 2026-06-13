@@ -27,12 +27,11 @@ const (
 )
 
 var (
-	// Navigation defines a map of byte keycodes for navigation actions.
-	// These keys are used for cursor movement and selection in interactive prompts.
-	Navigation = map[byte]bool{
-		Up:    true,
-		Down:  true,
-		Left:  true,
-		Right: true,
-	}
+	CtrlC2     = New(CtrlC)
+	Enter2     = New(Enter)
+	NewLine2   = New(NewLine)
+	UpArrow    = New(Escape, LeftBracket, UpperA)
+	DownArrow  = New(Escape, LeftBracket, UpperB)
+	RightArrow = New(Escape, LeftBracket, UpperC)
+	LeftArrow  = New(Escape, LeftBracket, UpperD)
 )

@@ -20,6 +20,7 @@ type Select[T comparable] struct {
 	selectEval   eval[string] // cannot use select because it is a reserved keyword
 	options      []Option[T]
 	selectFn     func(string) string
+	prompt       string
 	cursorPos    int
 	scrollOffset int
 	value        *T
@@ -59,35 +60,47 @@ func (s *Select[T]) Ask() error {
 		return ErrNoSelectOptions
 	}
 
+	if err := s.ask(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Select[T]) ask() error {
+	s.terminal.Print(ansi.HideCursor)
 	defer func() {
-		fmt.Fprint(s.terminal.Out, ansi.ShowCursor)
+		s.terminal.Print(ansi.ShowCursor)
 	}()
 
-	// Print the question
-	fmt.Fprintf(s.terminal.Out, "%s%s\n", s.icon.Get(), s.title.Get())
+	s.prompt = fmt.Sprintf("%s%s", s.icon.Get(), s.title.Get())
+	s.terminal.Println(s.prompt)
 
 	s.renderOptions(false)
-	fmt.Fprint(s.terminal.Out, ansi.HideCursor)
 
 	for {
-		keyCode, err := s.terminal.GetInput()
+		input, err := s.terminal.GetInput()
 		if err != nil {
 			return err
 		}
 
-		switch keyCode {
-		case keys.CtrlC:
+		if len(input) == 0 {
+			continue
+		}
+
+		switch {
+		case keys.CtrlC2.Equal(input):
 			return ErrUserAborted
-		case keys.Enter, keys.NewLine:
+		case keys.Enter2.Equal(input), keys.NewLine2.Equal(input):
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
 			visibleOptions := min(len(s.options), s.terminal.GetTerminalHeight()-3)
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return nil
-		case keys.Up:
+		case keys.UpArrow.Equal(input):
 			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 			s.renderOptions(true)
-		case keys.Down:
+		case keys.DownArrow.Equal(input):
 			s.cursorPos = (s.cursorPos + 1) % len(s.options)
 			s.renderOptions(true)
 		}
@@ -187,7 +200,7 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	}
 
 	// Write everything at once to minimize flicker
-	fmt.Fprint(s.terminal.Out, output.String())
+	s.terminal.Print(output.String())
 }
 
 func (s *Select[T]) updateScrollOffset(termHeight int) {
@@ -216,12 +229,12 @@ func (s *Select[T]) renderOptions(redraw bool) {
 
 			if i != s.cursorPos {
 				cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
-				fmt.Fprintf(s.terminal.Out, "%s%s\n", cursor, selectedOption.Key)
+				s.terminal.Printf("%s%s\n", cursor, selectedOption.Key)
 				continue
 			}
 
 			s.selectEval.val = selectedOption.Key
-			fmt.Fprintf(s.terminal.Out, "%s%s\n", selectCursor, s.selectEval.Get())
+			s.terminal.Printf("%s%s\n", selectCursor, s.selectEval.Get())
 		}
 	}
 }

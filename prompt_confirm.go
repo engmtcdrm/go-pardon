@@ -26,7 +26,7 @@ type Confirm struct {
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		terminal:   NewTerminal(),
+		terminal:   NewConfirmTerminal(),
 		value:      value,
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
@@ -111,14 +111,14 @@ func (c *Confirm) ask() error {
 	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
 	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, c.getPromptOptions())
 
-	fmt.Fprint(c.terminal.Out, c.promptOpts)
+	c.terminal.Print(c.promptOpts)
 
 	for {
 		c.terminal.Reset()
 		line, err := c.terminal.RawRead()
 		if err != nil {
 			if errors.Is(err, ErrUserAborted) {
-				fmt.Fprint(c.terminal.Out, ansi.ClearLineReset+c.prompt)
+				c.terminal.Print(ansi.ClearLineReset + c.prompt)
 				return err
 			}
 
@@ -175,7 +175,7 @@ func (c *Confirm) printFinalPromptLine() {
 	promptAnswer := c.prompt + c.answer.Get()
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	fmt.Fprint(c.terminal.Out, builder.String())
+	c.terminal.Print(builder.String())
 }
 
 func (c *Confirm) processLine(line []rune) (done bool) {
