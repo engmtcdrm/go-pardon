@@ -72,7 +72,7 @@ func Test_Confirm_Ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.LowerY))
 
 		err := confirmPrompt.Ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -84,7 +84,7 @@ func Test_Confirm_Ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.CtrlC))
 
 		err := confirmPrompt.Ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -259,7 +259,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.LowerY))
 
 		err := confirmPrompt.ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -271,7 +271,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, string(keys.CtrlC))
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -283,7 +283,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.In = bytes.NewBufferString(string(keys.LowerY))
+		confirmPrompt.In.Reader = bytes.NewBufferString(string(keys.LowerY))
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")

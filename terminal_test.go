@@ -13,7 +13,7 @@ func Test_NewTerminal(t *testing.T) {
 	t.Run("should create a new Terminal instance with default values", func(t *testing.T) {
 		terminal := NewTerminalInput()
 		require.NotNil(t, terminal)
-		require.Equal(t, terminal.In, os.Stdin)
+		require.Equal(t, terminal.Reader, os.Stdin)
 	})
 }
 
@@ -23,7 +23,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 		_, f := testutils.CreateWritePTY(t, "hello\n")
 
 		terminal := NewTerminalInput()
-		terminal.In = f
+		terminal.Reader = f
 
 		var results []byte
 
@@ -45,7 +45,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 
 	t.Run("should return an error if In is not a file", func(t *testing.T) {
 		terminal := NewTerminalInput()
-		terminal.In = nil
+		terminal.Reader = nil
 
 		results, err := terminal.RawRead()
 		require.Error(t, err)
@@ -57,7 +57,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 		defer f.Close()
 
 		terminal := NewTerminalInput()
-		terminal.In = f
+		terminal.Reader = f
 
 		var results []byte
 

@@ -9,14 +9,14 @@ import (
 )
 
 type TerminalInput struct {
-	// In is the input reader for the terminal, typically [os.Stdin].
-	In io.Reader
+	// Reader is the input reader for the terminal, typically [os.Stdin].
+	Reader io.Reader
 }
 
 // NewTerminalInput creates a new [TerminalInput] instance with input read from
 // [os.Stdin].
 func NewTerminalInput() *TerminalInput {
-	return &TerminalInput{In: os.Stdin}
+	return &TerminalInput{Reader: os.Stdin}
 }
 
 // RawRead reads input from the terminal in raw mode and returns the raw bytes.
@@ -53,7 +53,7 @@ func (t *TerminalInput) RawRead() ([]byte, error) {
 // restore function to ensure that the terminal state is properly restored after
 // raw input is processed.
 func (t *TerminalInput) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
-	inputFile, ok := t.In.(*os.File)
+	inputFile, ok := t.Reader.(*os.File)
 	if !ok {
 		return nil, func() {
 			// No cleanup needed since we didn't set raw mode
