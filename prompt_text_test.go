@@ -70,7 +70,7 @@ func Test_Text_AnswerFunc(t *testing.T) {
 		var result string
 		textPrompt := NewQuestion(&result).
 			Title("Continue?")
-		textPrompt.terminal.Out = io.Discard
+		textPrompt.Out = io.Discard
 		assert.Nil(t, textPrompt.answer.fn, "Default answer function should be nil")
 	})
 
@@ -82,7 +82,7 @@ func Test_Text_AnswerFunc(t *testing.T) {
 		textPrompt := NewQuestion(&result).
 			Title("Continue?").
 			AnswerFunc(customFn)
-		textPrompt.terminal.Out = io.Discard
+		textPrompt.Out = io.Discard
 		textPrompt.answer.val = "Test"
 		assert.Equal(t, customFn("Test"), textPrompt.answer.Get(), "Custom answer function did not return expected result")
 	})
@@ -108,8 +108,8 @@ func Test_Text_Ask(t *testing.T) {
 		var result string
 		textPrompt := NewQuestion(&result).
 			Title("Enter value:")
-		textPrompt.terminal.Out = io.Discard
-		textPrompt.terminal.In = testutils.CreateValidTestFile(t, "test input\r")
+		textPrompt.Out = io.Discard
+		textPrompt.In.In = testutils.CreateValidTestFile(t, "test input\r")
 
 		err := textPrompt.Ask()
 		require.NoError(t, err, "Ask should not return an error for valid input")
@@ -120,8 +120,8 @@ func Test_Text_Ask(t *testing.T) {
 		var result string
 		textPrompt := NewQuestion(&result).
 			Title("Enter value:")
-		textPrompt.terminal.Out = io.Discard
-		textPrompt.terminal.In = testutils.CreateValidTestFile(t, "test input"+string(keys.CtrlC))
+		textPrompt.Out = io.Discard
+		textPrompt.In.In = testutils.CreateValidTestFile(t, "test input"+string(keys.CtrlC))
 
 		err := textPrompt.Ask()
 		require.ErrorIs(t, err, ErrUserAborted, "Ask should return ErrUserAborted when user presses Ctrl+C")
@@ -133,19 +133,19 @@ func Test_Text_Hide(t *testing.T) {
 	t.Run("should set hide to false on Question prompts", func(t *testing.T) {
 		var result string
 		textPrompt := NewQuestion(&result)
-		require.False(t, textPrompt.terminal.Hide, "Hide should be false by default for Question prompts")
+		require.False(t, textPrompt.hide, "Hide should be false by default for Question prompts")
 
 		textPrompt = textPrompt.Hide(true)
-		assert.True(t, textPrompt.terminal.Hide, "Hide should be set to true")
+		assert.True(t, textPrompt.hide, "Hide should be set to true")
 	})
 
 	t.Run("should set hide to true on Password prompts", func(t *testing.T) {
 		var result string
 		passwordPrompt := NewPassword(&result)
-		require.True(t, passwordPrompt.terminal.Hide, "Hide should be true by default for Password prompts")
+		require.True(t, passwordPrompt.hide, "Hide should be true by default for Password prompts")
 
 		passwordPrompt = passwordPrompt.Hide(false)
-		assert.False(t, passwordPrompt.terminal.Hide, "Hide should be set to false")
+		assert.False(t, passwordPrompt.hide, "Hide should be set to false")
 	})
 }
 
@@ -278,8 +278,8 @@ func Test_Text_ask(t *testing.T) {
 		var result string
 		questionPrompt := NewQuestion(&result).
 			Title(promptTitle)
-		questionPrompt.terminal.Out = io.Discard
-		questionPrompt.terminal.In = testutils.CreateValidTestFile(t, expectedResult+"\r")
+		questionPrompt.Out = io.Discard
+		questionPrompt.In.In = testutils.CreateValidTestFile(t, expectedResult+"\r")
 
 		err := questionPrompt.ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -290,8 +290,8 @@ func Test_Text_ask(t *testing.T) {
 		var result string
 		questionPrompt := NewQuestion(&result).
 			Title(promptTitle)
-		questionPrompt.terminal.Out = io.Discard
-		questionPrompt.terminal.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		questionPrompt.Out = io.Discard
+		questionPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
 
 		err := questionPrompt.ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -302,8 +302,8 @@ func Test_Text_ask(t *testing.T) {
 		var result string
 		questionPrompt := NewQuestion(&result).
 			Title(promptTitle)
-		questionPrompt.terminal.Out = io.Discard
-		questionPrompt.terminal.In = bytes.NewBufferString(string(keys.LowerY))
+		questionPrompt.Out = io.Discard
+		questionPrompt.In.In = bytes.NewBufferString(string(keys.LowerY))
 
 		err := questionPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")
@@ -326,9 +326,9 @@ func Test_Text_ask(t *testing.T) {
 
 				return nil
 			})
-		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.Out = mockTTY
 		// Buffer size is 8 so need to pad two empty spaces to emulate stdin clearing the line after validation error is printed.
-		questionPrompt.terminal.In = testutils.CreateValidTestFile(t, expectedResult+"\n  "+expectedResult+"2\r")
+		questionPrompt.In.In = testutils.CreateValidTestFile(t, expectedResult+"\n  "+expectedResult+"2\r")
 
 		err := questionPrompt.ask()
 		require.NoError(t, err, "Expected no error when validation fails")
@@ -374,7 +374,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 		_, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
 
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.Out = mockTTY
 
 		lines, err := questionPrompt.getPromptLines("Short prompt?")
 		assert.NoError(t, err, "getPromptLines should not return an error")
@@ -385,7 +385,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 		_, mockTTY := testutils.CreatePTYWithSize(t, 5, 10)
 
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.Out = mockTTY
 
 		lines, err := questionPrompt.getPromptLines("Short prompt?")
 		assert.NoError(t, err, "getPromptLines should not return an error")
@@ -394,7 +394,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 
 	t.Run("should return an error if output writer is not a file", func(t *testing.T) {
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = &bytes.Buffer{}
+		questionPrompt.Out = &bytes.Buffer{}
 
 		_, err := questionPrompt.getPromptLines("Short prompt?")
 		assert.Error(t, err, "getPromptLines should return an error if output writer is not a file")
@@ -404,7 +404,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 		_, mockTTY := testutils.CreatePTYWithSize(t, 0, 10)
 
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.Out = mockTTY
 
 		_, err := questionPrompt.getPromptLines("Short prompt?")
 		assert.Error(t, err, "getPromptLines should return an error if terminal width is 0")
@@ -413,7 +413,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 	t.Run("should return an error if terminal size cannot be determined", func(t *testing.T) {
 		// Use a regular file (not a PTY) so term.GetSize will fail with ENOTTY.
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = testutils.CreateValidTestFile(t, "not a pty")
+		questionPrompt.Out = testutils.CreateValidTestFile(t, "not a pty")
 
 		_, err := questionPrompt.getPromptLines("Short prompt?")
 		assert.Error(t, err, "getPromptLines should return an error if terminal size cannot be determined")
@@ -429,7 +429,7 @@ func Test_Text_printErrorMessage(t *testing.T) {
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
 
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.Out = mockTTY
 		questionPrompt.printErrorMessage(expectedErrorMessage)
 		_ = mockTTY.Close() // Close the TTY to signal we're done reading output
 
@@ -439,7 +439,7 @@ func Test_Text_printErrorMessage(t *testing.T) {
 
 	t.Run("should return an error if output writer is not a file", func(t *testing.T) {
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = &bytes.Buffer{}
+		questionPrompt.Out = &bytes.Buffer{}
 
 		errorMessage := errors.New("Test error")
 		assert.Panics(t, func() {
@@ -454,7 +454,7 @@ func Test_Text_printErrorMessage(t *testing.T) {
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 60, 10)
 
 		questionPrompt := NewQuestion(nil)
-		questionPrompt.terminal.Out = mockTTY
+		questionPrompt.Out = mockTTY
 		questionPrompt.printErrorMessage(longErrorMessage)
 		_ = mockTTY.Close() // Close the TTY to signal we're done reading output
 
@@ -470,12 +470,12 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 		var result string
 		questionPrompt := NewQuestion(&result).
 			Title("What is your name?")
-		questionPrompt.terminal.Out = &bytes.Buffer{}
+		questionPrompt.Out = &bytes.Buffer{}
 		*questionPrompt.value = "Bobby"
 		questionPrompt.prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
 
 		questionPrompt.printFinalPromptLine()
-		require.Equal(t, expectedOutput, questionPrompt.terminal.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
+		require.Equal(t, expectedOutput, questionPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
 	})
 
 	t.Run("should print final prompt line with only prompt when hide is true", func(t *testing.T) {
@@ -483,11 +483,11 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 		var result string
 		passwordPrompt := NewPassword(&result).
 			Title("What is your password?")
-		passwordPrompt.terminal.Out = &bytes.Buffer{}
+		passwordPrompt.Out = &bytes.Buffer{}
 		*passwordPrompt.value = "MySuperSecretPassword"
 		passwordPrompt.prompt = fmt.Sprintf("%s%s ", passwordPrompt.icon.Get(), passwordPrompt.title.Get())
 
 		passwordPrompt.printFinalPromptLine()
-		require.Equal(t, expectedOutput, passwordPrompt.terminal.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when hide is true")
+		require.Equal(t, expectedOutput, passwordPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when hide is true")
 	})
 }

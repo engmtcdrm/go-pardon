@@ -28,7 +28,7 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
+		confirmPrompt.Out = io.Discard
 		assert.Nil(t, confirmPrompt.answer.fn, "Default answer function should be nil")
 	})
 
@@ -40,7 +40,7 @@ func Test_Confirm_AnswerFunc(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?").
 			AnswerFunc(customFn)
-		confirmPrompt.terminal.Out = io.Discard
+		confirmPrompt.Out = io.Discard
 		confirmPrompt.answer.val = "Test"
 		assert.Equal(t, customFn("Test"), confirmPrompt.answer.Get(), "Custom answer function did not return expected result")
 	})
@@ -60,7 +60,7 @@ func Test_Confirm_Ask(t *testing.T) {
 	t.Run("should return error with nil value", func(t *testing.T) {
 		confirmPrompt := NewConfirm(nil).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
+		confirmPrompt.Out = io.Discard
 
 		err := confirmPrompt.Ask()
 		require.Error(t, err, "Expected error when asking with nil value")
@@ -71,8 +71,8 @@ func Test_Confirm_Ask(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
-		confirmPrompt.terminal.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
+		confirmPrompt.Out = io.Discard
+		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
 
 		err := confirmPrompt.Ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -83,8 +83,8 @@ func Test_Confirm_Ask(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
-		confirmPrompt.terminal.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		confirmPrompt.Out = io.Discard
+		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
 
 		err := confirmPrompt.Ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -258,8 +258,8 @@ func Test_Confirm_ask(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
-		confirmPrompt.terminal.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
+		confirmPrompt.Out = io.Discard
+		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.LowerY))
 
 		err := confirmPrompt.ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -270,8 +270,8 @@ func Test_Confirm_ask(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
-		confirmPrompt.terminal.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
+		confirmPrompt.Out = io.Discard
+		confirmPrompt.In.In = testutils.CreateValidTestFile(t, string(keys.CtrlC))
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -282,8 +282,8 @@ func Test_Confirm_ask(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = io.Discard
-		confirmPrompt.terminal.In = bytes.NewBufferString(string(keys.LowerY))
+		confirmPrompt.Out = io.Discard
+		confirmPrompt.In.In = bytes.NewBufferString(string(keys.LowerY))
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")
@@ -370,10 +370,10 @@ func Test_Confirm_printFinalPromptLine(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
-		confirmPrompt.terminal.Out = &bytes.Buffer{}
+		confirmPrompt.Out = &bytes.Buffer{}
 		confirmPrompt.prompt = fmt.Sprintf("%s%s ", confirmPrompt.icon.Get(), confirmPrompt.title.Get())
 		confirmPrompt.printFinalPromptLine()
-		require.Equal(t, expectedOutput, confirmPrompt.terminal.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
+		require.Equal(t, expectedOutput, confirmPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
 	})
 }
 

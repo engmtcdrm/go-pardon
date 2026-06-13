@@ -3,17 +3,25 @@ package pardon
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/mattn/go-runewidth"
+	"golang.org/x/term"
 
 	"github.com/engmtcdrm/go-pardon/internal/keys"
 )
 
 // Select represents a multiple-choice selection prompt.
 type Select[T comparable] struct {
-	terminal     *Terminal
+	// Out is the output writer for the terminal, typically [os.Stdout].
+	Out io.Writer
+
+	// In is the terminal input reader.
+	In *TerminalInput
+
 	icon         eval[string]
 	title        eval[string]
 	cursor       eval[string]
@@ -30,7 +38,8 @@ type Select[T comparable] struct {
 // NewSelect creates a new Select prompt instance.
 func NewSelect[T comparable](value *T) *Select[T] {
 	return &Select[T]{
-		terminal:   NewTerminal(),
+		In:         NewTerminalInput(),
+		Out:        os.Stdout,
 		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		cursor:     eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
@@ -69,18 +78,18 @@ func (s *Select[T]) Ask() error {
 }
 
 func (s *Select[T]) ask() error {
-	s.terminal.Print(ansi.HideCursor)
+	fmt.Fprint(s.Out, ansi.HideCursor)
 	defer func() {
-		s.terminal.Print(ansi.ShowCursor)
+		fmt.Fprint(s.Out, ansi.ShowCursor)
 	}()
 
 	s.prompt = fmt.Sprintf("%s%s", s.icon.Get(), s.title.Get())
-	s.terminal.Println(s.prompt)
+	fmt.Fprintln(s.Out, s.prompt)
 
 	s.renderOptions(false)
 
 	for {
-		input, err := s.terminal.RawRead()
+		input, err := s.In.RawRead()
 		if err != nil {
 			return err
 		}
@@ -162,7 +171,7 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 	case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
 		*s.value = s.options[s.cursorPos].Value
 		s.answer.val = s.options[s.cursorPos].Key
-		visibleOptions := min(len(s.options), s.terminal.GetTerminalHeight()-3)
+		visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)
 		renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 		return true, nil
 	case bytes.Equal(keys.UpArrow, input):
@@ -209,7 +218,7 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	}
 
 	// Write everything at once to minimize flicker
-	s.terminal.Print(output.String())
+	fmt.Fprint(s.Out, output.String())
 }
 
 func (s *Select[T]) updateScrollOffset(termHeight int) {
@@ -222,7 +231,7 @@ func (s *Select[T]) updateScrollOffset(termHeight int) {
 
 // renderOptions displays the list of available options to the user.
 func (s *Select[T]) renderOptions(redraw bool) {
-	termHeight := s.terminal.GetTerminalHeight() - 3
+	termHeight := s.GetTerminalHeight() - 3
 	selectSize := len(s.options)
 
 	s.updateScrollOffset(termHeight)
@@ -238,12 +247,29 @@ func (s *Select[T]) renderOptions(redraw bool) {
 
 			if i != s.cursorPos {
 				cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
-				s.terminal.Printf("%s%s\n", cursor, selectedOption.Key)
+				fmt.Fprintf(s.Out, "%s%s\n", cursor, selectedOption.Key)
 				continue
 			}
 
 			s.selectEval.val = selectedOption.Key
-			s.terminal.Printf("%s%s\n", selectCursor, s.selectEval.Get())
+			fmt.Fprintf(s.Out, "%s%s\n", selectCursor, s.selectEval.Get())
 		}
 	}
+}
+
+// GetTerminalHeight returns the height of the terminal in rows. If the terminal
+// size cannot be determined, it returns a default height of 25 rows.
+func (s *Select[T]) GetTerminalHeight() int {
+	termHeight := 25 // Default height
+
+	f, ok := s.Out.(*os.File)
+	if !ok {
+		return termHeight
+	}
+
+	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
+		termHeight = height
+	}
+
+	return termHeight
 }

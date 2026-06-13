@@ -8,77 +8,15 @@ import (
 	"golang.org/x/term"
 )
 
-type Terminal struct {
-	// Hide indicates whether the input should be hidden (e.g., for password
-	// input).
-	Hide bool
-
-	// Out is the output writer for the terminal, typically [os.Stdout].
-	Out io.Writer
+type TerminalInput struct {
 	// In is the input reader for the terminal, typically [os.Stdin].
 	In io.Reader
 }
 
-// NewTerminal creates a new Terminal instance with default settings for regular
-// input. Output will go to [os.Stdout] and input will be read from [os.Stdin].
-func NewTerminal() *Terminal {
-	return &Terminal{
-		Hide: false,
-		Out:  os.Stdout,
-		In:   os.Stdin,
-	}
-}
-
-// NewHiddenTerminal creates a new Terminal instance configured for hidden input,
-// such as for password prompts. Output will go to [os.Stdout] and input will be
-// read from [os.Stdin].
-func NewHiddenTerminal() *Terminal {
-	input := NewTerminal()
-	input.Hide = true
-
-	return input
-}
-
-// GetTerminalHeight returns the height of the terminal in rows. If the terminal
-// size cannot be determined, it returns a default height of 25 rows.
-func (t *Terminal) GetTerminalHeight() int {
-	termHeight := 25 // Default height
-
-	f, ok := t.Out.(*os.File)
-	if !ok {
-		return termHeight
-	}
-
-	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
-		termHeight = height
-	}
-
-	return termHeight
-}
-
-// Print writes the given arguments to the terminal output.
-func (t *Terminal) Print(a ...any) {
-	fmt.Fprint(t.Out, a...)
-}
-
-// Printf formats according to a format specifier and writes to the terminal
-// output.
-func (t *Terminal) Printf(format string, a ...any) {
-	fmt.Fprintf(t.Out, format, a...)
-}
-
-// Println writes the given arguments to the terminal output, followed by a
-// newline.
-func (t *Terminal) Println(a ...any) {
-	fmt.Fprintln(t.Out, a...)
-}
-
-// PrintInput writes the given arguments to th>e terminal if [Terminal.Hide] is
-// false.
-func (t *Terminal) PrintInput(a ...any) {
-	if !t.Hide {
-		t.Print(a...)
-	}
+// NewTerminalInput creates a new [TerminalInput] instance with input read from
+// [os.Stdin].
+func NewTerminalInput() *TerminalInput {
+	return &TerminalInput{In: os.Stdin}
 }
 
 // RawRead reads input from the terminal in raw mode and returns the raw bytes.
@@ -86,7 +24,7 @@ func (t *Terminal) PrintInput(a ...any) {
 // The caller is responsible for processing the bytes and handling special keys.
 // As well as wrapping this call in a for loop to continue reading until the
 // desired input is complete.
-func (t *Terminal) RawRead() ([]byte, error) {
+func (t *TerminalInput) RawRead() ([]byte, error) {
 	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
 		return nil, err
@@ -114,7 +52,7 @@ func (t *Terminal) RawRead() ([]byte, error) {
 // file and a no-op restore function without error. The caller should defer the
 // restore function to ensure that the terminal state is properly restored after
 // raw input is processed.
-func (t *Terminal) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
+func (t *TerminalInput) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
 	inputFile, ok := t.In.(*os.File)
 	if !ok {
 		return nil, func() {

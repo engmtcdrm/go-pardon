@@ -3,6 +3,8 @@ package pardon
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
@@ -11,7 +13,12 @@ import (
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
 type Confirm struct {
-	terminal   *Terminal
+	// Out is the output writer for the terminal, typically [os.Stdout].
+	Out io.Writer
+
+	// In is the terminal input reader.
+	In *TerminalInput
+
 	value      *bool
 	icon       eval[string]
 	title      eval[string]
@@ -25,7 +32,8 @@ type Confirm struct {
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		terminal:   NewTerminal(),
+		In:         NewTerminalInput(),
+		Out:        os.Stdout,
 		value:      value,
 		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
@@ -106,10 +114,10 @@ func (c *Confirm) ask() error {
 	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
 	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, c.getPromptOptions())
 
-	c.terminal.Print(c.promptOpts)
+	fmt.Fprint(c.Out, c.promptOpts)
 
 	for {
-		input, err := c.terminal.RawRead()
+		input, err := c.In.RawRead()
 		if err != nil {
 			return err
 		}
@@ -175,7 +183,7 @@ func (c *Confirm) printFinalPromptLine() {
 	promptAnswer := c.prompt + c.answer.Get()
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	c.terminal.Print(builder.String())
+	fmt.Fprint(c.Out, builder.String())
 }
 
 func (c *Confirm) processInput(input []byte) (done bool, err error) {

@@ -1,8 +1,6 @@
 package pardon
 
 import (
-	"bytes"
-	"io"
 	"os"
 	"testing"
 
@@ -10,35 +8,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tests for [NewTerminal] function.
+// Tests for [NewTerminalInput] function.
 func Test_NewTerminal(t *testing.T) {
 	t.Run("should create a new Terminal instance with default values", func(t *testing.T) {
-		terminal := NewTerminal()
+		terminal := NewTerminalInput()
 		require.NotNil(t, terminal)
-		require.Equal(t, terminal.Hide, false)
-		require.Equal(t, terminal.Out, os.Stdout)
 		require.Equal(t, terminal.In, os.Stdin)
 	})
 }
 
-// Tests for [NewHiddenTerminal] function.
-func Test_NewHiddenTerminal(t *testing.T) {
-	t.Run("should create a new Terminal instance with Hide set to true", func(t *testing.T) {
-		terminal := NewHiddenTerminal()
-		require.NotNil(t, terminal)
-		require.Equal(t, terminal.Hide, true)
-		require.Equal(t, terminal.Out, os.Stdout)
-		require.Equal(t, terminal.In, os.Stdin)
-	})
-}
-
-// Tests for [Terminal.RawRead] function.
+// Tests for [TerminalInput.RawRead] function.
 func Test_Terminal_RawRead(t *testing.T) {
 	t.Run("should read input from the In and return it as a slice of runes", func(t *testing.T) {
 		_, f := testutils.CreateWritePTY(t, "hello\n")
 
-		terminal := NewTerminal()
-		terminal.Out = io.Discard
+		terminal := NewTerminalInput()
 		terminal.In = f
 
 		var results []byte
@@ -60,8 +44,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 	})
 
 	t.Run("should return an error if In is not a file", func(t *testing.T) {
-		terminal := NewTerminal()
-		terminal.Out = io.Discard
+		terminal := NewTerminalInput()
 		terminal.In = nil
 
 		results, err := terminal.RawRead()
@@ -73,8 +56,7 @@ func Test_Terminal_RawRead(t *testing.T) {
 		f := testutils.CreateValidTestFile(t, "hello\n")
 		defer f.Close()
 
-		terminal := NewTerminal()
-		terminal.Out = io.Discard
+		terminal := NewTerminalInput()
 		terminal.In = f
 
 		var results []byte
@@ -97,26 +79,5 @@ func Test_Terminal_RawRead(t *testing.T) {
 
 	t.Run("should error when term.MakeRaw fails", func(t *testing.T) {
 		t.Skip("Cannot reliably test term.MakeRaw failure without mocking, and mocking is not currently implemented.")
-	})
-}
-
-// Tests for [Terminal.print] function.
-func Test_Terminal_print(t *testing.T) {
-	t.Run("should print the message to the Writer", func(t *testing.T) {
-		terminal := NewTerminal()
-		inputText := "hello"
-		expected := "hello"
-		terminal.Out = &bytes.Buffer{}
-		terminal.PrintInput(inputText)
-		require.Equal(t, expected, terminal.Out.(*bytes.Buffer).String())
-	})
-
-	t.Run("should not print anything if the message is empty", func(t *testing.T) {
-		terminal := NewHiddenTerminal()
-		inputText := "hello"
-		expected := ""
-		terminal.Out = &bytes.Buffer{}
-		terminal.PrintInput(inputText)
-		require.Equal(t, expected, terminal.Out.(*bytes.Buffer).String())
 	})
 }

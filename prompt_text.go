@@ -3,6 +3,7 @@ package pardon
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"unicode/utf8"
@@ -13,12 +14,21 @@ import (
 )
 
 type Text struct {
+	// Out is the output writer for the terminal, typically [os.Stdout].
+	Out io.Writer
+
+	// In is the terminal input reader.
+	In *TerminalInput
+
 	icon       eval[string]
 	title      eval[string]
 	answer     eval[string]
 	validateFn func(string) error
 
-	terminal     *Terminal
+	// hide indicates whether the input should be hidden (e.g., for password
+	// input).
+	hide bool
+
 	prompt       string
 	pendingValue []byte
 	value        *string
@@ -31,7 +41,9 @@ func NewPassword(value *string) *Text {
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
 		validateFn: func(s string) error { return nil },
-		terminal:   NewHiddenTerminal(),
+		In:         NewTerminalInput(),
+		Out:        os.Stdout,
+		hide:       true,
 		value:      value,
 	}
 }
@@ -44,7 +56,8 @@ func NewQuestion(value *string) *Text {
 		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
 		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
 		validateFn: func(s string) error { return nil },
-		terminal:   NewTerminal(),
+		In:         NewTerminalInput(),
+		Out:        os.Stdout,
 		value:      value,
 	}
 }
@@ -76,7 +89,7 @@ func (t *Text) Ask() error {
 
 // Hide sets whether the input should be hidden (e.g., for password input).
 func (t *Text) Hide(hide bool) *Text {
-	t.terminal.Hide = hide
+	t.hide = hide
 	return t
 }
 
@@ -123,11 +136,18 @@ func (t *Text) Value(value *string) *Text {
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
 func (t *Text) ask() error {
+	if t.hide {
+		fmt.Fprint(t.Out, ansi.HideCursor)
+		defer func() {
+			fmt.Fprint(t.Out, ansi.ShowCursor)
+		}()
+	}
+
 	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
-	t.terminal.Print(t.prompt)
+	fmt.Fprint(t.Out, t.prompt)
 
 	for {
-		input, err := t.terminal.RawRead()
+		input, err := t.In.RawRead()
 		if err != nil {
 			return err
 		}
@@ -141,7 +161,7 @@ func (t *Text) ask() error {
 func (t *Text) getPromptLines(prompt string) (int, error) {
 	promptLines := 1
 
-	writer, ok := t.terminal.Out.(*os.File)
+	writer, ok := t.Out.(*os.File)
 	if !ok {
 		return 0, fmt.Errorf("unable to determine prompt lines: output writer is not a file")
 	}
@@ -188,7 +208,7 @@ func (t *Text) printErrorMessage(err error) {
 
 	builder.WriteString(resetLineAbove())
 	builder.WriteString(t.prompt)
-	t.terminal.Print(builder.String())
+	fmt.Fprint(t.Out, builder.String())
 }
 
 // printFinalPromptLine handles printing the final prompt line after successful
@@ -197,7 +217,7 @@ func (t *Text) printFinalPromptLine() {
 	builder := strings.Builder{}
 	// If the input is not hidden, We need to clear the line, then print the
 	// prompt with the answer function applied.
-	if !t.terminal.Hide {
+	if !t.hide {
 		builder.WriteString(ansi.ClearLineReset)
 		t.answer.val = *t.value
 		promptAnswer := t.prompt + t.answer.Get()
@@ -208,7 +228,7 @@ func (t *Text) printFinalPromptLine() {
 	// clear it in case there are any validation error messages that are still
 	// visible.
 	builder.WriteString("\n" + ansi.ClearLineReset)
-	t.terminal.Print(builder.String())
+	fmt.Fprint(t.Out, builder.String())
 }
 
 func (t *Text) processInput(input []byte) (done bool, err error) {
@@ -237,13 +257,19 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 				size = 1
 			}
 			t.pendingValue = t.pendingValue[:len(t.pendingValue)-size]
-			t.terminal.PrintInput("\b \b")
+			t.printInput("\b \b")
 		}
 		return false, nil
 	}
 
 	t.pendingValue = append(t.pendingValue, input...)
-	t.terminal.PrintInput(string(input))
+	t.printInput(string(input))
 
 	return false, nil
+}
+
+func (t *Text) printInput(a ...any) {
+	if !t.hide {
+		fmt.Fprint(t.Out, a...)
+	}
 }
