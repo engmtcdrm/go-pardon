@@ -8,7 +8,6 @@ import (
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/internal/keys"
-	"github.com/engmtcdrm/go-pardon/internal/runekeys"
 	"github.com/engmtcdrm/go-pardon/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -98,7 +97,7 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 	t.Run("default confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.Equal(t, runekeys.UpperY, confirmPrompt.confirmKey, "Default confirm key should be 'Y'")
+		require.True(t, bytes.Equal(confirmPrompt.confirmKey, []byte{keys.UpperY}), "Default confirm key should be 'Y'")
 	})
 
 	t.Run("custom confirm key", func(t *testing.T) {
@@ -383,7 +382,9 @@ func Test_Confirm_processLine(t *testing.T) {
 	t.Run("should return false for empty input", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.False(t, confirmPrompt.processInput([]byte{}), "processLine() should return false for empty input")
+		done, err := confirmPrompt.processInput([]byte{})
+		require.False(t, done, "processLine() should return false for empty input")
+		require.NoError(t, err, "processLine() should not return an error for empty input")
 	})
 
 	t.Run("should return set value if user enters enter character", func(t *testing.T) {
@@ -391,7 +392,9 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		require.True(t, confirmPrompt.processInput([]byte{keys.Enter}), "processLine() should return true when user hits enter key")
+		done, err := confirmPrompt.processInput([]byte{keys.Enter})
+		require.True(t, done, "processLine() should return true when user hits enter key")
+		require.NoError(t, err, "processLine() should not return an error when user hits enter key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits enter key")
 	})
 
@@ -400,7 +403,9 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		require.True(t, confirmPrompt.processInput([]byte{keys.NewLine}), "processLine() should return true when user hits new line key")
+		done, err := confirmPrompt.processInput([]byte{keys.NewLine})
+		require.True(t, done, "processLine() should return true when user hits new line key")
+		require.NoError(t, err, "processLine() should not return an error when user hits new line key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits new line key")
 	})
 
@@ -409,7 +414,9 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.False(t, *confirmPrompt.value, "Initial value should be false")
 
-		require.True(t, confirmPrompt.processInput(confirmPrompt.confirmKey), "processLine() should return true when user confirms")
+		done, err := confirmPrompt.processInput(confirmPrompt.confirmKey)
+		require.True(t, done, "processLine() should return true when user confirms")
+		require.NoError(t, err, "processLine() should not return an error when user confirms")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user confirms")
 	})
 
@@ -418,13 +425,17 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		require.True(t, confirmPrompt.processInput(confirmPrompt.denyKey), "processLine() should return true when user denies")
+		done, err := confirmPrompt.processInput(confirmPrompt.denyKey)
+		require.True(t, done, "processLine() should return true when user denies")
+		require.NoError(t, err, "processLine() should not return an error when user denies")
 		require.False(t, *confirmPrompt.value, "Value should be set to false when user denies")
 	})
 
 	t.Run("should return false for unrecognized input", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.False(t, confirmPrompt.processInput([]byte{keys.UpperO}), "processLine() should return false for unrecognized input")
+		done, err := confirmPrompt.processInput([]byte{keys.UpperO})
+		require.False(t, done, "processLine() should return false for unrecognized input")
+		require.NoError(t, err, "processLine() should not return an error for unrecognized input")
 	})
 }

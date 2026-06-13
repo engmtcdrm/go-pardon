@@ -2,6 +2,7 @@ package pardon
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -82,28 +83,15 @@ func (s *Select[T]) ask() error {
 	for {
 		input, err := s.terminal.RawRead2()
 		if err != nil {
+			if errors.Is(err, ErrUserAborted) {
+				return err
+			}
+
 			return err
 		}
 
-		if len(input) == 0 {
-			continue
-		}
-
-		switch {
-		case bytes.Equal([]byte{keys.CtrlC}, input):
-			return ErrUserAborted
-		case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
-			*s.value = s.options[s.cursorPos].Value
-			s.answer.val = s.options[s.cursorPos].Key
-			visibleOptions := min(len(s.options), s.terminal.GetTerminalHeight()-3)
-			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
-			return nil
-		case bytes.Equal(keys.UpArrow, input):
-			s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
-			s.renderOptions(true)
-		case bytes.Equal(keys.DownArrow, input):
-			s.cursorPos = (s.cursorPos + 1) % len(s.options)
-			s.renderOptions(true)
+		if done, err := s.processInput(input); done {
+			return err
 		}
 	}
 }
@@ -166,6 +154,31 @@ func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
 func (s *Select[T]) Value(value *T) *Select[T] {
 	s.value = value
 	return s
+}
+
+func (s *Select[T]) processInput(input []byte) (done bool, err error) {
+	if len(input) == 0 {
+		return false, nil
+	}
+
+	switch {
+	case bytes.Equal([]byte{keys.CtrlC}, input):
+		return true, ErrUserAborted
+	case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
+		*s.value = s.options[s.cursorPos].Value
+		s.answer.val = s.options[s.cursorPos].Key
+		visibleOptions := min(len(s.options), s.terminal.GetTerminalHeight()-3)
+		renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
+		return true, nil
+	case bytes.Equal(keys.UpArrow, input):
+		s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
+		s.renderOptions(true)
+	case bytes.Equal(keys.DownArrow, input):
+		s.cursorPos = (s.cursorPos + 1) % len(s.options)
+		s.renderOptions(true)
+	}
+
+	return false, nil
 }
 
 func (s *Select[T]) redraw(selectSize, termHeight int) {

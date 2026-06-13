@@ -2,7 +2,6 @@ package pardon
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -110,20 +109,13 @@ func (c *Confirm) ask() error {
 	c.terminal.Print(c.promptOpts)
 
 	for {
-		c.terminal.Reset()
 		input, err := c.terminal.RawRead2()
 		if err != nil {
-			if errors.Is(err, ErrUserAborted) {
-				c.terminal.Print(ansi.ClearLineReset + c.prompt)
-				return err
-			}
-
 			return err
 		}
 
-		if done := c.processInput(input); done {
-			c.printFinalPromptLine()
-			return nil
+		if done, err := c.processInput(input); done {
+			return err
 		}
 	}
 }
@@ -186,24 +178,28 @@ func (c *Confirm) printFinalPromptLine() {
 	c.terminal.Print(builder.String())
 }
 
-func (c *Confirm) processInput(line []byte) (done bool) {
-	if len(line) == 0 {
-		return false
+func (c *Confirm) processInput(input []byte) (done bool, err error) {
+	if len(input) == 0 {
+		return false, nil
 	}
 
 	// If user hit enter, use the current value of [Confirm.value] as the input
-	if line[0] == keys.Enter || line[0] == keys.NewLine {
-		line = c.getValueAsBytes()
+	if input[0] == keys.Enter || input[0] == keys.NewLine {
+		input = c.getValueAsBytes()
 	}
 
 	switch {
-	case bytes.EqualFold(c.confirmKey, line):
+	case bytes.Equal([]byte{keys.CtrlC}, input):
+		return true, ErrUserAborted
+	case bytes.EqualFold(c.confirmKey, input):
 		*c.value = true
-		return true
-	case bytes.EqualFold(c.denyKey, line):
+		c.printFinalPromptLine()
+		return true, nil
+	case bytes.EqualFold(c.denyKey, input):
 		*c.value = false
-		return true
+		c.printFinalPromptLine()
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
