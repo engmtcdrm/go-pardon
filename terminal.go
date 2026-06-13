@@ -31,6 +31,10 @@ type Terminal struct {
 	// input.
 	result []rune
 
+	// lastInputWasEscSeq tracks whether the previous input was part of an escape sequence.
+	// This helps with proper handling of multi-byte terminal input sequences.
+	lastInputWasEscSeq bool
+
 	CustomHandler func(t *Terminal, r rune) (done bool)
 }
 
@@ -301,25 +305,25 @@ func (t *Terminal) GetInput() (byte, error) {
 	if read > 3 {
 		// Buffer all characters except the first one
 		t.pending = append(t.pending, readBytes[1:read]...)
-		lastInputWasEscSeq = false
+		t.lastInputWasEscSeq = false
 		return readBytes[0], nil
 	}
 
 	// Handle escape sequences (arrow keys)
 	if read == 3 && readBytes[0] == keys.Escape && readBytes[1] == keys.LeftBracket {
 		// This is a proper ANSI escape sequence (ESC[X)
-		if _, ok := navigationKeys[readBytes[2]]; ok {
-			lastInputWasEscSeq = true
+		if _, ok := keys.Navigation[readBytes[2]]; ok {
+			t.lastInputWasEscSeq = true
 			return readBytes[2], nil
 		}
 		// If it's an escape sequence but not a navigation key, ignore it
-		lastInputWasEscSeq = false
+		t.lastInputWasEscSeq = false
 		return 0, nil
 	}
 
 	// For any other input (1, 2, or 3 bytes that aren't escape sequences),
 	// return the first byte which contains the actual character
-	lastInputWasEscSeq = false
+	t.lastInputWasEscSeq = false
 	if read > 0 {
 		return readBytes[0], nil
 	}
