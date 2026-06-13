@@ -54,16 +54,6 @@ func NewHiddenTerminal() *Terminal {
 	return input
 }
 
-// NewConfirmTerminal creates a new Terminal instance configured for
-// confirmation prompts. Output will go to [os.Stdout] and input will be read
-// from [os.Stdin].
-func NewConfirmTerminal() *Terminal {
-	input := NewTerminal()
-	input.Confirm = true
-
-	return input
-}
-
 // GetTerminalHeight returns the height of the terminal in rows. If the terminal
 // size cannot be determined, it returns a default height of 25 rows.
 func (t *Terminal) GetTerminalHeight() int {

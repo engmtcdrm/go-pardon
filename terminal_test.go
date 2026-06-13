@@ -34,18 +34,6 @@ func Test_NewHiddenTerminal(t *testing.T) {
 	})
 }
 
-// Tests for [NewConfirmTerminal] function.
-func Test_NewConfirmTerminal(t *testing.T) {
-	t.Run("should create a new Terminal instance with Confirm set to true", func(t *testing.T) {
-		terminal := NewConfirmTerminal()
-		require.NotNil(t, terminal)
-		require.Equal(t, terminal.Hide, false)
-		require.Equal(t, terminal.Confirm, true)
-		require.Equal(t, terminal.Out, os.Stdout)
-		require.Equal(t, terminal.In, os.Stdin)
-	})
-}
-
 // Tests for [Terminal.RawRead] function.
 func Test_Terminal_RawRead(t *testing.T) {
 	t.Run("should read input from the In and return it as a slice of runes", func(t *testing.T) {
@@ -314,17 +302,6 @@ func Test_Terminal_processPending(t *testing.T) {
 		require.False(t, done)
 		require.Nil(t, returnRunes, "runes should be nil on invalid full rune")
 		require.Equal(t, []byte{0xE2}, terminal.pending, "expected pending unchanged")
-	})
-
-	t.Run("valid confirm input", func(t *testing.T) {
-		terminal := NewConfirmTerminal()
-		terminal.Out = io.Discard
-		terminal.pending = []byte{keys.UpperN}
-
-		returnRunes, done, err := terminal.processPending()
-		require.NoError(t, err)
-		require.True(t, done)
-		require.Equal(t, []rune{runekeys.UpperN}, returnRunes)
 	})
 }
 
