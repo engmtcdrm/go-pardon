@@ -1,12 +1,14 @@
 package pardon
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/internal/keys"
 	"golang.org/x/term"
 )
 
@@ -16,9 +18,10 @@ type Text struct {
 	answer     eval[string]
 	validateFn func(string) error
 
-	terminal *Terminal
-	prompt   string
-	value    *string
+	terminal     *Terminal
+	prompt       string
+	pendingValue []byte
+	value        *string
 }
 
 // NewPassword creates an InputPrompt for secure password input with masking.
@@ -124,29 +127,15 @@ func (t *Text) ask() error {
 	t.terminal.Print(t.prompt)
 
 	for {
-		t.terminal.Reset()
-		line, err := t.terminal.RawRead()
+		input, err := t.terminal.RawRead()
 		if err != nil {
-			if errors.Is(err, ErrUserAborted) {
-				t.terminal.Print(ansi.ClearLineReset + t.prompt)
-				return err
-			}
 			return err
 		}
 
-		pendingValue := strings.TrimSpace(string(line))
-		if err := t.validateFn(pendingValue); err != nil {
-			t.printErrorMessage(err)
-			continue
+		if done, err := t.processInput(input); done {
+			return err
 		}
-
-		*t.value = pendingValue
-		break
 	}
-
-	t.printFinalPromptLine()
-
-	return nil
 }
 
 func (t *Text) getPromptLines(prompt string) (int, error) {
@@ -220,4 +209,41 @@ func (t *Text) printFinalPromptLine() {
 	// visible.
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	t.terminal.Print(builder.String())
+}
+
+func (t *Text) processInput(input []byte) (done bool, err error) {
+	if len(input) == 0 {
+		return false, nil
+	}
+
+	switch {
+	case bytes.Equal([]byte{keys.CtrlC}, input):
+		return true, ErrUserAborted
+	case bytes.Equal([]byte{keys.Enter}, input), bytes.Equal([]byte{keys.NewLine}, input):
+		if err := t.validateFn(string(t.pendingValue)); err != nil {
+			t.printErrorMessage(err)
+			return false, nil
+		}
+
+		*t.value = string(t.pendingValue)
+
+		t.printFinalPromptLine()
+		return true, nil
+	case bytes.Equal([]byte{keys.Delete}, input), bytes.Equal([]byte{keys.Backspace}, input):
+		if len(t.pendingValue) > 0 {
+			// Remove last UTF-8 rune (safe for multi-byte characters).
+			_, size := utf8.DecodeLastRune(t.pendingValue)
+			if size <= 0 {
+				size = 1
+			}
+			t.pendingValue = t.pendingValue[:len(t.pendingValue)-size]
+			t.terminal.PrintInput("\b \b")
+		}
+		return false, nil
+	}
+
+	t.pendingValue = append(t.pendingValue, input...)
+	t.terminal.PrintInput(string(input))
+
+	return false, nil
 }

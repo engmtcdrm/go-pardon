@@ -2,7 +2,6 @@ package pardon
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -81,12 +80,8 @@ func (s *Select[T]) ask() error {
 	s.renderOptions(false)
 
 	for {
-		input, err := s.terminal.RawRead2()
+		input, err := s.terminal.RawRead()
 		if err != nil {
-			if errors.Is(err, ErrUserAborted) {
-				return err
-			}
-
 			return err
 		}
 

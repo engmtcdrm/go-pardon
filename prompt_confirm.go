@@ -109,7 +109,7 @@ func (c *Confirm) ask() error {
 	c.terminal.Print(c.promptOpts)
 
 	for {
-		input, err := c.terminal.RawRead2()
+		input, err := c.terminal.RawRead()
 		if err != nil {
 			return err
 		}
