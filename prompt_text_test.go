@@ -340,6 +340,33 @@ func Test_Text_ask(t *testing.T) {
 	})
 }
 
+// Tests for [Text.processInput] function.
+func Test_Text_processInput(t *testing.T) {
+	t.Run("should return done true and set value on Enter key", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result)
+		questionPrompt.Out = io.Discard
+
+		expectedOutput := "input test"
+
+		done, err := questionPrompt.processInput([]byte(expectedOutput + "\r"))
+		require.NoError(t, err, "Expected no error when processing input with Enter key")
+		require.True(t, done, "Expected done to be true when Enter key is pressed")
+		require.Equal(t, expectedOutput, result, "Expected value to be set to 'input test' when Enter key is pressed")
+	})
+
+	t.Run("should return done true and set value on Enter key2", func(t *testing.T) {
+		var result string
+		questionPrompt := NewQuestion(&result)
+		questionPrompt.Out = io.Discard
+		questionPrompt.In.Reader = testutils.CreateValidTestFile(t, "input ❤️"+ansi.Red+"Apple"+ansi.Reset+"\r")
+
+		err := questionPrompt.ask()
+		require.NoError(t, err, "Expected no error when processing input with Enter key")
+		require.Equal(t, "input Apple", result, "Expected value to be set to 'input Apple' when Enter key is pressed")
+	})
+}
+
 func TestFiles(t *testing.T) {
 	const expectedResult = "Bobby"
 	f := testutils.CreateValidTestFile(t, expectedResult+"\n"+expectedResult+"2\r")
