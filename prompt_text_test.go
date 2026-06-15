@@ -328,9 +328,7 @@ func Test_Text_ask(t *testing.T) {
 			})
 		questionPrompt.Out = mockTTY
 		// Buffer size is 8 so need to pad two empty spaces to emulate stdin clearing the line after validation error is printed.
-		// questionPrompt.In.Reader = testutils.CreateValidTestFile(t, expectedResult+"\n\x00\x00"+expectedResult+"2\r")
-		questionPrompt.In.Reader = testutils.CreateValidTestFile(t, expectedResult+"\n")
-
+		questionPrompt.In.Reader = testutils.CreateValidTestFile(t, expectedResult+"\n  "+expectedResult+"2\r")
 		err := questionPrompt.ask()
 		require.NoError(t, err, "Expected no error when validation fails")
 		require.Equal(t, expectedResult+"2", result, "Expected result to be 'Bobby2' after correcting validation error")
@@ -360,7 +358,7 @@ func Test_Text_processInput(t *testing.T) {
 
 		err := questionPrompt.ask()
 		require.NoError(t, err, "Expected no error when processing input with Enter key")
-		require.Equal(t, "input Apple", result, "Expected value to be set to 'input Apple' when Enter key is pressed")
+		require.Equal(t, "input ❤️Apple", result, "Expected value to be set to 'input Apple' when Enter key is pressed")
 	})
 }
 

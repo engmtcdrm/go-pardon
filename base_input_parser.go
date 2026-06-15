@@ -56,6 +56,9 @@ func (bp *BaseInputParser) processEnter(r keys.Key, handler KeyHandler) (done bo
 }
 
 func (bp *BaseInputParser) processEscapeSequence(r keys.Key, handler KeyHandler) (done bool, err error) {
+	defer func() {
+		bp.pendingEscSequence = nil
+	}()
 	bp.pendingEscSequence = append(bp.pendingEscSequence, r)
 	if len(bp.pendingInputRuneKeys) == 1 {
 		// We have an escape character but no more input, so we should wait
@@ -94,7 +97,7 @@ func (bp *BaseInputParser) processEscapeSequence(r keys.Key, handler KeyHandler)
 
 		bp.pendingInputRuneKeys = bp.pendingInputRuneKeys[toRemove:]
 	}
-	return false, nil
+	return true, nil
 }
 
 type TestTest struct {
