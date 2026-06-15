@@ -10,6 +10,7 @@ import (
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/mattn/go-runewidth"
 	"golang.org/x/term"
 )
 
@@ -29,9 +30,11 @@ type Text struct {
 	// input).
 	hide bool
 
-	prompt       string
-	pendingValue []byte
-	value        *string
+	prompt           string
+	pendingInput     []byte
+	pendingInputRune []rune
+	pendingValue     []rune
+	value            *string
 }
 
 // NewPassword creates an InputPrompt for secure password input with masking.
@@ -231,39 +234,99 @@ func (t *Text) printFinalPromptLine() {
 	fmt.Fprint(t.Out, builder.String())
 }
 
+func (t *Text) parseInputToRunes() (needMoreInput bool) {
+	for len(t.pendingInput) > 0 {
+		r, width := utf8.DecodeRune(t.pendingInput)
+		// If we encounter an invalid UTF-8 sequence, we should wait for more input
+		if r == utf8.RuneError {
+			return true
+		}
+
+		t.pendingInput = t.pendingInput[width:]
+		nk := keys.New([]byte(string(r))...)
+		_ = nk
+		t.pendingInputRune = append(t.pendingInputRune, r)
+	}
+
+	return false
+}
+
 func (t *Text) processInput(input []byte) (done bool, err error) {
-	if len(input) == 0 {
+	t.pendingInput = append(t.pendingInput, input...)
+
+	// Parse pending input bytes into runes
+	if needMoreInput := t.parseInputToRunes(); needMoreInput {
 		return false, nil
 	}
 
-	switch {
-	case bytes.Equal(input, keys.CtrlC):
-		return true, ErrUserAborted
-	case bytes.Equal(input, keys.Enter), bytes.Equal(input, keys.Newline):
-		if err := t.validateFn(string(t.pendingValue)); err != nil {
-			t.printErrorMessage(err)
-			return false, nil
-		}
+	pendingEscSequence := []rune{}
 
-		*t.value = string(t.pendingValue)
-
-		t.printFinalPromptLine()
-		return true, nil
-	case bytes.Equal(input, keys.Delete), bytes.Equal(input, keys.Backspace):
-		if len(t.pendingValue) > 0 {
-			// Remove last UTF-8 rune (safe for multi-byte characters).
-			_, size := utf8.DecodeLastRune(t.pendingValue)
-			if size <= 0 {
-				size = 1
+	// Process pending input runes
+	for len(t.pendingInputRune) > 0 {
+		r := t.pendingInputRune[0]
+		br := []byte(string(r))
+		switch {
+		case bytes.Equal(br, keys.CtrlC):
+			return true, ErrUserAborted
+		case bytes.Equal(br, keys.Enter), bytes.Equal(br, keys.Newline):
+			if err := t.validateFn(string(t.pendingValue)); err != nil {
+				t.printErrorMessage(err)
+				t.pendingInput = nil
+				t.pendingValue = nil
+				t.pendingInputRune = nil
+				return false, nil
 			}
-			t.pendingValue = t.pendingValue[:len(t.pendingValue)-size]
-			t.printInput("\b \b")
+
+			*t.value = string(t.pendingValue)
+
+			t.printFinalPromptLine()
+			return true, nil
+		case bytes.Equal(br, keys.Delete), bytes.Equal(br, keys.Backspace):
+			if len(t.pendingValue) > 0 {
+				size2 := runewidth.RuneWidth(t.pendingValue[len(t.pendingValue)-1])
+				_ = size2
+				size := utf8.RuneLen(t.pendingValue[len(t.pendingValue)-1])
+				t.pendingValue = t.pendingValue[:len(t.pendingValue)-size]
+				t.pendingInputRune = t.pendingInputRune[1:]
+				t.printInput("\b \b")
+			}
+			return false, nil
+		case bytes.Equal(br, keys.Escape):
+			pendingEscSequence = append(pendingEscSequence, r)
+			if len(t.pendingInputRune) == 1 {
+				// We have an escape character but no more input, so we should wait
+				// for more input before processing.
+				return false, nil
+			}
+			nextRune := t.pendingInputRune[1]
+			pendingEscSequence = append(pendingEscSequence, nextRune)
+			pendingEscSequenceKey := keys.New([]byte(string(pendingEscSequence))...)
+			if keys.IsFeEscapeSequence(pendingEscSequenceKey) {
+				if len(t.pendingInputRune) == 2 {
+					return false, nil
+				}
+
+				tempRunes := keys.New([]byte(string(t.pendingInputRune[2:]))...)
+				seqEndIdx := keys.IndexOfSequenceEnd(tempRunes)
+				if seqEndIdx == -1 {
+					// We have the start of an escape sequence but we don't have the full sequence yet,
+					// so we should wait for more input before processing.
+					return false, nil
+				}
+
+				toRemove := 3 + seqEndIdx
+
+				t.pendingInputRune = t.pendingInputRune[toRemove:]
+				continue
+			}
 		}
-		return false, nil
+
+		t.pendingValue = append(t.pendingValue, r)
+		t.pendingInputRune = t.pendingInputRune[1:]
+		t.printInput(string(r))
 	}
 
-	t.pendingValue = append(t.pendingValue, input...)
-	t.printInput(string(input))
+	t.pendingInputRune = nil
 
 	return false, nil
 }
