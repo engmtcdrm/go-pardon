@@ -3,15 +3,16 @@ module github.com/engmtcdrm/go-pardon
 go 1.26.4
 
 require (
+	github.com/clipperhouse/uax29/v2 v2.7.0
 	github.com/creack/pty v1.1.24
 	github.com/engmtcdrm/go-ansi v1.0.2
 	github.com/mattn/go-runewidth v0.0.24
+	github.com/rivo/uniseg v0.4.7
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/term v0.44.0
 )
 
 require (
-	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect

@@ -1,1 +1,1 @@
-input ❤️[31mApple[0m
+input ❤️ [31mApple[0m

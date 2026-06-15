@@ -1,6 +1,6 @@
 package keys
 
-func IsFeEscapeSequence(key Key) bool {
+func IsFeEscapeSequenceRune(key Key) bool {
 	if len(key) != 2 {
 		return false
 	}
@@ -16,7 +16,7 @@ func IsFeEscapeSequence(key Key) bool {
 	return true
 }
 
-func IsSequenceEnd(key Key) bool {
+func IsSequenceEndRune(key Key) bool {
 	if len(key) != 1 {
 		return false
 	}
@@ -28,7 +28,7 @@ func IsSequenceEnd(key Key) bool {
 	return true
 }
 
-func HasSequenceEnd(key Key) bool {
+func HasSequenceEndRune(key Key) bool {
 	for _, b := range key {
 		if b >= 0x40 && b <= 0x7E {
 			return true
@@ -38,7 +38,7 @@ func HasSequenceEnd(key Key) bool {
 	return false
 }
 
-func IndexOfSequenceEnd(key Key) int {
+func IndexOfSequenceEndRune(key Key) int {
 	for i, b := range key {
 		if b >= 0x40 && b <= 0x7E {
 			return i

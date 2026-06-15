@@ -1,18 +1,23 @@
 package pardon
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 )
 
-// equal compares a byte slice to a variadic list of bytes for equality. It
-// calls [bytes.Equal] under the hood but provides a more convenient interface
-// for comparing against single byte values without needing to create a slice.
-func equal(a []byte, b ...byte) bool {
-	return bytes.Equal(a, b)
+// equal reports whether a and b are the same length and contain the same runes.
+// A nil argument is equivalent to an empty slice.
+func equal(a []rune, b []rune) bool {
+	return string(a) == string(b)
+}
+
+// equalFold reports whether a and b, interpreted as UTF-8 strings,
+// are equal under simple Unicode case-folding, which is a more general
+// form of case-insensitivity.
+func equalFold(a []rune, b ...rune) bool {
+	return strings.EqualFold(string(a), string(b))
 }
 
 // renderClearAndReposition clears lines and renders final answer.

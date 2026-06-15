@@ -13,6 +13,7 @@ import (
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
 type Confirm struct {
+	BaseInputParser
 	// Out is the output writer for the terminal, typically [os.Stdout].
 	Out io.Writer
 
@@ -132,11 +133,11 @@ func (c *Confirm) ask() error {
 func (c *Confirm) getPromptOptions() string {
 	var confirmKey, denyKey []byte
 	if *c.value {
-		confirmKey = bytes.ToUpper(c.confirmKey)
-		denyKey = bytes.ToLower(c.denyKey)
+		confirmKey = bytes.ToUpper(c.confirmKey.Bytes())
+		denyKey = bytes.ToLower(c.denyKey.Bytes())
 	} else {
-		confirmKey = bytes.ToLower(c.confirmKey)
-		denyKey = bytes.ToUpper(c.denyKey)
+		confirmKey = bytes.ToLower(c.confirmKey.Bytes())
+		denyKey = bytes.ToUpper(c.denyKey.Bytes())
 	}
 
 	builder := strings.Builder{}
@@ -161,7 +162,7 @@ func (c *Confirm) getPromptOptions() string {
 	return builder.String()
 }
 
-func (c *Confirm) getValueAsBytes() []byte {
+func (c *Confirm) getValueAsRuneKey() keys.Key {
 	if *c.value {
 		return c.confirmKey
 	}
@@ -192,22 +193,33 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
-	// If user hit enter, use the current value of [Confirm.value] as the input
-	if bytes.Equal(keys.Enter, input) || bytes.Equal(keys.Newline, input) {
-		input = c.getValueAsBytes()
+	c.pendingInput = append(c.pendingInput, input...)
+
+	if needMoreInput := c.parseInputToRuneKeys(); needMoreInput {
+		return false, nil
 	}
 
-	switch {
-	case bytes.Equal(input, keys.CtrlC):
-		return true, ErrUserAborted
-	case bytes.EqualFold(c.confirmKey, input):
-		*c.value = true
-		c.printFinalPromptLine()
-		return true, nil
-	case bytes.EqualFold(c.denyKey, input):
-		*c.value = false
-		c.printFinalPromptLine()
-		return true, nil
+	for len(c.pendingInputRuneKeys) > 0 {
+		r := c.pendingInputRuneKeys[0]
+		// If user hit enter, use the current value of [Confirm.value] as the input
+		if equal(r, keys.Enter) || equal(r, keys.Newline) {
+			r = c.getValueAsRuneKey()
+		}
+
+		switch {
+		case equal(r, keys.CtrlC):
+			return true, ErrUserAborted
+		case equalFold(r, c.confirmKey...):
+			*c.value = true
+			c.printFinalPromptLine()
+			return true, nil
+		case equalFold(r, c.denyKey...):
+			*c.value = false
+			c.printFinalPromptLine()
+			return true, nil
+		}
+
+		c.pendingInputRuneKeys = c.pendingInputRuneKeys[1:]
 	}
 
 	return false, nil

@@ -1,7 +1,6 @@
 package pardon
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/mattn/go-runewidth"
+	"github.com/rivo/uniseg"
 	"golang.org/x/term"
 
 	"github.com/engmtcdrm/go-pardon/keys"
@@ -16,23 +16,25 @@ import (
 
 // Select represents a multiple-choice selection prompt.
 type Select[T comparable] struct {
+	BaseInputParser
 	// Out is the output writer for the terminal, typically [os.Stdout].
 	Out io.Writer
 
 	// In is the terminal input reader.
 	In *TerminalInput
 
-	icon         eval[string]
-	title        eval[string]
-	cursor       eval[string]
-	answer       eval[string]
-	selectEval   eval[string] // cannot use select because it is a reserved keyword
-	options      []Option[T]
-	selectFn     func(string) string
-	prompt       string
-	cursorPos    int
-	scrollOffset int
-	value        *T
+	icon            eval[string]
+	title           eval[string]
+	cursor          eval[string]
+	answer          eval[string]
+	selectEval      eval[string] // cannot use select because it is a reserved keyword
+	options         []Option[T]
+	selectFn        func(string) string
+	prompt          string
+	cursorPos       int
+	cursorCharWidth int
+	scrollOffset    int
+	value           *T
 }
 
 // NewSelect creates a new Select prompt instance.
@@ -165,23 +167,49 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
+	s.pendingInput = append(s.pendingInput, input...)
+
+	if needMoreInput := s.parseInputToRuneKeys(); needMoreInput {
+		return false, nil
+	}
+
+	s.pendingEscSequence = keys.Keys{}
+
+	for len(s.pendingInputRuneKeys) > 0 {
+		r := s.pendingInputRuneKeys[0]
+
+		switch {
+		case equal(r, keys.CtrlC):
+			return true, ErrUserAborted
+		case equal(r, keys.Enter), equal(r, keys.Newline):
+			*s.value = s.options[s.cursorPos].Value
+			s.answer.val = s.options[s.cursorPos].Key
+			visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)
+			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
+			return true, nil
+		case equal(r, keys.Escape):
+			doContinue, err := s.processEscapeSequence(r, s.escapeSequenceHandler)
+			if !doContinue {
+				return false, err
+			}
+			continue
+		}
+
+		s.pendingInputRuneKeys = s.pendingInputRuneKeys[1:]
+	}
+
+	return false, nil
+}
+
+func (s *Select[T]) escapeSequenceHandler(seq keys.Key) (done bool, err error) {
 	switch {
-	case bytes.Equal(input, keys.CtrlC):
-		return true, ErrUserAborted
-	case bytes.Equal(input, keys.Enter), bytes.Equal(input, keys.Newline):
-		*s.value = s.options[s.cursorPos].Value
-		s.answer.val = s.options[s.cursorPos].Key
-		visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)
-		renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
-		return true, nil
-	case bytes.Equal(keys.UpArrow, input):
+	case equal(seq, keys.UpArrow):
 		s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 		s.renderOptions(true)
-	case bytes.Equal(keys.DownArrow, input):
+	case equal(seq, keys.DownArrow):
 		s.cursorPos = (s.cursorPos + 1) % len(s.options)
 		s.renderOptions(true)
 	}
-
 	return false, nil
 }
 
@@ -198,7 +226,9 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	// Build all lines in memory first
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
 		selectedOption := s.options[i]
-		cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
+		cwidth := runewidth.StringWidth(ansi.Strip(selectCursor))
+		cursor := strings.Repeat(" ", cwidth)
+		uniseg.StringWidth(ansi.Strip(selectCursor))
 
 		// Clear line and build content
 		output.WriteString("\r")
@@ -246,7 +276,8 @@ func (s *Select[T]) renderOptions(redraw bool) {
 			selectedOption := s.options[i]
 
 			if i != s.cursorPos {
-				cursor := strings.Repeat(" ", runewidth.StringWidth(ansi.Strip(selectCursor)))
+				cwidth := runewidth.StringWidth(ansi.Strip(selectCursor))
+				cursor := strings.Repeat(" ", cwidth)
 				fmt.Fprintf(s.Out, "%s%s\n", cursor, selectedOption.Key)
 				continue
 			}
