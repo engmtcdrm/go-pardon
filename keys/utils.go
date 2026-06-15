@@ -15,3 +15,35 @@ func IsFeEscapeSequence(key Key) bool {
 
 	return true
 }
+
+func IsSequenceEnd(key Key) bool {
+	if len(key) != 1 {
+		return false
+	}
+
+	if key[0] < 0x40 || key[0] > 0x7E {
+		return false
+	}
+
+	return true
+}
+
+func HasSequenceEnd(key Key) bool {
+	for _, b := range key {
+		if b >= 0x40 && b <= 0x7E {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IndexOfSequenceEnd(key Key) int {
+	for i, b := range key {
+		if b >= 0x40 && b <= 0x7E {
+			return i
+		}
+	}
+
+	return -1
+}
