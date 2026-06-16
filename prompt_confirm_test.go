@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/grapheme"
 	"github.com/engmtcdrm/go-pardon/internal/testutils"
-	"github.com/engmtcdrm/go-pardon/keys"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -72,7 +72,7 @@ func Test_Confirm_Ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.LowerY.String())
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, grapheme.New('y').String())
 
 		err := confirmPrompt.Ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -84,7 +84,7 @@ func Test_Confirm_Ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.CtrlC.String())
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, grapheme.CtrlC.String())
 
 		err := confirmPrompt.Ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -97,14 +97,16 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 	t.Run("default confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.confirmKey, keys.UpperY), "Default confirm key should be 'Y'")
+		require.True(t, equal(confirmPrompt.confirmKeyCluster, grapheme.UpperY), "Default confirm key should be 'Y'")
 	})
 
 	t.Run("custom confirm key", func(t *testing.T) {
+		confirmKey := grapheme.New('O')
+
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(keys.UpperO)
-		require.True(t, equal(confirmPrompt.confirmKey, keys.UpperO), "Custom confirm key should be 'O'")
+			ConfirmKey(confirmKey)
+		require.True(t, equal(confirmPrompt.confirmKeyCluster, confirmKey), "Custom confirm key should be 'O'")
 	})
 }
 
@@ -113,14 +115,16 @@ func Test_Confirm_DenyKey(t *testing.T) {
 	t.Run("default deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.denyKey, keys.UpperN), "Default deny key should be 'N'")
+		require.True(t, equal(confirmPrompt.denyKeyCluster, grapheme.UpperN), "Default deny key should be 'N'")
 	})
 
 	t.Run("custom deny key", func(t *testing.T) {
+		denyKey := grapheme.New('O')
+
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			DenyKey(keys.UpperO)
-		require.True(t, equal(confirmPrompt.denyKey, keys.UpperO), "Custom deny key should be 'O'")
+			DenyKey(denyKey)
+		require.True(t, equal(confirmPrompt.denyKeyCluster, denyKey), "Custom deny key should be 'O'")
 	})
 }
 
@@ -259,7 +263,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.LowerY.String())
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, grapheme.New('y').String())
 
 		err := confirmPrompt.ask()
 		require.NoError(t, err, "Expected no error when asking with valid input")
@@ -271,7 +275,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.CtrlC.String())
+		confirmPrompt.In.Reader = testutils.CreateValidTestFile(t, grapheme.CtrlC.String())
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -283,7 +287,7 @@ func Test_Confirm_ask(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = io.Discard
-		confirmPrompt.In.Reader = bytes.NewBufferString(keys.LowerY.String())
+		confirmPrompt.In.Reader = bytes.NewBufferString(grapheme.New('y').String())
 
 		err := confirmPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")
@@ -306,8 +310,8 @@ func Test_Confirm_getPromptOptions(t *testing.T) {
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(keys.UpperO).
-			DenyKey(keys.UpperA)
+			ConfirmKey(grapheme.New('O')).
+			DenyKey(grapheme.New('A'))
 		expectedOptions := "[o/A]"
 		require.Equal(t, expectedOptions, confirmPrompt.getPromptOptions(), "getPromptOptions() did not return expected options with custom keys")
 
@@ -322,21 +326,21 @@ func Test_Confirm_getValueAsBytes(t *testing.T) {
 	t.Run("with default confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.denyKey, confirmPrompt.getValueAsRuneKey()), "getValueAsBytes() did not return expected bytes when value is false")
+		require.True(t, equal(confirmPrompt.denyKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes when value is false")
 
 		result = true
-		require.True(t, equal(confirmPrompt.confirmKey, confirmPrompt.getValueAsRuneKey()), "getValueAsBytes() did not return expected bytes when value is true")
+		require.True(t, equal(confirmPrompt.confirmKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes when value is true")
 	})
 
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(keys.UpperO).
-			DenyKey(keys.UpperA)
-		require.True(t, equal(confirmPrompt.denyKey, confirmPrompt.getValueAsRuneKey()), "getValueAsBytes() did not return expected bytes with custom keys when value is false")
+			ConfirmKey(grapheme.New('O')).
+			DenyKey(grapheme.New('A'))
+		require.True(t, equal(confirmPrompt.denyKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes with custom keys when value is false")
 
 		result = true
-		require.True(t, equal(confirmPrompt.confirmKey, confirmPrompt.getValueAsRuneKey()), "getValueAsBytes() did not return expected bytes with custom keys when value is true")
+		require.True(t, equal(confirmPrompt.confirmKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes with custom keys when value is true")
 	})
 }
 
@@ -354,8 +358,8 @@ func Test_Confirm_getValueAsString(t *testing.T) {
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
-			ConfirmKey(keys.UpperO).
-			DenyKey(keys.UpperA)
+			ConfirmKey(grapheme.New('O')).
+			DenyKey(grapheme.New('A'))
 		require.Equal(t, "A", confirmPrompt.getValueAsString(), "getValueAsString() did not return expected string with custom keys when value is false")
 
 		result = true
@@ -392,7 +396,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		done, err := confirmPrompt.processInput(keys.Enter.Bytes())
+		done, err := confirmPrompt.processInput(grapheme.Enter.Bytes())
 		require.True(t, done, "processLine() should return true when user hits enter key")
 		require.NoError(t, err, "processLine() should not return an error when user hits enter key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits enter key")
@@ -403,7 +407,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		done, err := confirmPrompt.processInput(keys.Newline.Bytes())
+		done, err := confirmPrompt.processInput(grapheme.Newline.Bytes())
 		require.True(t, done, "processLine() should return true when user hits new line key")
 		require.NoError(t, err, "processLine() should not return an error when user hits new line key")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user hits new line key")
@@ -414,7 +418,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.False(t, *confirmPrompt.value, "Initial value should be false")
 
-		done, err := confirmPrompt.processInput(confirmPrompt.confirmKey.Bytes())
+		done, err := confirmPrompt.processInput(confirmPrompt.confirmKeyCluster.Bytes())
 		require.True(t, done, "processLine() should return true when user confirms")
 		require.NoError(t, err, "processLine() should not return an error when user confirms")
 		require.True(t, *confirmPrompt.value, "Value should be set to true when user confirms")
@@ -425,7 +429,7 @@ func Test_Confirm_processLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result)
 		require.True(t, *confirmPrompt.value, "Initial value should be true")
 
-		done, err := confirmPrompt.processInput(confirmPrompt.denyKey.Bytes())
+		done, err := confirmPrompt.processInput(confirmPrompt.denyKeyCluster.Bytes())
 		require.True(t, done, "processLine() should return true when user denies")
 		require.NoError(t, err, "processLine() should not return an error when user denies")
 		require.False(t, *confirmPrompt.value, "Value should be set to false when user denies")
@@ -434,7 +438,7 @@ func Test_Confirm_processLine(t *testing.T) {
 	t.Run("should return false for unrecognized input", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		done, err := confirmPrompt.processInput(keys.UpperO.Bytes())
+		done, err := confirmPrompt.processInput(grapheme.New('O').Bytes())
 		require.False(t, done, "processLine() should return false for unrecognized input")
 		require.NoError(t, err, "processLine() should not return an error for unrecognized input")
 	})

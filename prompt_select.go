@@ -7,11 +7,10 @@ import (
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/grapheme"
 	"github.com/mattn/go-runewidth"
 	"github.com/rivo/uniseg"
 	"golang.org/x/term"
-
-	"github.com/engmtcdrm/go-pardon/keys"
 )
 
 // Select represents a multiple-choice selection prompt.
@@ -169,25 +168,25 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 
 	s.pendingInput = append(s.pendingInput, input...)
 
-	if needMoreInput := s.parseInputToRuneKeys(); needMoreInput {
+	if needMoreInput := s.parseInputToGraphemeClusters(); needMoreInput {
 		return false, nil
 	}
 
-	s.pendingEscSequence = keys.Keys{}
+	s.pendingEscSequence = grapheme.ClusterSet{}
 
-	for len(s.pendingInputRuneKeys) > 0 {
-		r := s.pendingInputRuneKeys[0]
+	for len(s.pendingInputClusterSet) > 0 {
+		r := s.pendingInputClusterSet[0]
 
 		switch {
-		case equal(r, keys.CtrlC):
+		case equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
-		case equal(r, keys.Enter), equal(r, keys.Newline):
+		case equal(r, grapheme.Enter), equal(r, grapheme.Newline):
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
 			visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return true, nil
-		case equal(r, keys.Escape):
+		case equal(r, grapheme.Escape):
 			doContinue, err := s.processEscapeSequence(r, s.escapeSequenceHandler)
 			if !doContinue {
 				return false, err
@@ -195,18 +194,18 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 			continue
 		}
 
-		s.pendingInputRuneKeys = s.pendingInputRuneKeys[1:]
+		s.pendingInputClusterSet = s.pendingInputClusterSet[1:]
 	}
 
 	return false, nil
 }
 
-func (s *Select[T]) escapeSequenceHandler(seq keys.Key) (done bool, err error) {
+func (s *Select[T]) escapeSequenceHandler(seq grapheme.Cluster) (done bool, err error) {
 	switch {
-	case equal(seq, keys.UpArrow):
+	case equal(seq, grapheme.UpArrow):
 		s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 		s.renderOptions(true)
-	case equal(seq, keys.DownArrow):
+	case equal(seq, grapheme.DownArrow):
 		s.cursorPos = (s.cursorPos + 1) % len(s.options)
 		s.renderOptions(true)
 	}

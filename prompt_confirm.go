@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/engmtcdrm/go-pardon/grapheme"
 )
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
@@ -20,27 +20,27 @@ type Confirm struct {
 	// In is the terminal input reader.
 	In *TerminalInput
 
-	value      *bool
-	icon       eval[string]
-	title      eval[string]
-	answer     eval[string]
-	confirmKey keys.Key
-	denyKey    keys.Key
-	prompt     string
-	promptOpts string
+	value             *bool
+	icon              eval[string]
+	title             eval[string]
+	answer            eval[string]
+	confirmKeyCluster grapheme.Cluster
+	denyKeyCluster    grapheme.Cluster
+	prompt            string
+	promptOpts        string
 }
 
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
 	return &Confirm{
-		In:         NewTerminalInput(),
-		Out:        os.Stdout,
-		value:      value,
-		icon:       eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title:      eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
-		answer:     eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
-		confirmKey: keys.UpperY,
-		denyKey:    keys.UpperN,
+		In:                NewTerminalInput(),
+		Out:               os.Stdout,
+		value:             value,
+		icon:              eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
+		title:             eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
+		answer:            eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
+		confirmKeyCluster: grapheme.UpperY,
+		denyKeyCluster:    grapheme.UpperN,
 	}
 }
 
@@ -67,17 +67,17 @@ func (c *Confirm) Ask() error {
 	return nil
 }
 
-// ConfirmKey sets the [keys.Key] that represents the confirmation key (e.g.,
-// 'Y' for yes).
-func (c *Confirm) ConfirmKey(key keys.Key) *Confirm {
-	c.confirmKey = key
+// ConfirmKey sets the [grapheme.Cluster] that represents the confirmation key
+// (e.g., 'Y' for yes).
+func (c *Confirm) ConfirmKey(key grapheme.Cluster) *Confirm {
+	c.confirmKeyCluster = key
 	return c
 }
 
-// DenyKey sets the [keys.Key] that represents the denial key (e.g., 'N' for
-// no).
-func (c *Confirm) DenyKey(key keys.Key) *Confirm {
-	c.denyKey = key
+// DenyKey sets the [grapheme.Cluster] that represents the denial key (e.g., 'N'
+// for no).
+func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm {
+	c.denyKeyCluster = key
 	return c
 }
 
@@ -133,11 +133,11 @@ func (c *Confirm) ask() error {
 func (c *Confirm) getPromptOptions() string {
 	var confirmKey, denyKey []byte
 	if *c.value {
-		confirmKey = bytes.ToUpper(c.confirmKey.Bytes())
-		denyKey = bytes.ToLower(c.denyKey.Bytes())
+		confirmKey = bytes.ToUpper(c.confirmKeyCluster.Bytes())
+		denyKey = bytes.ToLower(c.denyKeyCluster.Bytes())
 	} else {
-		confirmKey = bytes.ToLower(c.confirmKey.Bytes())
-		denyKey = bytes.ToUpper(c.denyKey.Bytes())
+		confirmKey = bytes.ToLower(c.confirmKeyCluster.Bytes())
+		denyKey = bytes.ToUpper(c.denyKeyCluster.Bytes())
 	}
 
 	builder := strings.Builder{}
@@ -162,20 +162,20 @@ func (c *Confirm) getPromptOptions() string {
 	return builder.String()
 }
 
-func (c *Confirm) getValueAsRuneKey() keys.Key {
+func (c *Confirm) getValueAsCluster() grapheme.Cluster {
 	if *c.value {
-		return c.confirmKey
+		return c.confirmKeyCluster
 	}
 
-	return c.denyKey
+	return c.denyKeyCluster
 }
 
 func (c *Confirm) getValueAsString() string {
 	if *c.value {
-		return string(c.confirmKey)
+		return string(c.confirmKeyCluster)
 	}
 
-	return string(c.denyKey)
+	return string(c.denyKeyCluster)
 }
 
 func (c *Confirm) printFinalPromptLine() {
@@ -195,31 +195,31 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 
 	c.pendingInput = append(c.pendingInput, input...)
 
-	if needMoreInput := c.parseInputToRuneKeys(); needMoreInput {
+	if needMoreInput := c.parseInputToGraphemeClusters(); needMoreInput {
 		return false, nil
 	}
 
-	for len(c.pendingInputRuneKeys) > 0 {
-		r := c.pendingInputRuneKeys[0]
+	for len(c.pendingInputClusterSet) > 0 {
+		r := c.pendingInputClusterSet[0]
 		// If user hit enter, use the current value of [Confirm.value] as the input
-		if equal(r, keys.Enter) || equal(r, keys.Newline) {
-			r = c.getValueAsRuneKey()
+		if equal(r, grapheme.Enter) || equal(r, grapheme.Newline) {
+			r = c.getValueAsCluster()
 		}
 
 		switch {
-		case equal(r, keys.CtrlC):
+		case equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
-		case equalFold(r, c.confirmKey...):
+		case equalFold(r, c.confirmKeyCluster...):
 			*c.value = true
 			c.printFinalPromptLine()
 			return true, nil
-		case equalFold(r, c.denyKey...):
+		case equalFold(r, c.denyKeyCluster...):
 			*c.value = false
 			c.printFinalPromptLine()
 			return true, nil
 		}
 
-		c.pendingInputRuneKeys = c.pendingInputRuneKeys[1:]
+		c.pendingInputClusterSet = c.pendingInputClusterSet[1:]
 	}
 
 	return false, nil

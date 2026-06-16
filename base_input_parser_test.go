@@ -7,7 +7,7 @@ import (
 func TestThis(t *testing.T) {
 	tt := TestTest{}
 	tt.pendingInput = []byte("example input ❤️")
-	tt.parseInputToRuneKeys()
+	tt.parseInputToGraphemeClusters()
 
-	t.Logf("%v", tt.pendingInputRuneKeys)
+	t.Logf("%v", tt.pendingInputClusterSet)
 }

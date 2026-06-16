@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/engmtcdrm/go-ansi"
+	"github.com/engmtcdrm/go-pardon/grapheme"
 	"github.com/engmtcdrm/go-pardon/internal/testutils"
-	"github.com/engmtcdrm/go-pardon/keys"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -121,7 +121,7 @@ func Test_Text_Ask(t *testing.T) {
 		textPrompt := NewQuestion(&result).
 			Title("Enter value:")
 		textPrompt.Out = io.Discard
-		textPrompt.In.Reader = testutils.CreateValidTestFile(t, "test input"+keys.CtrlC.String())
+		textPrompt.In.Reader = testutils.CreateValidTestFile(t, "test input"+grapheme.CtrlC.String())
 
 		err := textPrompt.Ask()
 		require.ErrorIs(t, err, ErrUserAborted, "Ask should return ErrUserAborted when user presses Ctrl+C")
@@ -291,7 +291,7 @@ func Test_Text_ask(t *testing.T) {
 		questionPrompt := NewQuestion(&result).
 			Title(promptTitle)
 		questionPrompt.Out = io.Discard
-		questionPrompt.In.Reader = testutils.CreateValidTestFile(t, keys.CtrlC.String())
+		questionPrompt.In.Reader = testutils.CreateValidTestFile(t, grapheme.CtrlC.String())
 
 		err := questionPrompt.ask()
 		require.Error(t, err, "Expected error when user presses Ctrl+C")
@@ -303,7 +303,7 @@ func Test_Text_ask(t *testing.T) {
 		questionPrompt := NewQuestion(&result).
 			Title(promptTitle)
 		questionPrompt.Out = io.Discard
-		questionPrompt.In.Reader = bytes.NewBufferString(keys.LowerY.String())
+		questionPrompt.In.Reader = bytes.NewBufferString(grapheme.New('y').String())
 
 		err := questionPrompt.ask()
 		require.Error(t, err, "Expected error when In is not os.File")

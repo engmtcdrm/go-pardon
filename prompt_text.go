@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
-	"github.com/engmtcdrm/go-pardon/keys"
+	"github.com/engmtcdrm/go-pardon/grapheme"
 	"golang.org/x/term"
 )
 
@@ -28,9 +28,9 @@ type Text struct {
 	// input).
 	hide bool
 
-	prompt               string
-	pendingValueRuneKeys keys.Keys
-	value                *string
+	prompt                 string
+	pendingValueClusterSet grapheme.ClusterSet
+	value                  *string
 }
 
 // NewPassword creates an InputPrompt for secure password input with masking.
@@ -230,32 +230,32 @@ func (t *Text) printFinalPromptLine() {
 	fmt.Fprint(t.Out, builder.String())
 }
 
-func (t *Text) handleEnter(_ keys.Key) (done bool, err error) {
-	if err := t.validateFn(t.pendingValueRuneKeys.String()); err != nil {
+func (t *Text) handleEnter(_ grapheme.Cluster) (done bool, err error) {
+	if err := t.validateFn(t.pendingValueClusterSet.String()); err != nil {
 		t.printErrorMessage(err)
-		t.pendingInputRuneKeys = nil
-		t.pendingValueRuneKeys = nil
+		t.pendingInputClusterSet = nil
+		t.pendingValueClusterSet = nil
 		return false, nil
 	}
 
-	*t.value = t.pendingValueRuneKeys.String()
+	*t.value = t.pendingValueClusterSet.String()
 
 	t.printFinalPromptLine()
 	return true, nil
 }
 
-func (t *Text) handleDelete(_ keys.Key) (done bool, err error) {
-	if len(t.pendingValueRuneKeys) > 0 {
-		t.pendingValueRuneKeys = t.pendingValueRuneKeys[:len(t.pendingValueRuneKeys)-1]
+func (t *Text) handleDelete(_ grapheme.Cluster) (done bool, err error) {
+	if len(t.pendingValueClusterSet) > 0 {
+		t.pendingValueClusterSet = t.pendingValueClusterSet[:len(t.pendingValueClusterSet)-1]
 		t.printInput("\b \b")
 	}
 
-	t.pendingInputRuneKeys = t.pendingInputRuneKeys[1:]
+	t.pendingInputClusterSet = t.pendingInputClusterSet[1:]
 	return false, nil
 }
 
 // Currently calls [Text.handleEnter].
-func (t *Text) handleNewline(r keys.Key) (done bool, err error) {
+func (t *Text) handleNewline(r grapheme.Cluster) (done bool, err error) {
 	return t.handleEnter(r)
 }
 
@@ -266,25 +266,25 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 
 	t.pendingInput = append(t.pendingInput, input...)
 
-	if needMoreInput := t.parseInputToRuneKeys(); needMoreInput {
+	if needMoreInput := t.parseInputToGraphemeClusters(); needMoreInput {
 		return false, nil
 	}
 
 	// Reset pending escape sequence before processing new input.
-	t.pendingEscSequence = keys.Keys{}
+	t.pendingEscSequence = grapheme.ClusterSet{}
 
-	for len(t.pendingInputRuneKeys) > 0 {
-		r := t.pendingInputRuneKeys[0]
+	for len(t.pendingInputClusterSet) > 0 {
+		r := t.pendingInputClusterSet[0]
 		switch {
-		case equal(r, keys.CtrlC):
+		case equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
-		case equal(r, keys.Enter):
+		case equal(r, grapheme.Enter):
 			return t.handleEnter(r)
-		case equal(r, keys.Newline):
+		case equal(r, grapheme.Newline):
 			return t.handleNewline(r)
-		case equal(r, keys.Delete), equal(r, keys.Backspace):
+		case equal(r, grapheme.Delete), equal(r, grapheme.Backspace):
 			return t.handleDelete(r)
-		case equal(r, keys.Escape):
+		case equal(r, grapheme.Escape):
 			doContinue, err := t.processEscapeSequence(r, nil)
 			if !doContinue {
 				return false, err
@@ -292,12 +292,12 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 			continue
 		}
 
-		t.pendingValueRuneKeys = append(t.pendingValueRuneKeys, r)
-		t.pendingInputRuneKeys = t.pendingInputRuneKeys[1:]
+		t.pendingValueClusterSet = append(t.pendingValueClusterSet, r)
+		t.pendingInputClusterSet = t.pendingInputClusterSet[1:]
 		t.printInput(string(r))
 	}
 
-	t.pendingInputRuneKeys = nil
+	t.pendingInputClusterSet = nil
 
 	return false, nil
 }
