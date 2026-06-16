@@ -12,9 +12,6 @@ var (
 	Enter     = New('\r')
 	Newline   = New('\n')
 
-	UpperN = New('N')
-	UpperY = New('Y')
-
 	UpArrow    = New(escape, '[', 'A')
 	DownArrow  = New(escape, '[', 'B')
 	RightArrow = New(escape, '[', 'C')

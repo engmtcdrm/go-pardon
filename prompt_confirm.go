@@ -39,8 +39,8 @@ func NewConfirm(value *bool) *Confirm {
 		icon:              eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
 		title:             eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
 		answer:            eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
-		confirmKeyCluster: grapheme.UpperY,
-		denyKeyCluster:    grapheme.UpperN,
+		confirmKeyCluster: grapheme.New('Y'),
+		denyKeyCluster:    grapheme.New('N'),
 	}
 }
 

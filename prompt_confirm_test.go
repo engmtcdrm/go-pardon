@@ -97,7 +97,7 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 	t.Run("default confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.confirmKeyCluster, grapheme.UpperY), "Default confirm key should be 'Y'")
+		require.True(t, equal(confirmPrompt.confirmKeyCluster, grapheme.New('Y')), "Default confirm key should be 'Y'")
 	})
 
 	t.Run("custom confirm key", func(t *testing.T) {
@@ -115,7 +115,7 @@ func Test_Confirm_DenyKey(t *testing.T) {
 	t.Run("default deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.denyKeyCluster, grapheme.UpperN), "Default deny key should be 'N'")
+		require.True(t, equal(confirmPrompt.denyKeyCluster, grapheme.New('N')), "Default deny key should be 'N'")
 	})
 
 	t.Run("custom deny key", func(t *testing.T) {

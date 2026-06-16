@@ -1,5 +1,6 @@
 package grapheme
 
+// IsFeEscapeSequence checks if the given Cluster is a Fe Escape Sequence.
 func IsFeEscapeSequence(gc Cluster) bool {
 	if len(gc) != 2 {
 		return false
@@ -16,6 +17,8 @@ func IsFeEscapeSequence(gc Cluster) bool {
 	return true
 }
 
+// IsSequenceEnd checks if the given Cluster is a ANSI escape sequence end
+// character.
 func IsSequenceEnd(gc Cluster) bool {
 	if len(gc) != 1 {
 		return false
@@ -28,6 +31,8 @@ func IsSequenceEnd(gc Cluster) bool {
 	return true
 }
 
+// HasSequenceEnd checks if the given Cluster contains a ANSI escape sequence
+// end character.
 func HasSequenceEnd(gc Cluster) bool {
 	for _, b := range gc {
 		if b >= 0x40 && b <= 0x7E {
@@ -38,6 +43,8 @@ func HasSequenceEnd(gc Cluster) bool {
 	return false
 }
 
+// IndexOfSequenceEnd returns the index of the ANSI escape sequence end
+// character in the given Cluster, or -1 if there is no such character.
 func IndexOfSequenceEnd(gc Cluster) int {
 	for i, b := range gc {
 		if b >= 0x40 && b <= 0x7E {
