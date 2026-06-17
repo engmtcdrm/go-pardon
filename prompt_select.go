@@ -2,7 +2,6 @@ package pardon
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -15,45 +14,26 @@ import (
 
 // Select represents a multiple-choice selection prompt.
 type Select[T comparable] struct {
-	BaseInputParser
-	// Out is the output writer for the terminal, typically [os.Stdout].
-	Out io.Writer
+	PromptBase[T, *Select[T]]
 
-	// In is the terminal input reader.
-	In *TerminalInput
-
-	icon            eval[string]
-	title           eval[string]
 	cursor          eval[string]
-	answer          eval[string]
 	selectEval      eval[string] // cannot use select because it is a reserved keyword
 	options         []Option[T]
 	selectFn        func(string) string
-	prompt          string
 	cursorPos       int
 	cursorCharWidth int
 	scrollOffset    int
-	value           *T
 }
 
 // NewSelect creates a new Select prompt instance.
 func NewSelect[T comparable](value *T) *Select[T] {
-	return &Select[T]{
-		In:         NewTerminalInput(),
-		Out:        os.Stdout,
-		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
+	s := &Select[T]{
+		PromptBase: NewPromptBase[T, *Select[T]](value),
 		cursor:     eval[string]{val: "> ", defaultFn: defaultFuncs.cursorFn},
-		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
 		selectEval: eval[string]{val: "", defaultFn: defaultFuncs.selectFn},
 		options:    make([]Option[T], 0),
-		value:      value,
 	}
-}
-
-// AnswerFunc sets a function to format the final answer display.
-func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T] {
-	s.answer.fn = fn
+	s.PromptBase.Self = s
 	return s
 }
 
@@ -114,19 +94,6 @@ func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T] {
 	return s
 }
 
-// Icon sets the icon displayed before the prompt title.
-func (s *Select[T]) Icon(icon string) *Select[T] {
-	s.icon.val = icon
-	s.icon.fn = nil
-	return s
-}
-
-// IconFunc sets a function to dynamically format the prompt icon.
-func (s *Select[T]) IconFunc(fn func(string) string) *Select[T] {
-	s.icon.fn = fn
-	return s
-}
-
 // Options sets the list of available options for selection.
 func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
 	if len(options) == 0 {
@@ -143,30 +110,12 @@ func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
 	return s
 }
 
-// Title sets the prompt title text that will be displayed to the user.
-func (s *Select[T]) Title(title string) *Select[T] {
-	s.title.val = title
-	return s
-}
-
-// TitleFunc sets a function to dynamically format the prompt title.
-func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T] {
-	s.title.fn = fn
-	return s
-}
-
-// Value sets the pointer where the selected option's value will be stored.
-func (s *Select[T]) Value(value *T) *Select[T] {
-	s.value = value
-	return s
-}
-
 func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 	if len(input) == 0 {
 		return false, nil
 	}
 
-	s.pendingInput = append(s.pendingInput, input...)
+	s.pendingInputBytes = append(s.pendingInputBytes, input...)
 
 	if needMoreInput := s.parseInputToGraphemeClusters(); needMoreInput {
 		return false, nil

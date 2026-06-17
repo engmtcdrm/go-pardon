@@ -2,7 +2,6 @@ package pardon
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -12,60 +11,36 @@ import (
 )
 
 type Text struct {
-	BaseInputParser
-	// Out is the output writer for the terminal, typically [os.Stdout].
-	Out io.Writer
+	PromptBase[string, *Text]
 
-	// In is the terminal input reader.
-	In *TerminalInput
-
-	icon       eval[string]
-	title      eval[string]
-	answer     eval[string]
 	validateFn func(string) error
 
 	// hide indicates whether the input should be hidden (e.g., for password
 	// input).
 	hide bool
 
-	prompt                 string
 	pendingValueClusterSet grapheme.ClusterSet
-	value                  *string
 }
 
 // NewPassword creates an InputPrompt for secure password input with masking.
 func NewPassword(value *string) *Text {
-	return &Text{
-		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
+	t := &Text{
+		PromptBase: NewPromptBase[string, *Text](value),
 		validateFn: func(s string) error { return nil },
-		In:         NewTerminalInput(),
-		Out:        os.Stdout,
 		hide:       true,
-		value:      value,
 	}
+	t.PromptBase.Self = t
+	return t
 }
 
 // NewQuestion creates a new InputPrompt for text input with a question mark
 // icon.
 func NewQuestion(value *string) *Text {
-	return &Text{
-		icon:       eval[string]{val: Icons.QuestionMark, defaultFn: defaultFuncs.iconFn},
-		title:      eval[string]{val: "", defaultFn: defaultFuncs.titleFn},
-		answer:     eval[string]{val: "", defaultFn: defaultFuncs.answerFn},
+	t := &Text{
+		PromptBase: NewPromptBase[string, *Text](value),
 		validateFn: func(s string) error { return nil },
-		In:         NewTerminalInput(),
-		Out:        os.Stdout,
-		value:      value,
 	}
-}
-
-// AnswerFunc sets a function to format the final answer being displayed.
-func (t *Text) AnswerFunc(fn func(string) string) *Text {
-	if fn != nil {
-		t.answer.fn = fn
-	}
+	t.PromptBase.Self = t
 	return t
 }
 
@@ -92,43 +67,11 @@ func (t *Text) Hide(hide bool) *Text {
 	return t
 }
 
-// Icon sets the prompt icon.
-func (t *Text) Icon(s string) *Text {
-	t.icon.val = s
-	t.icon.fn = nil
-	return t
-}
-
-// IconFunc sets a dynamic icon function.
-func (t *Text) IconFunc(fn func(string) string) *Text {
-	t.icon.fn = fn
-	return t
-}
-
-// Title sets the prompt text.
-func (t *Text) Title(title string) *Text {
-	t.title.val = title
-	t.title.fn = nil
-	return t
-}
-
-// TitleFunc sets a dynamic title function.
-func (t *Text) TitleFunc(fn func(string) string) *Text {
-	t.title.fn = fn
-	return t
-}
-
 // ValidateFunc sets a validation function for the prompt input.
 func (t *Text) ValidateFunc(fn func(string) error) *Text {
 	if fn != nil {
 		t.validateFn = fn
 	}
-	return t
-}
-
-// Value sets a default input value.
-func (t *Text) Value(value *string) *Text {
-	t.value = value
 	return t
 }
 
@@ -264,7 +207,7 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
-	t.pendingInput = append(t.pendingInput, input...)
+	t.pendingInputBytes = append(t.pendingInputBytes, input...)
 
 	if needMoreInput := t.parseInputToGraphemeClusters(); needMoreInput {
 		return false, nil

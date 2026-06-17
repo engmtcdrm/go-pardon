@@ -3,8 +3,6 @@ package pardon
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
@@ -13,40 +11,21 @@ import (
 
 // Confirm represents a yes/no confirmation prompt for user decisions.
 type Confirm struct {
-	BaseInputParser
-	// Out is the output writer for the terminal, typically [os.Stdout].
-	Out io.Writer
+	PromptBase[bool, *Confirm]
 
-	// In is the terminal input reader.
-	In *TerminalInput
-
-	value             *bool
-	icon              eval[string]
-	title             eval[string]
-	answer            eval[string]
 	confirmKeyCluster grapheme.Cluster
 	denyKeyCluster    grapheme.Cluster
-	prompt            string
 	promptOpts        string
 }
 
 // NewConfirm creates a new Confirm prompt instance.
 func NewConfirm(value *bool) *Confirm {
-	return &Confirm{
-		In:                NewTerminalInput(),
-		Out:               os.Stdout,
-		value:             value,
-		icon:              eval[string]{val: Icons.QuestionMark, fn: nil, defaultFn: defaultFuncs.iconFn},
-		title:             eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.titleFn},
-		answer:            eval[string]{val: "", fn: nil, defaultFn: defaultFuncs.answerFn},
+	c := &Confirm{
+		PromptBase:        NewPromptBase[bool, *Confirm](value),
 		confirmKeyCluster: grapheme.New('Y'),
 		denyKeyCluster:    grapheme.New('N'),
 	}
-}
-
-// AnswerFunc sets a function to transform the final answer being displayed.
-func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm {
-	c.answer.fn = fn
+	c.PromptBase.Self = c
 	return c
 }
 
@@ -78,37 +57,6 @@ func (c *Confirm) ConfirmKey(key grapheme.Cluster) *Confirm {
 // for no).
 func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm {
 	c.denyKeyCluster = key
-	return c
-}
-
-// Icon sets a static icon for the confirmation prompt.
-func (c *Confirm) Icon(s string) *Confirm {
-	c.icon.val = s
-	c.icon.fn = nil
-	return c
-}
-
-// IconFunc sets a dynamic icon function for the confirmation prompt.
-func (c *Confirm) IconFunc(fn func(string) string) *Confirm {
-	c.icon.fn = fn
-	return c
-}
-
-// Title sets a static title for the confirmation prompt.
-func (c *Confirm) Title(title string) *Confirm {
-	c.title.val = title
-	return c
-}
-
-// TitleFunc sets a dynamic title function for the confirmation prompt.
-func (c *Confirm) TitleFunc(fn func(string) string) *Confirm {
-	c.title.fn = fn
-	return c
-}
-
-// Value sets a default value for the confirmation prompt.
-func (c *Confirm) Value(value *bool) *Confirm {
-	c.value = value
 	return c
 }
 
@@ -193,7 +141,7 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
-	c.pendingInput = append(c.pendingInput, input...)
+	c.pendingInputBytes = append(c.pendingInputBytes, input...)
 
 	if needMoreInput := c.parseInputToGraphemeClusters(); needMoreInput {
 		return false, nil
