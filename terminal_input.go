@@ -15,8 +15,8 @@ type TerminalInput struct {
 
 // NewTerminalInput creates a new [TerminalInput] instance with input read from
 // [os.Stdin].
-func NewTerminalInput() *TerminalInput {
-	return &TerminalInput{Reader: os.Stdin}
+func NewTerminalInput() TerminalInput {
+	return TerminalInput{Reader: os.Stdin}
 }
 
 // RawRead reads input from the terminal in raw mode and returns the raw bytes.
@@ -24,7 +24,7 @@ func NewTerminalInput() *TerminalInput {
 // The caller is responsible for processing the bytes and handling special keys.
 // As well as wrapping this call in a for loop to continue reading until the
 // desired input is complete.
-func (t *TerminalInput) RawRead() ([]byte, error) {
+func (t TerminalInput) RawRead() ([]byte, error) {
 	inputFile, restoreTerminal, err := t.setTerminalToRawMode()
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (t *TerminalInput) RawRead() ([]byte, error) {
 // file and a no-op restore function without error. The caller should defer the
 // restore function to ensure that the terminal state is properly restored after
 // raw input is processed.
-func (t *TerminalInput) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
+func (t TerminalInput) setTerminalToRawMode() (inputFile *os.File, restoreTerminal func(), err error) {
 	inputFile, ok := t.Reader.(*os.File)
 	if !ok {
 		return nil, func() {

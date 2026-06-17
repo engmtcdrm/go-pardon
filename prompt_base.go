@@ -27,29 +27,38 @@ type PromptBase[T comparable, Self any] struct {
 	Out io.Writer
 
 	// In is the terminal input reader.
-	In *TerminalInput
-
-	// The prompt string to display to the user.
-	Prompt string
+	In TerminalInput
 
 	icon   eval[string]
 	title  eval[string]
 	answer eval[string]
 	value  *T
 
-	// The following three fields are intentionally exported to allow for easier
-	// testing.
+	// The prompt string to display to the user.
+	//
+	// This should not be modified outside the struct. It is intentionally
+	// exported to allow for easier testing.
+	Prompt string
 
 	// PendingInputBytes holds the raw input bytes that have been read from the
 	// terminal but not yet processed.
+	//
+	// This should not be modified outside the struct. It is intentionally
+	// exported to allow for easier testing.
 	PendingInputBytes []byte
 
 	// PendingInputRunes holds the decoded runes from
 	// [PromptBase.PendingInputBytes].
+	//
+	// This should not be modified outside the struct. It is intentionally
+	// exported to allow for easier testing.
 	PendingInputRunes []rune
 
 	// PendingInputClusterSet holds the grapheme clusters parsed from
 	// [PromptBase.PendingInputRunes].
+	//
+	// This should not be modified outside the struct. It is intentionally
+	// exported to allow for easier testing.
 	PendingInputClusterSet grapheme.ClusterSet
 }
 
