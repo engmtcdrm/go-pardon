@@ -111,41 +111,41 @@ func (bp *PromptBase[T, Self]) parseInputToGraphemeSet() (needMoreInput bool) {
 type InputHandler func(c grapheme.Cluster) (done bool, err error)
 
 func (bp *PromptBase[T, Self]) processEscapeSequence(c grapheme.Cluster, handler InputHandler) (done bool, err error) {
-	pendingEscSequence := grapheme.ClusterSet{}
+	pendingEscSeqSet := grapheme.ClusterSet{}
 
 	// Handle first grapheme of the escape sequence.
-	pendingEscSequence = append(pendingEscSequence, c)
+	pendingEscSeqSet = append(pendingEscSeqSet, c)
 	if len(bp.pendingInputClusterSet) == 1 {
-		// We have an escape character but no more input, so we should wait
-		// for more input before processing.
+		// We have an escape character but no more input, so we should wait for
+		// more input before processing.
 		return false, nil
 	}
 
 	// Handle second grapheme of the escape sequence.
-	pendingEscSequence = append(pendingEscSequence, bp.pendingInputClusterSet[1])
-	pendingEscSequenceCluster := grapheme.New(pendingEscSequence.Runes()...)
-	if !grapheme.IsFeEscapeSequence(pendingEscSequenceCluster) {
+	pendingEscSeqSet = append(pendingEscSeqSet, bp.pendingInputClusterSet[1])
+	pendingEscSeqCluster := grapheme.New(pendingEscSeqSet.Runes()...)
+	switch {
+	case !grapheme.IsFeEscapeSequence(pendingEscSeqCluster):
 		return true, nil
-	}
-
-	if len(bp.pendingInputClusterSet) == 2 {
-		// We have a complete escape sequence with only the escape character and the next rune,
-		// so we should wait for more input before processing.
+	case len(bp.pendingInputClusterSet) == 2:
+		// We have an escape character and one more input, but it's not a full
+		// escape sequence, so we should wait for more input before processing.
 		return false, nil
 	}
 
+	// Handle any additional graphemes that may be part of the escape sequence.
 	nextCluster := grapheme.New(bp.pendingInputClusterSet[2:].Runes()...)
 	seqEndIdx := grapheme.IndexOfSequenceEnd(nextCluster)
 	if seqEndIdx == -1 {
-		// We have the start of an escape sequence but we don't have the full sequence yet,
-		// so we should wait for more input before processing.
+		// We have the start of an escape sequence but we don't have the full
+		// sequence yet, so we should wait for more input before processing.
 		return false, nil
 	}
 
-	pendingEscSequenceCluster = append(pendingEscSequenceCluster, bp.pendingInputClusterSet[2:3+seqEndIdx].Runes()...)
+	pendingEscSeqCluster = append(pendingEscSeqCluster, bp.pendingInputClusterSet[2:3+seqEndIdx].Runes()...)
 
 	if handler != nil {
-		handled, err := handler(pendingEscSequenceCluster)
+		handled, err := handler(pendingEscSeqCluster)
 		if handled {
 			return true, err
 		}
