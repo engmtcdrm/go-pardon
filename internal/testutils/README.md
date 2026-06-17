@@ -6,6 +6,8 @@
 import "github.com/engmtcdrm/go-pardon/internal/testutils"
 ```
 
+Package testutils provides utilities for testing.
+
 ## Index
 
 - [func CreateInvalidTestFile\(t \*testing.T, content string\) \*os.File](<#CreateInvalidTestFile>)

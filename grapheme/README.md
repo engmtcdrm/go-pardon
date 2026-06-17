@@ -6,6 +6,8 @@
 import "github.com/engmtcdrm/go-pardon/grapheme"
 ```
 
+Package grapheme provides functions and structs for working with Unicode grapheme clusters.
+
 ## Index
 
 - [Variables](<#variables>)
