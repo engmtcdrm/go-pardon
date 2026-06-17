@@ -87,6 +87,9 @@
 				"color": "terminal.ansiCyan"
 			},
 			"command": "${workspaceFolder}/scripts/generate-docs.sh",
+			"windows": {
+				"command": "${workspaceFolder}/scripts/generate-docs.ps1"
+			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -118,6 +121,9 @@
 				"color": "terminal.ansiMagenta"
 			},
 			"command": "${workspaceFolder}/scripts/build-examples.sh",
+			"windows": {
+				"command": "${workspaceFolder}/scripts/build-examples.ps1"
+			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
