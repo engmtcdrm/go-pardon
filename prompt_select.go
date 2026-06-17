@@ -125,15 +125,15 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 		r := s.PendingInputClusterSet[0]
 
 		switch {
-		case equal(r, grapheme.CtrlC):
+		case grapheme.Equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
-		case equal(r, grapheme.Enter), equal(r, grapheme.Newline):
+		case grapheme.Equal(r, grapheme.Enter), grapheme.Equal(r, grapheme.Newline):
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
 			visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return true, nil
-		case equal(r, grapheme.Escape):
+		case grapheme.Equal(r, grapheme.Escape):
 			doContinue, err := s.ProcessEscapeSequence(r, s.escapeSequenceHandler)
 			if !doContinue {
 				return false, err
@@ -149,10 +149,10 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 
 func (s *Select[T]) escapeSequenceHandler(seq grapheme.Cluster) (done bool, err error) {
 	switch {
-	case equal(seq, grapheme.UpArrow):
+	case grapheme.Equal(seq, grapheme.UpArrow):
 		s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
 		s.renderOptions(true)
-	case equal(seq, grapheme.DownArrow):
+	case grapheme.Equal(seq, grapheme.DownArrow):
 		s.cursorPos = (s.cursorPos + 1) % len(s.options)
 		s.renderOptions(true)
 	}

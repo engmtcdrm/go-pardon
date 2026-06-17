@@ -97,7 +97,7 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 	t.Run("default confirm key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.confirmKeyCluster, grapheme.New('Y')), "Default confirm key should be 'Y'")
+		require.True(t, grapheme.Equal(confirmPrompt.confirmKeyCluster, grapheme.New('Y')), "Default confirm key should be 'Y'")
 	})
 
 	t.Run("custom confirm key", func(t *testing.T) {
@@ -106,7 +106,7 @@ func Test_Confirm_ConfirmKey(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			ConfirmKey(confirmKey)
-		require.True(t, equal(confirmPrompt.confirmKeyCluster, confirmKey), "Custom confirm key should be 'O'")
+		require.True(t, grapheme.Equal(confirmPrompt.confirmKeyCluster, confirmKey), "Custom confirm key should be 'O'")
 	})
 }
 
@@ -115,7 +115,7 @@ func Test_Confirm_DenyKey(t *testing.T) {
 	t.Run("default deny key", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.denyKeyCluster, grapheme.New('N')), "Default deny key should be 'N'")
+		require.True(t, grapheme.Equal(confirmPrompt.denyKeyCluster, grapheme.New('N')), "Default deny key should be 'N'")
 	})
 
 	t.Run("custom deny key", func(t *testing.T) {
@@ -124,7 +124,7 @@ func Test_Confirm_DenyKey(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			DenyKey(denyKey)
-		require.True(t, equal(confirmPrompt.denyKeyCluster, denyKey), "Custom deny key should be 'O'")
+		require.True(t, grapheme.Equal(confirmPrompt.denyKeyCluster, denyKey), "Custom deny key should be 'O'")
 	})
 }
 
@@ -326,10 +326,10 @@ func Test_Confirm_getValueAsBytes(t *testing.T) {
 	t.Run("with default confirm and deny keys", func(t *testing.T) {
 		var result bool
 		confirmPrompt := NewConfirm(&result)
-		require.True(t, equal(confirmPrompt.denyKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes when value is false")
+		require.True(t, grapheme.Equal(confirmPrompt.denyKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes when value is false")
 
 		result = true
-		require.True(t, equal(confirmPrompt.confirmKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes when value is true")
+		require.True(t, grapheme.Equal(confirmPrompt.confirmKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes when value is true")
 	})
 
 	t.Run("with custom confirm and deny keys", func(t *testing.T) {
@@ -337,10 +337,10 @@ func Test_Confirm_getValueAsBytes(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			ConfirmKey(grapheme.New('O')).
 			DenyKey(grapheme.New('A'))
-		require.True(t, equal(confirmPrompt.denyKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes with custom keys when value is false")
+		require.True(t, grapheme.Equal(confirmPrompt.denyKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes with custom keys when value is false")
 
 		result = true
-		require.True(t, equal(confirmPrompt.confirmKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes with custom keys when value is true")
+		require.True(t, grapheme.Equal(confirmPrompt.confirmKeyCluster, confirmPrompt.getValueAsCluster()), "getValueAsBytes() did not return expected bytes with custom keys when value is true")
 	})
 }
 

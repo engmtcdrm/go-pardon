@@ -150,18 +150,18 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 	for len(c.PendingInputClusterSet) > 0 {
 		r := c.PendingInputClusterSet[0]
 		// If user hit enter, use the current value of [Confirm.value] as the input
-		if equal(r, grapheme.Enter) || equal(r, grapheme.Newline) {
+		if grapheme.Equal(r, grapheme.Enter) || grapheme.Equal(r, grapheme.Newline) {
 			r = c.getValueAsCluster()
 		}
 
 		switch {
-		case equal(r, grapheme.CtrlC):
+		case grapheme.Equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
-		case equalFold(r, c.confirmKeyCluster...):
+		case grapheme.EqualFold(r, c.confirmKeyCluster):
 			*c.value = true
 			c.printFinalPromptLine()
 			return true, nil
-		case equalFold(r, c.denyKeyCluster...):
+		case grapheme.EqualFold(r, c.denyKeyCluster):
 			*c.value = false
 			c.printFinalPromptLine()
 			return true, nil

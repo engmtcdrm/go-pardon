@@ -216,15 +216,15 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 	for len(t.PendingInputClusterSet) > 0 {
 		r := t.PendingInputClusterSet[0]
 		switch {
-		case equal(r, grapheme.CtrlC):
+		case grapheme.Equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
-		case equal(r, grapheme.Enter):
+		case grapheme.Equal(r, grapheme.Enter):
 			return t.handleEnter(r)
-		case equal(r, grapheme.Newline):
+		case grapheme.Equal(r, grapheme.Newline):
 			return t.handleNewline(r)
-		case equal(r, grapheme.Delete), equal(r, grapheme.Backspace):
+		case grapheme.Equal(r, grapheme.Delete), grapheme.Equal(r, grapheme.Backspace):
 			return t.handleDelete(r)
-		case equal(r, grapheme.Escape):
+		case grapheme.Equal(r, grapheme.Escape):
 			doContinue, err := t.ProcessEscapeSequence(r, nil)
 			if !doContinue {
 				return false, err

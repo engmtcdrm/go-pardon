@@ -7,19 +7,6 @@ import (
 	"github.com/engmtcdrm/go-ansi"
 )
 
-// equal reports whether a and b are the same length and contain the same runes.
-// A nil argument is equivalent to an empty slice.
-func equal(a []rune, b []rune) bool {
-	return string(a) == string(b)
-}
-
-// equalFold reports whether a and b, interpreted as UTF-8 strings,
-// are equal under simple Unicode case-folding, which is a more general
-// form of case-insensitivity.
-func equalFold(a []rune, b ...rune) bool {
-	return strings.EqualFold(string(a), string(b))
-}
-
 // renderClearAndReposition clears lines and renders final answer.
 // Minimizes screen flicker by batching terminal operations.
 func renderClearAndReposition(linesToErase int, icon, title, answer string) {
