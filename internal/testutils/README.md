@@ -9,12 +9,16 @@ import "github.com/engmtcdrm/go-pardon/internal/testutils"
 ## Index
 
 - [func CreateInvalidTestFile\(t \*testing.T, content string\) \*os.File](<#CreateInvalidTestFile>)
-- [func CreatePTY\(t \*testing.T, content string\) \*os.File](<#CreatePTY>)
+- [func CreatePTY\(t \*testing.T\) \(master \*os.File, slave \*os.File\)](<#CreatePTY>)
+- [func CreatePTYWithSize\(t \*testing.T, columns, rows int\) \(master \*os.File, slave \*os.File\)](<#CreatePTYWithSize>)
 - [func CreateValidTestFile\(t \*testing.T, content string\) \*os.File](<#CreateValidTestFile>)
+- [func CreateWritePTY\(t \*testing.T, content string\) \(master \*os.File, slave \*os.File\)](<#CreateWritePTY>)
+- [func CreateWritePTYWithSize\(t \*testing.T, content string, columns, rows int\) \(master \*os.File, slave \*os.File\)](<#CreateWritePTYWithSize>)
+- [func ReadPTYOutput\(t \*testing.T, ptyFile \*os.File, bufferSize int\) string](<#ReadPTYOutput>)
 
 
 <a name="CreateInvalidTestFile"></a>
-## func [CreateInvalidTestFile](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L33>)
+## func [CreateInvalidTestFile](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L43>)
 
 ```go
 func CreateInvalidTestFile(t *testing.T, content string) *os.File
@@ -23,21 +27,57 @@ func CreateInvalidTestFile(t *testing.T, content string) *os.File
 CreateInvalidTestFile is a helper function to create a temporary file with specific content for emulating user input for tests. It does not append an EOF character to the content, which can be used to test how the code handles unexpected end of input.
 
 <a name="CreatePTY"></a>
-## func [CreatePTY](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L49>)
+## func [CreatePTY](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L65>)
 
 ```go
-func CreatePTY(t *testing.T, content string) *os.File
+func CreatePTY(t *testing.T) (master *os.File, slave *os.File)
 ```
 
-CreatePTY creates a pseudo\-terminal pair and writes the provided content to the master end so the returned slave \*os.File can be used as a terminal reader in tests. The master is closed after writing so the slave will observe EOF when appropriate.
+CreatePTY creates a pseudo\-terminal pair for testing terminal interactions. The returned master and slave \*os.File can be used to simulate terminal input and output in tests. The master end can be used to write input as if typed by a user, while the slave end can be used to read output from the terminal. Both files are automatically closed after the test completes.
+
+<a name="CreatePTYWithSize"></a>
+## func [CreatePTYWithSize](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L87>)
+
+```go
+func CreatePTYWithSize(t *testing.T, columns, rows int) (master *os.File, slave *os.File)
+```
+
+CreatePTYWithSize creates a pseudo\-terminal pair with the specified size for testing terminal interactions. The returned master and slave \*os.File can be used to simulate terminal input and output in tests that require specific terminal dimensions. Both files are automatically closed after the test completes.
 
 <a name="CreateValidTestFile"></a>
-## func [CreateValidTestFile](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L17>)
+## func [CreateValidTestFile](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L22>)
 
 ```go
 func CreateValidTestFile(t *testing.T, content string) *os.File
 ```
 
 CreateValidTestFile is a helper function to create a temporary file with specific content for emulating user input for tests. It appends an EOF character to the content to ensure that the file is properly terminated for reading.
+
+<a name="CreateWritePTY"></a>
+## func [CreateWritePTY](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L102>)
+
+```go
+func CreateWritePTY(t *testing.T, content string) (master *os.File, slave *os.File)
+```
+
+CreateWritePTY creates a pseudo\-terminal pair and writes the provided content to the master end. The returned slave \*os.File can be used as a terminal reader in tests. The master is closed after writing so the slave will observe EOF when appropriate.
+
+<a name="CreateWritePTYWithSize"></a>
+## func [CreateWritePTYWithSize](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L126>)
+
+```go
+func CreateWritePTYWithSize(t *testing.T, content string, columns, rows int) (master *os.File, slave *os.File)
+```
+
+CreateWritePTYWithSize creates a pseudo\-terminal pair with the specified size and writes the provided content to the master end. The returned slave \*os.File can be used as a terminal reader in tests that require specific terminal dimensions. The master is closed after writing so the slave will observe EOF when appropriate.
+
+<a name="ReadPTYOutput"></a>
+## func [ReadPTYOutput](<https://github.com/engmtcdrm/go-pardon/blob/main/internal/testutils/testutils.go#L139>)
+
+```go
+func ReadPTYOutput(t *testing.T, ptyFile *os.File, bufferSize int) string
+```
+
+ReadPTYOutput reads all available output from the provided pseudo\-terminal file until EOF is reached.
 
 Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

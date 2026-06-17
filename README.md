@@ -14,54 +14,45 @@ import "github.com/engmtcdrm/go-pardon"
 - [func SetDefaultIconFunc\(fn func\(string\) string\)](<#SetDefaultIconFunc>)
 - [func SetDefaultSelectFunc\(fn func\(string\) string\)](<#SetDefaultSelectFunc>)
 - [func SetDefaultTitleFunc\(fn func\(string\) string\)](<#SetDefaultTitleFunc>)
+- [type ClusterHandler](<#ClusterHandler>)
 - [type Confirm](<#Confirm>)
   - [func NewConfirm\(value \*bool\) \*Confirm](<#NewConfirm>)
-  - [func \(c \*Confirm\) AnswerFunc\(fn func\(string\) string\) \*Confirm](<#Confirm.AnswerFunc>)
   - [func \(c \*Confirm\) Ask\(\) error](<#Confirm.Ask>)
-  - [func \(c \*Confirm\) ConfirmKey\(r rune\) \*Confirm](<#Confirm.ConfirmKey>)
-  - [func \(c \*Confirm\) DenyKey\(r rune\) \*Confirm](<#Confirm.DenyKey>)
-  - [func \(c \*Confirm\) Icon\(s string\) \*Confirm](<#Confirm.Icon>)
-  - [func \(c \*Confirm\) IconFunc\(fn func\(string\) string\) \*Confirm](<#Confirm.IconFunc>)
-  - [func \(c \*Confirm\) Title\(title string\) \*Confirm](<#Confirm.Title>)
-  - [func \(c \*Confirm\) TitleFunc\(fn func\(string\) string\) \*Confirm](<#Confirm.TitleFunc>)
-  - [func \(c \*Confirm\) Value\(value \*bool\) \*Confirm](<#Confirm.Value>)
+  - [func \(c \*Confirm\) ConfirmKey\(key grapheme.Cluster\) \*Confirm](<#Confirm.ConfirmKey>)
+  - [func \(c \*Confirm\) DenyKey\(key grapheme.Cluster\) \*Confirm](<#Confirm.DenyKey>)
 - [type Form](<#Form>)
   - [func NewForm\(prompts ...Prompt\) \*Form](<#NewForm>)
   - [func \(f \*Form\) Ask\(\) error](<#Form.Ask>)
 - [type Option](<#Option>)
   - [func NewOption\[T comparable\]\(key string, value T\) Option\[T\]](<#NewOption>)
 - [type Prompt](<#Prompt>)
+- [type PromptBase](<#PromptBase>)
+  - [func NewPromptBase\[T comparable, Self any\]\(value \*T\) PromptBase\[T, Self\]](<#NewPromptBase>)
+  - [func \(bp \*PromptBase\[T, Self\]\) AnswerFunc\(fn func\(string\) string\) Self](<#PromptBase[T, Self].AnswerFunc>)
+  - [func \(bp \*PromptBase\[T, Self\]\) ConvertBytesToGraphemeSet\(\) \(needMoreInput bool\)](<#PromptBase[T, Self].ConvertBytesToGraphemeSet>)
+  - [func \(bp \*PromptBase\[T, Self\]\) Icon\(s string\) Self](<#PromptBase[T, Self].Icon>)
+  - [func \(bp \*PromptBase\[T, Self\]\) IconFunc\(fn func\(string\) string\) Self](<#PromptBase[T, Self].IconFunc>)
+  - [func \(bp \*PromptBase\[T, Self\]\) ProcessEscapeSequence\(c grapheme.Cluster, handler ClusterHandler\) \(done bool, err error\)](<#PromptBase[T, Self].ProcessEscapeSequence>)
+  - [func \(bp \*PromptBase\[T, Self\]\) Title\(title string\) Self](<#PromptBase[T, Self].Title>)
+  - [func \(bp \*PromptBase\[T, Self\]\) TitleFunc\(fn func\(string\) string\) Self](<#PromptBase[T, Self].TitleFunc>)
+  - [func \(bp \*PromptBase\[T, Self\]\) Value\(value \*T\) Self](<#PromptBase[T, Self].Value>)
 - [type Select](<#Select>)
   - [func NewSelect\[T comparable\]\(value \*T\) \*Select\[T\]](<#NewSelect>)
-  - [func \(s \*Select\[T\]\) AnswerFunc\(fn func\(string\) string\) \*Select\[T\]](<#Select[T].AnswerFunc>)
   - [func \(s \*Select\[T\]\) Ask\(\) error](<#Select[T].Ask>)
   - [func \(s \*Select\[T\]\) Cursor\(cursor string\) \*Select\[T\]](<#Select[T].Cursor>)
   - [func \(s \*Select\[T\]\) CursorFunc\(fn func\(string\) string\) \*Select\[T\]](<#Select[T].CursorFunc>)
-  - [func \(s \*Select\[T\]\) Icon\(icon string\) \*Select\[T\]](<#Select[T].Icon>)
-  - [func \(s \*Select\[T\]\) IconFunc\(fn func\(string\) string\) \*Select\[T\]](<#Select[T].IconFunc>)
+  - [func \(s \*Select\[T\]\) GetTerminalHeight\(\) int](<#Select[T].GetTerminalHeight>)
   - [func \(s \*Select\[T\]\) Options\(options ...Option\[T\]\) \*Select\[T\]](<#Select[T].Options>)
   - [func \(s \*Select\[T\]\) SelectFunc\(fn func\(string\) string\) \*Select\[T\]](<#Select[T].SelectFunc>)
-  - [func \(s \*Select\[T\]\) Title\(title string\) \*Select\[T\]](<#Select[T].Title>)
-  - [func \(s \*Select\[T\]\) TitleFunc\(fn func\(string\) string\) \*Select\[T\]](<#Select[T].TitleFunc>)
-  - [func \(s \*Select\[T\]\) Value\(value \*T\) \*Select\[T\]](<#Select[T].Value>)
-- [type Terminal](<#Terminal>)
-  - [func NewConfirmTerminal\(\) \*Terminal](<#NewConfirmTerminal>)
-  - [func NewHiddenTerminal\(\) \*Terminal](<#NewHiddenTerminal>)
-  - [func NewTerminal\(\) \*Terminal](<#NewTerminal>)
-  - [func \(t \*Terminal\) RawRead\(\) \(\[\]rune, error\)](<#Terminal.RawRead>)
-  - [func \(t \*Terminal\) Reset\(\)](<#Terminal.Reset>)
+- [type TerminalInput](<#TerminalInput>)
+  - [func NewTerminalInput\(\) TerminalInput](<#NewTerminalInput>)
+  - [func \(t TerminalInput\) RawRead\(\) \(\[\]byte, error\)](<#TerminalInput.RawRead>)
 - [type Text](<#Text>)
   - [func NewPassword\(value \*string\) \*Text](<#NewPassword>)
   - [func NewQuestion\(value \*string\) \*Text](<#NewQuestion>)
-  - [func \(t \*Text\) AnswerFunc\(fn func\(string\) string\) \*Text](<#Text.AnswerFunc>)
   - [func \(t \*Text\) Ask\(\) error](<#Text.Ask>)
   - [func \(t \*Text\) Hide\(hide bool\) \*Text](<#Text.Hide>)
-  - [func \(t \*Text\) Icon\(s string\) \*Text](<#Text.Icon>)
-  - [func \(t \*Text\) IconFunc\(fn func\(string\) string\) \*Text](<#Text.IconFunc>)
-  - [func \(t \*Text\) Title\(title string\) \*Text](<#Text.Title>)
-  - [func \(t \*Text\) TitleFunc\(fn func\(string\) string\) \*Text](<#Text.TitleFunc>)
   - [func \(t \*Text\) ValidateFunc\(fn func\(string\) error\) \*Text](<#Text.ValidateFunc>)
-  - [func \(t \*Text\) Value\(value \*string\) \*Text](<#Text.Value>)
 
 
 ## Variables
@@ -133,8 +124,17 @@ func SetDefaultTitleFunc(fn func(string) string)
 
 SetDefaultTitleFunc sets the global default title transformation function.
 
+<a name="ClusterHandler"></a>
+## type [ClusterHandler](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L15>)
+
+ClusterHandler defines a function type that handles a \[grapheme.Cluster\]. It returns a boolean indicating whether processing is done and an error if any occurred.
+
+```go
+type ClusterHandler func(c grapheme.Cluster) (done bool, err error)
+```
+
 <a name="Confirm"></a>
-## type [Confirm](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L14-L24>)
+## type [Confirm](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L13-L19>)
 
 Confirm represents a yes/no confirmation prompt for user decisions.
 
@@ -145,7 +145,7 @@ type Confirm struct {
 ```
 
 <a name="NewConfirm"></a>
-### func [NewConfirm](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L27>)
+### func [NewConfirm](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L22>)
 
 ```go
 func NewConfirm(value *bool) *Confirm
@@ -153,17 +153,8 @@ func NewConfirm(value *bool) *Confirm
 
 NewConfirm creates a new Confirm prompt instance.
 
-<a name="Confirm.AnswerFunc"></a>
-### func \(\*Confirm\) [AnswerFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L39>)
-
-```go
-func (c *Confirm) AnswerFunc(fn func(string) string) *Confirm
-```
-
-AnswerFunc sets a function to transform the final answer being displayed.
-
 <a name="Confirm.Ask"></a>
-### func \(\*Confirm\) [Ask](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L45>)
+### func \(\*Confirm\) [Ask](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L33>)
 
 ```go
 func (c *Confirm) Ask() error
@@ -172,67 +163,22 @@ func (c *Confirm) Ask() error
 Ask displays the confirmation prompt.
 
 <a name="Confirm.ConfirmKey"></a>
-### func \(\*Confirm\) [ConfirmKey](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L67>)
+### func \(\*Confirm\) [ConfirmKey](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L51>)
 
 ```go
-func (c *Confirm) ConfirmKey(r rune) *Confirm
+func (c *Confirm) ConfirmKey(key grapheme.Cluster) *Confirm
 ```
 
-ConfirmKey sets the rune that represents the confirmation key \(e.g., 'Y' for yes\).
+ConfirmKey sets the \[grapheme.Cluster\] that represents the confirmation key \(e.g., 'Y' for yes\).
 
 <a name="Confirm.DenyKey"></a>
-### func \(\*Confirm\) [DenyKey](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L73>)
+### func \(\*Confirm\) [DenyKey](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L58>)
 
 ```go
-func (c *Confirm) DenyKey(r rune) *Confirm
+func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm
 ```
 
-DenyKey sets the rune that represents the denial key \(e.g., 'N' for no\).
-
-<a name="Confirm.Icon"></a>
-### func \(\*Confirm\) [Icon](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L79>)
-
-```go
-func (c *Confirm) Icon(s string) *Confirm
-```
-
-Icon sets a static icon for the confirmation prompt.
-
-<a name="Confirm.IconFunc"></a>
-### func \(\*Confirm\) [IconFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L86>)
-
-```go
-func (c *Confirm) IconFunc(fn func(string) string) *Confirm
-```
-
-IconFunc sets a dynamic icon function for the confirmation prompt.
-
-<a name="Confirm.Title"></a>
-### func \(\*Confirm\) [Title](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L92>)
-
-```go
-func (c *Confirm) Title(title string) *Confirm
-```
-
-Title sets a static title for the confirmation prompt.
-
-<a name="Confirm.TitleFunc"></a>
-### func \(\*Confirm\) [TitleFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L98>)
-
-```go
-func (c *Confirm) TitleFunc(fn func(string) string) *Confirm
-```
-
-TitleFunc sets a dynamic title function for the confirmation prompt.
-
-<a name="Confirm.Value"></a>
-### func \(\*Confirm\) [Value](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_confirm.go#L104>)
-
-```go
-func (c *Confirm) Value(value *bool) *Confirm
-```
-
-Value sets a default value for the confirmation prompt.
+DenyKey sets the \[grapheme.Cluster\] that represents the denial key \(e.g., 'N' for no\).
 
 <a name="Form"></a>
 ## type [Form](<https://github.com/engmtcdrm/go-pardon/blob/main/form.go#L4-L6>)
@@ -296,8 +242,136 @@ type Prompt interface {
 }
 ```
 
+<a name="PromptBase"></a>
+## type [PromptBase](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L21-L63>)
+
+PromptBase is a generic base struct for creating terminal prompts. It provides common functionality such as handling input and output, managing the prompt's icon, title, and answer, and processing escape sequences.
+
+```go
+type PromptBase[T comparable, Self any] struct {
+    // Self holds a pointer to the concrete self struct so fluent
+    // methods on the base can return the self type.
+    Self Self
+
+    // Out is the output writer for the terminal, typically [os.Stdout].
+    Out io.Writer
+
+    // In is the terminal input reader.
+    In  TerminalInput
+
+    // The prompt string to display to the user.
+    //
+    // This should not be modified outside the struct. It is intentionally
+    // exported to allow for easier testing.
+    Prompt string
+
+    // PendingInputBytes holds the raw input bytes that have been read from the
+    // terminal but not yet processed.
+    //
+    // This should not be modified outside the struct. It is intentionally
+    // exported to allow for easier testing.
+    PendingInputBytes []byte
+
+    // PendingInputRunes holds the decoded runes from
+    // [PromptBase.PendingInputBytes].
+    //
+    // This should not be modified outside the struct. It is intentionally
+    // exported to allow for easier testing.
+    PendingInputRunes []rune
+
+    // PendingInputClusterSet holds the grapheme clusters parsed from
+    // [PromptBase.PendingInputRunes].
+    //
+    // This should not be modified outside the struct. It is intentionally
+    // exported to allow for easier testing.
+    PendingInputClusterSet grapheme.ClusterSet
+    // contains filtered or unexported fields
+}
+```
+
+<a name="NewPromptBase"></a>
+### func [NewPromptBase](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L67>)
+
+```go
+func NewPromptBase[T comparable, Self any](value *T) PromptBase[T, Self]
+```
+
+NewPromptBase creates and initializes a new PromptBase instance with the given default value.
+
+<a name="PromptBase[T, Self].AnswerFunc"></a>
+### func \(\*PromptBase\[T, Self\]\) [AnswerFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L80>)
+
+```go
+func (bp *PromptBase[T, Self]) AnswerFunc(fn func(string) string) Self
+```
+
+AnswerFunc sets a function to transform the final answer being displayed.
+
+<a name="PromptBase[T, Self].ConvertBytesToGraphemeSet"></a>
+### func \(\*PromptBase\[T, Self\]\) [ConvertBytesToGraphemeSet](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L119>)
+
+```go
+func (bp *PromptBase[T, Self]) ConvertBytesToGraphemeSet() (needMoreInput bool)
+```
+
+ConvertBytesToGraphemeSet parses pending input bytes to a \[grapheme.ClusterSet\] for further processing.
+
+<a name="PromptBase[T, Self].Icon"></a>
+### func \(\*PromptBase\[T, Self\]\) [Icon](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L86>)
+
+```go
+func (bp *PromptBase[T, Self]) Icon(s string) Self
+```
+
+Icon sets a static icon for the confirmation prompt.
+
+<a name="PromptBase[T, Self].IconFunc"></a>
+### func \(\*PromptBase\[T, Self\]\) [IconFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L93>)
+
+```go
+func (bp *PromptBase[T, Self]) IconFunc(fn func(string) string) Self
+```
+
+IconFunc sets a dynamic icon function for the confirmation prompt.
+
+<a name="PromptBase[T, Self].ProcessEscapeSequence"></a>
+### func \(\*PromptBase\[T, Self\]\) [ProcessEscapeSequence](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L143>)
+
+```go
+func (bp *PromptBase[T, Self]) ProcessEscapeSequence(c grapheme.Cluster, handler ClusterHandler) (done bool, err error)
+```
+
+
+
+<a name="PromptBase[T, Self].Title"></a>
+### func \(\*PromptBase\[T, Self\]\) [Title](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L99>)
+
+```go
+func (bp *PromptBase[T, Self]) Title(title string) Self
+```
+
+Title sets a static title for the confirmation prompt.
+
+<a name="PromptBase[T, Self].TitleFunc"></a>
+### func \(\*PromptBase\[T, Self\]\) [TitleFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L106>)
+
+```go
+func (bp *PromptBase[T, Self]) TitleFunc(fn func(string) string) Self
+```
+
+TitleFunc sets a dynamic title function for the confirmation prompt.
+
+<a name="PromptBase[T, Self].Value"></a>
+### func \(\*PromptBase\[T, Self\]\) [Value](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_base.go#L112>)
+
+```go
+func (bp *PromptBase[T, Self]) Value(value *T) Self
+```
+
+Value sets a default value for the confirmation prompt.
+
 <a name="Select"></a>
-## type [Select](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L15-L25>)
+## type [Select](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L16-L26>)
 
 Select represents a multiple\-choice selection prompt.
 
@@ -308,7 +382,7 @@ type Select[T comparable] struct {
 ```
 
 <a name="NewSelect"></a>
-### func [NewSelect](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L28>)
+### func [NewSelect](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L29>)
 
 ```go
 func NewSelect[T comparable](value *T) *Select[T]
@@ -316,17 +390,8 @@ func NewSelect[T comparable](value *T) *Select[T]
 
 NewSelect creates a new Select prompt instance.
 
-<a name="Select[T].AnswerFunc"></a>
-### func \(\*Select\[T\]\) [AnswerFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L39>)
-
-```go
-func (s *Select[T]) AnswerFunc(fn func(string) string) *Select[T]
-```
-
-AnswerFunc sets a function to format the final answer display.
-
 <a name="Select[T].Ask"></a>
-### func \(\*Select\[T\]\) [Ask](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L45>)
+### func \(\*Select\[T\]\) [Ask](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L41>)
 
 ```go
 func (s *Select[T]) Ask() error
@@ -335,7 +400,7 @@ func (s *Select[T]) Ask() error
 Ask displays the select prompt and waits for user selection.
 
 <a name="Select[T].Cursor"></a>
-### func \(\*Select\[T\]\) [Cursor](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L90>)
+### func \(\*Select\[T\]\) [Cursor](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L85>)
 
 ```go
 func (s *Select[T]) Cursor(cursor string) *Select[T]
@@ -344,7 +409,7 @@ func (s *Select[T]) Cursor(cursor string) *Select[T]
 Cursor sets the cursor symbol displayed next to the selected option.
 
 <a name="Select[T].CursorFunc"></a>
-### func \(\*Select\[T\]\) [CursorFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L97>)
+### func \(\*Select\[T\]\) [CursorFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L92>)
 
 ```go
 func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T]
@@ -352,26 +417,17 @@ func (s *Select[T]) CursorFunc(fn func(string) string) *Select[T]
 
 CursorFunc sets a function to dynamically format the cursor symbol.
 
-<a name="Select[T].Icon"></a>
-### func \(\*Select\[T\]\) [Icon](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L103>)
+<a name="Select[T].GetTerminalHeight"></a>
+### func \(\*Select\[T\]\) [GetTerminalHeight](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L239>)
 
 ```go
-func (s *Select[T]) Icon(icon string) *Select[T]
+func (s *Select[T]) GetTerminalHeight() int
 ```
 
-Icon sets the icon displayed before the prompt title.
-
-<a name="Select[T].IconFunc"></a>
-### func \(\*Select\[T\]\) [IconFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L110>)
-
-```go
-func (s *Select[T]) IconFunc(fn func(string) string) *Select[T]
-```
-
-IconFunc sets a function to dynamically format the prompt icon.
+GetTerminalHeight returns the height of the terminal in rows. If the terminal size cannot be determined, it returns a default height of 25 rows.
 
 <a name="Select[T].Options"></a>
-### func \(\*Select\[T\]\) [Options](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L116>)
+### func \(\*Select\[T\]\) [Options](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L98>)
 
 ```go
 func (s *Select[T]) Options(options ...Option[T]) *Select[T]
@@ -380,7 +436,7 @@ func (s *Select[T]) Options(options ...Option[T]) *Select[T]
 Options sets the list of available options for selection.
 
 <a name="Select[T].SelectFunc"></a>
-### func \(\*Select\[T\]\) [SelectFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L126>)
+### func \(\*Select\[T\]\) [SelectFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L108>)
 
 ```go
 func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T]
@@ -388,106 +444,40 @@ func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T]
 
 SelectFunc sets a function to format option text during selection.
 
-<a name="Select[T].Title"></a>
-### func \(\*Select\[T\]\) [Title](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L132>)
-
-```go
-func (s *Select[T]) Title(title string) *Select[T]
-```
-
-Title sets the prompt title text that will be displayed to the user.
-
-<a name="Select[T].TitleFunc"></a>
-### func \(\*Select\[T\]\) [TitleFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L138>)
-
-```go
-func (s *Select[T]) TitleFunc(fn func(string) string) *Select[T]
-```
-
-TitleFunc sets a function to dynamically format the prompt title.
-
-<a name="Select[T].Value"></a>
-### func \(\*Select\[T\]\) [Value](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_select.go#L144>)
-
-```go
-func (s *Select[T]) Value(value *T) *Select[T]
-```
-
-Value sets the pointer where the selected option's value will be stored.
-
-<a name="Terminal"></a>
-## type [Terminal](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal.go#L14-L35>)
+<a name="TerminalInput"></a>
+## type [TerminalInput](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal_input.go#L11-L14>)
 
 
 
 ```go
-type Terminal struct {
-    // Hide indicates whether the input should be hidden (e.g., for password
-    // input).
-    Hide bool
-
-    // Confirm indicates whether the input should be treated as a confirmation.
-    Confirm bool
-
-    // Out is the output writer for the terminal, typically [os.Stdout].
-    Out io.Writer
-    // In is the input reader for the terminal, typically [os.Stdin].
-    In  io.Reader
-
-    CustomHandler func(t *Terminal, r rune) (done bool)
-    // contains filtered or unexported fields
+type TerminalInput struct {
+    // Reader is the input reader for the terminal, typically [os.Stdin].
+    Reader io.Reader
 }
 ```
 
-<a name="NewConfirmTerminal"></a>
-### func [NewConfirmTerminal](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal.go#L60>)
+<a name="NewTerminalInput"></a>
+### func [NewTerminalInput](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal_input.go#L18>)
 
 ```go
-func NewConfirmTerminal() *Terminal
+func NewTerminalInput() TerminalInput
 ```
 
-NewConfirmTerminal creates a new Terminal instance configured for confirmation prompts. Output will go to [os.Stdout](<https://pkg.go.dev/os/#Stdout>) and input will be read from [os.Stdin](<https://pkg.go.dev/os/#Stdin>).
+NewTerminalInput creates a new [TerminalInput](<#TerminalInput>) instance with input read from [os.Stdin](<https://pkg.go.dev/os/#Stdin>).
 
-<a name="NewHiddenTerminal"></a>
-### func [NewHiddenTerminal](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal.go#L50>)
+<a name="TerminalInput.RawRead"></a>
+### func \(TerminalInput\) [RawRead](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal_input.go#L27>)
 
 ```go
-func NewHiddenTerminal() *Terminal
+func (t TerminalInput) RawRead() ([]byte, error)
 ```
 
-NewHiddenTerminal creates a new Terminal instance configured for hidden input, such as for password prompts. Output will go to [os.Stdout](<https://pkg.go.dev/os/#Stdout>) and input will be read from [os.Stdin](<https://pkg.go.dev/os/#Stdin>).
+RawRead reads input from the terminal in raw mode and returns the raw bytes.
 
-<a name="NewTerminal"></a>
-### func [NewTerminal](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal.go#L39>)
-
-```go
-func NewTerminal() *Terminal
-```
-
-NewTerminal creates a new Terminal instance with default settings for regular input. Output will go to [os.Stdout](<https://pkg.go.dev/os/#Stdout>) and input will be read from [os.Stdin](<https://pkg.go.dev/os/#Stdin>).
-
-<a name="Terminal.RawRead"></a>
-### func \(\*Terminal\) [RawRead](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal.go#L73>)
-
-```go
-func (t *Terminal) RawRead() ([]rune, error)
-```
-
-RawRead reads input from the terminal in raw mode. It handles special keys like Enter, Backspace, etc., and returns the input as a slice of runes. If the input is interrupted \(e.g., by Ctrl\+C\), it returns an error.
-
-[Terminal.Reset](<#Terminal.Reset>) must be called before invoking this function to ensure that any previous input does not interfere with the new input.
-
-<a name="Terminal.Reset"></a>
-### func \(\*Terminal\) [Reset](<https://github.com/engmtcdrm/go-pardon/blob/main/terminal.go#L104>)
-
-```go
-func (t *Terminal) Reset()
-```
-
-Reset clears the pending input and the result. This should be called prior to calling [Terminal.RawRead](<#Terminal.RawRead>) to ensure that any previous input does not interfere with the new input. This is intentional to allow for easier testing of the [Terminal](<#Terminal>) struct.
+The caller is responsible for processing the bytes and handling special keys. As well as wrapping this call in a for loop to continue reading until the desired input is complete.
 
 <a name="Text"></a>
-## type [Text](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L13-L22>)
+## type [Text](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L13-L23>)
 
 
 
@@ -498,7 +488,7 @@ type Text struct {
 ```
 
 <a name="NewPassword"></a>
-### func [NewPassword](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L25>)
+### func [NewPassword](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L26>)
 
 ```go
 func NewPassword(value *string) *Text
@@ -507,7 +497,7 @@ func NewPassword(value *string) *Text
 NewPassword creates an InputPrompt for secure password input with masking.
 
 <a name="NewQuestion"></a>
-### func [NewQuestion](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L37>)
+### func [NewQuestion](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L38>)
 
 ```go
 func NewQuestion(value *string) *Text
@@ -515,17 +505,8 @@ func NewQuestion(value *string) *Text
 
 NewQuestion creates a new InputPrompt for text input with a question mark icon.
 
-<a name="Text.AnswerFunc"></a>
-### func \(\*Text\) [AnswerFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L48>)
-
-```go
-func (t *Text) AnswerFunc(fn func(string) string) *Text
-```
-
-AnswerFunc sets a function to format the final answer being displayed.
-
 <a name="Text.Ask"></a>
-### func \(\*Text\) [Ask](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L56>)
+### func \(\*Text\) [Ask](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L48>)
 
 ```go
 func (t *Text) Ask() error
@@ -534,7 +515,7 @@ func (t *Text) Ask() error
 Ask displays the prompt and waits for input.
 
 <a name="Text.Hide"></a>
-### func \(\*Text\) [Hide](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L75>)
+### func \(\*Text\) [Hide](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L65>)
 
 ```go
 func (t *Text) Hide(hide bool) *Text
@@ -542,58 +523,13 @@ func (t *Text) Hide(hide bool) *Text
 
 Hide sets whether the input should be hidden \(e.g., for password input\).
 
-<a name="Text.Icon"></a>
-### func \(\*Text\) [Icon](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L81>)
-
-```go
-func (t *Text) Icon(s string) *Text
-```
-
-Icon sets the prompt icon.
-
-<a name="Text.IconFunc"></a>
-### func \(\*Text\) [IconFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L88>)
-
-```go
-func (t *Text) IconFunc(fn func(string) string) *Text
-```
-
-IconFunc sets a dynamic icon function.
-
-<a name="Text.Title"></a>
-### func \(\*Text\) [Title](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L94>)
-
-```go
-func (t *Text) Title(title string) *Text
-```
-
-Title sets the prompt text.
-
-<a name="Text.TitleFunc"></a>
-### func \(\*Text\) [TitleFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L100>)
-
-```go
-func (t *Text) TitleFunc(fn func(string) string) *Text
-```
-
-TitleFunc sets a dynamic title function.
-
 <a name="Text.ValidateFunc"></a>
-### func \(\*Text\) [ValidateFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L106>)
+### func \(\*Text\) [ValidateFunc](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L71>)
 
 ```go
 func (t *Text) ValidateFunc(fn func(string) error) *Text
 ```
 
 ValidateFunc sets a validation function for the prompt input.
-
-<a name="Text.Value"></a>
-### func \(\*Text\) [Value](<https://github.com/engmtcdrm/go-pardon/blob/main/prompt_text.go#L114>)
-
-```go
-func (t *Text) Value(value *string) *Text
-```
-
-Value sets a default input value.
 
 Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)
