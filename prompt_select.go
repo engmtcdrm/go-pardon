@@ -117,11 +117,9 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 
 	s.pendingInputBytes = append(s.pendingInputBytes, input...)
 
-	if needMoreInput := s.parseInputToGraphemeClusters(); needMoreInput {
+	if needMoreInput := s.parseInputToGraphemeSet(); needMoreInput {
 		return false, nil
 	}
-
-	s.pendingEscSequence = grapheme.ClusterSet{}
 
 	for len(s.pendingInputClusterSet) > 0 {
 		r := s.pendingInputClusterSet[0]

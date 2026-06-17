@@ -29,7 +29,6 @@ type PromptBase[T comparable, Self any] struct {
 	pendingInputBytes      []byte
 	pendingInputRunes      []rune
 	pendingInputClusterSet grapheme.ClusterSet
-	pendingEscSequence     grapheme.ClusterSet
 }
 
 // NewPromptBase creates and initializes a new PromptBase instance with the
@@ -84,9 +83,9 @@ func (bp *PromptBase[T, Self]) Value(value *T) Self {
 	return bp.Self
 }
 
-// parseInputToGraphemeClusters parses pending input bytes to a
-// [grapheme.ClusterSet] for further processing.
-func (bp *PromptBase[T, Self]) parseInputToGraphemeClusters() (needMoreInput bool) {
+// parseInputToGraphemeSet parses pending input bytes to a [grapheme.ClusterSet]
+// for further processing.
+func (bp *PromptBase[T, Self]) parseInputToGraphemeSet() (needMoreInput bool) {
 	for len(bp.pendingInputBytes) > 0 {
 		r, width := utf8.DecodeRune(bp.pendingInputBytes)
 		// If we encounter an invalid UTF-8 sequence, we should wait for more input
@@ -112,14 +111,10 @@ func (bp *PromptBase[T, Self]) parseInputToGraphemeClusters() (needMoreInput boo
 type InputHandler func(c grapheme.Cluster) (done bool, err error)
 
 func (bp *PromptBase[T, Self]) processEscapeSequence(c grapheme.Cluster, handler InputHandler) (done bool, err error) {
-	defer func() {
-		// Regardless of return path, we need to clear this for the next time we
-		// process an escape sequence.
-		bp.pendingEscSequence = nil
-	}()
+	pendingEscSequence := grapheme.ClusterSet{}
 
 	// Handle first grapheme of the escape sequence.
-	bp.pendingEscSequence = append(bp.pendingEscSequence, c)
+	pendingEscSequence = append(pendingEscSequence, c)
 	if len(bp.pendingInputClusterSet) == 1 {
 		// We have an escape character but no more input, so we should wait
 		// for more input before processing.
@@ -127,8 +122,8 @@ func (bp *PromptBase[T, Self]) processEscapeSequence(c grapheme.Cluster, handler
 	}
 
 	// Handle second grapheme of the escape sequence.
-	bp.pendingEscSequence = append(bp.pendingEscSequence, bp.pendingInputClusterSet[1])
-	pendingEscSequenceCluster := grapheme.New(bp.pendingEscSequence.Runes()...)
+	pendingEscSequence = append(pendingEscSequence, bp.pendingInputClusterSet[1])
+	pendingEscSequenceCluster := grapheme.New(pendingEscSequence.Runes()...)
 	if !grapheme.IsFeEscapeSequence(pendingEscSequenceCluster) {
 		return true, nil
 	}

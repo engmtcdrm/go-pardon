@@ -209,12 +209,9 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 
 	t.pendingInputBytes = append(t.pendingInputBytes, input...)
 
-	if needMoreInput := t.parseInputToGraphemeClusters(); needMoreInput {
+	if needMoreInput := t.parseInputToGraphemeSet(); needMoreInput {
 		return false, nil
 	}
-
-	// Reset pending escape sequence before processing new input.
-	t.pendingEscSequence = grapheme.ClusterSet{}
 
 	for len(t.pendingInputClusterSet) > 0 {
 		r := t.pendingInputClusterSet[0]

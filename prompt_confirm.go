@@ -143,7 +143,7 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 
 	c.pendingInputBytes = append(c.pendingInputBytes, input...)
 
-	if needMoreInput := c.parseInputToGraphemeClusters(); needMoreInput {
+	if needMoreInput := c.parseInputToGraphemeSet(); needMoreInput {
 		return false, nil
 	}
 
