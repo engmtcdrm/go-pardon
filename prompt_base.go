@@ -9,6 +9,15 @@ import (
 	"github.com/engmtcdrm/go-pardon/grapheme"
 )
 
+// ClusterHandler defines a function type that handles a [grapheme.Cluster].
+// It returns a boolean indicating whether processing is done and an error if
+// any occurred.
+type ClusterHandler func(c grapheme.Cluster) (done bool, err error)
+
+// PromptBase is a generic base struct for creating terminal prompts.
+// It provides common functionality such as handling input and output,
+// managing the prompt's icon, title, and answer, and processing escape
+// sequences.
 type PromptBase[T comparable, Self any] struct {
 	// Self holds a pointer to the concrete self struct so fluent
 	// methods on the base can return the self type.
@@ -20,15 +29,28 @@ type PromptBase[T comparable, Self any] struct {
 	// In is the terminal input reader.
 	In *TerminalInput
 
+	// The prompt string to display to the user.
+	Prompt string
+
 	icon   eval[string]
 	title  eval[string]
 	answer eval[string]
-	prompt string
 	value  *T
 
-	pendingInputBytes      []byte
-	pendingInputRunes      []rune
-	pendingInputClusterSet grapheme.ClusterSet
+	// The following three fields are intentionally exported to allow for easier
+	// testing.
+
+	// PendingInputBytes holds the raw input bytes that have been read from the
+	// terminal but not yet processed.
+	PendingInputBytes []byte
+
+	// PendingInputRunes holds the decoded runes from
+	// [PromptBase.PendingInputBytes].
+	PendingInputRunes []rune
+
+	// PendingInputClusterSet holds the grapheme clusters parsed from
+	// [PromptBase.PendingInputRunes].
+	PendingInputClusterSet grapheme.ClusterSet
 }
 
 // NewPromptBase creates and initializes a new PromptBase instance with the
@@ -83,58 +105,57 @@ func (bp *PromptBase[T, Self]) Value(value *T) Self {
 	return bp.Self
 }
 
-// parseInputToGraphemeSet parses pending input bytes to a [grapheme.ClusterSet]
-// for further processing.
-func (bp *PromptBase[T, Self]) parseInputToGraphemeSet() (needMoreInput bool) {
-	for len(bp.pendingInputBytes) > 0 {
-		r, width := utf8.DecodeRune(bp.pendingInputBytes)
-		// If we encounter an invalid UTF-8 sequence, we should wait for more input
+// ConvertBytesToGraphemeSet parses pending input bytes to a
+// [grapheme.ClusterSet] for further processing.
+func (bp *PromptBase[T, Self]) ConvertBytesToGraphemeSet() (needMoreInput bool) {
+	for len(bp.PendingInputBytes) > 0 {
+		r, width := utf8.DecodeRune(bp.PendingInputBytes)
+		// If we encounter an invalid UTF-8 sequence, we should wait for more
+		// input before processing.
 		if r == utf8.RuneError {
 			return true
 		}
 
-		bp.pendingInputBytes = bp.pendingInputBytes[width:]
-		bp.pendingInputRunes = append(bp.pendingInputRunes, r)
+		bp.PendingInputBytes = bp.PendingInputBytes[width:]
+		bp.PendingInputRunes = append(bp.PendingInputRunes, r)
 	}
 
-	pendingGraphemes := graphemes.FromString(string(bp.pendingInputRunes))
-	bp.pendingInputRunes = nil
+	pendingGraphemes := graphemes.FromString(string(bp.PendingInputRunes))
+	bp.PendingInputRunes = nil
 
 	for pendingGraphemes.Next() {
 		cluster := grapheme.New([]rune(pendingGraphemes.Value())...)
-		bp.pendingInputClusterSet = append(bp.pendingInputClusterSet, cluster)
+		bp.PendingInputClusterSet = append(bp.PendingInputClusterSet, cluster)
 	}
 
 	return false
 }
 
-type InputHandler func(c grapheme.Cluster) (done bool, err error)
-
-func (bp *PromptBase[T, Self]) processEscapeSequence(c grapheme.Cluster, handler InputHandler) (done bool, err error) {
+func (bp *PromptBase[T, Self]) ProcessEscapeSequence(c grapheme.Cluster, handler ClusterHandler) (done bool, err error) {
 	pendingEscSeqSet := grapheme.ClusterSet{}
 
 	// Handle first grapheme of the escape sequence.
 	pendingEscSeqSet = append(pendingEscSeqSet, c)
-	if len(bp.pendingInputClusterSet) == 1 {
+	if len(bp.PendingInputClusterSet) == 1 {
 		// We have an escape character but no more input, so we should wait for
 		// more input before processing.
 		return false, nil
 	}
 
 	// Handle second grapheme of the escape sequence.
-	pendingEscSeqSet = append(pendingEscSeqSet, bp.pendingInputClusterSet[1])
+	pendingEscSeqSet = append(pendingEscSeqSet, bp.PendingInputClusterSet[1])
 	pendingEscSeqCluster := grapheme.New(pendingEscSeqSet.Runes()...)
 	switch {
 	case !grapheme.IsFeEscapeSequence(pendingEscSeqCluster):
 		return true, nil
-	case len(bp.pendingInputClusterSet) == 2:
+	case len(bp.PendingInputClusterSet) == 2:
 		// We have an escape character and one more input, but it's not a full
 		// escape sequence, so we should wait for more input before processing.
 		return false, nil
 	}
 
 	// Handle any additional graphemes that may be part of the escape sequence.
-	nextCluster := grapheme.New(bp.pendingInputClusterSet[2:].Runes()...)
+	nextCluster := grapheme.New(bp.PendingInputClusterSet[2:].Runes()...)
 	seqEndIdx := grapheme.IndexOfSequenceEnd(nextCluster)
 	if seqEndIdx == -1 {
 		// We have the start of an escape sequence but we don't have the full
@@ -142,7 +163,7 @@ func (bp *PromptBase[T, Self]) processEscapeSequence(c grapheme.Cluster, handler
 		return false, nil
 	}
 
-	pendingEscSeqCluster = append(pendingEscSeqCluster, bp.pendingInputClusterSet[2:3+seqEndIdx].Runes()...)
+	pendingEscSeqCluster = append(pendingEscSeqCluster, bp.PendingInputClusterSet[2:3+seqEndIdx].Runes()...)
 
 	if handler != nil {
 		handled, err := handler(pendingEscSeqCluster)
@@ -151,7 +172,7 @@ func (bp *PromptBase[T, Self]) processEscapeSequence(c grapheme.Cluster, handler
 		}
 	}
 
-	bp.pendingInputClusterSet = bp.pendingInputClusterSet[3+seqEndIdx:]
+	bp.PendingInputClusterSet = bp.PendingInputClusterSet[3+seqEndIdx:]
 
 	return true, nil
 }

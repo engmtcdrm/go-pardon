@@ -10,8 +10,8 @@ type TestTest[T comparable] struct {
 
 func TestThis(t *testing.T) {
 	tt := TestTest[string]{}
-	tt.pendingInputBytes = []byte("example input ❤️")
-	tt.parseInputToGraphemeSet()
+	tt.PendingInputBytes = []byte("example input ❤️")
+	tt.ConvertBytesToGraphemeSet()
 
-	t.Logf("%v", tt.pendingInputClusterSet)
+	t.Logf("%v", tt.PendingInputClusterSet)
 }

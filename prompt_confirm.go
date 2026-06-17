@@ -61,8 +61,8 @@ func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm {
 }
 
 func (c *Confirm) ask() error {
-	c.prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
-	c.promptOpts = fmt.Sprintf("%s%s ", c.prompt, c.getPromptOptions())
+	c.Prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
+	c.promptOpts = fmt.Sprintf("%s%s ", c.Prompt, c.getPromptOptions())
 
 	fmt.Fprint(c.Out, c.promptOpts)
 
@@ -130,7 +130,7 @@ func (c *Confirm) printFinalPromptLine() {
 	builder := strings.Builder{}
 	builder.WriteString(ansi.ClearLineReset)
 	c.answer.val = c.getValueAsString()
-	promptAnswer := c.prompt + c.answer.Get()
+	promptAnswer := c.Prompt + c.answer.Get()
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Fprint(c.Out, builder.String())
@@ -141,14 +141,14 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
-	c.pendingInputBytes = append(c.pendingInputBytes, input...)
+	c.PendingInputBytes = append(c.PendingInputBytes, input...)
 
-	if needMoreInput := c.parseInputToGraphemeSet(); needMoreInput {
+	if needMoreInput := c.ConvertBytesToGraphemeSet(); needMoreInput {
 		return false, nil
 	}
 
-	for len(c.pendingInputClusterSet) > 0 {
-		r := c.pendingInputClusterSet[0]
+	for len(c.PendingInputClusterSet) > 0 {
+		r := c.PendingInputClusterSet[0]
 		// If user hit enter, use the current value of [Confirm.value] as the input
 		if equal(r, grapheme.Enter) || equal(r, grapheme.Newline) {
 			r = c.getValueAsCluster()
@@ -167,7 +167,7 @@ func (c *Confirm) processInput(input []byte) (done bool, err error) {
 			return true, nil
 		}
 
-		c.pendingInputClusterSet = c.pendingInputClusterSet[1:]
+		c.PendingInputClusterSet = c.PendingInputClusterSet[1:]
 	}
 
 	return false, nil

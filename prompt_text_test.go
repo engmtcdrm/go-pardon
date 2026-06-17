@@ -466,7 +466,7 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 			Title("What is your name?")
 		questionPrompt.Out = &bytes.Buffer{}
 		*questionPrompt.value = "Bobby"
-		questionPrompt.prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
+		questionPrompt.Prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
 
 		questionPrompt.printFinalPromptLine()
 		require.Equal(t, expectedOutput, questionPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
@@ -479,7 +479,7 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 			Title("What is your password?")
 		passwordPrompt.Out = &bytes.Buffer{}
 		*passwordPrompt.value = "MySuperSecretPassword"
-		passwordPrompt.prompt = fmt.Sprintf("%s%s ", passwordPrompt.icon.Get(), passwordPrompt.title.Get())
+		passwordPrompt.Prompt = fmt.Sprintf("%s%s ", passwordPrompt.icon.Get(), passwordPrompt.title.Get())
 
 		passwordPrompt.printFinalPromptLine()
 		require.Equal(t, expectedOutput, passwordPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when hide is true")

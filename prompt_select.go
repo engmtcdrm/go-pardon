@@ -64,8 +64,8 @@ func (s *Select[T]) ask() error {
 		fmt.Fprint(s.Out, ansi.ShowCursor)
 	}()
 
-	s.prompt = fmt.Sprintf("%s%s", s.icon.Get(), s.title.Get())
-	fmt.Fprintln(s.Out, s.prompt)
+	s.Prompt = fmt.Sprintf("%s%s", s.icon.Get(), s.title.Get())
+	fmt.Fprintln(s.Out, s.Prompt)
 
 	s.renderOptions(false)
 
@@ -115,14 +115,14 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
-	s.pendingInputBytes = append(s.pendingInputBytes, input...)
+	s.PendingInputBytes = append(s.PendingInputBytes, input...)
 
-	if needMoreInput := s.parseInputToGraphemeSet(); needMoreInput {
+	if needMoreInput := s.ConvertBytesToGraphemeSet(); needMoreInput {
 		return false, nil
 	}
 
-	for len(s.pendingInputClusterSet) > 0 {
-		r := s.pendingInputClusterSet[0]
+	for len(s.PendingInputClusterSet) > 0 {
+		r := s.PendingInputClusterSet[0]
 
 		switch {
 		case equal(r, grapheme.CtrlC):
@@ -134,14 +134,14 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return true, nil
 		case equal(r, grapheme.Escape):
-			doContinue, err := s.processEscapeSequence(r, s.escapeSequenceHandler)
+			doContinue, err := s.ProcessEscapeSequence(r, s.escapeSequenceHandler)
 			if !doContinue {
 				return false, err
 			}
 			continue
 		}
 
-		s.pendingInputClusterSet = s.pendingInputClusterSet[1:]
+		s.PendingInputClusterSet = s.PendingInputClusterSet[1:]
 	}
 
 	return false, nil

@@ -375,7 +375,7 @@ func Test_Confirm_printFinalPromptLine(t *testing.T) {
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")
 		confirmPrompt.Out = &bytes.Buffer{}
-		confirmPrompt.prompt = fmt.Sprintf("%s%s ", confirmPrompt.icon.Get(), confirmPrompt.title.Get())
+		confirmPrompt.Prompt = fmt.Sprintf("%s%s ", confirmPrompt.icon.Get(), confirmPrompt.title.Get())
 		confirmPrompt.printFinalPromptLine()
 		require.Equal(t, expectedOutput, confirmPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
 	})

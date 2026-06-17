@@ -85,8 +85,8 @@ func (t *Text) ask() error {
 		}()
 	}
 
-	t.prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
-	fmt.Fprint(t.Out, t.prompt)
+	t.Prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
+	fmt.Fprint(t.Out, t.Prompt)
 
 	for {
 		input, err := t.In.RawRead()
@@ -149,7 +149,7 @@ func (t *Text) printErrorMessage(err error) {
 	}
 
 	builder.WriteString(resetLineAbove())
-	builder.WriteString(t.prompt)
+	builder.WriteString(t.Prompt)
 	fmt.Fprint(t.Out, builder.String())
 }
 
@@ -162,7 +162,7 @@ func (t *Text) printFinalPromptLine() {
 	if !t.hide {
 		builder.WriteString(ansi.ClearLineReset)
 		t.answer.val = *t.value
-		promptAnswer := t.prompt + t.answer.Get()
+		promptAnswer := t.Prompt + t.answer.Get()
 		builder.WriteString(promptAnswer)
 	}
 
@@ -176,7 +176,7 @@ func (t *Text) printFinalPromptLine() {
 func (t *Text) handleEnter(_ grapheme.Cluster) (done bool, err error) {
 	if err := t.validateFn(t.pendingValueClusterSet.String()); err != nil {
 		t.printErrorMessage(err)
-		t.pendingInputClusterSet = nil
+		t.PendingInputClusterSet = nil
 		t.pendingValueClusterSet = nil
 		return false, nil
 	}
@@ -193,7 +193,7 @@ func (t *Text) handleDelete(_ grapheme.Cluster) (done bool, err error) {
 		t.printInput("\b \b")
 	}
 
-	t.pendingInputClusterSet = t.pendingInputClusterSet[1:]
+	t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
 	return false, nil
 }
 
@@ -207,14 +207,14 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 		return false, nil
 	}
 
-	t.pendingInputBytes = append(t.pendingInputBytes, input...)
+	t.PendingInputBytes = append(t.PendingInputBytes, input...)
 
-	if needMoreInput := t.parseInputToGraphemeSet(); needMoreInput {
+	if needMoreInput := t.ConvertBytesToGraphemeSet(); needMoreInput {
 		return false, nil
 	}
 
-	for len(t.pendingInputClusterSet) > 0 {
-		r := t.pendingInputClusterSet[0]
+	for len(t.PendingInputClusterSet) > 0 {
+		r := t.PendingInputClusterSet[0]
 		switch {
 		case equal(r, grapheme.CtrlC):
 			return true, ErrUserAborted
@@ -225,7 +225,7 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 		case equal(r, grapheme.Delete), equal(r, grapheme.Backspace):
 			return t.handleDelete(r)
 		case equal(r, grapheme.Escape):
-			doContinue, err := t.processEscapeSequence(r, nil)
+			doContinue, err := t.ProcessEscapeSequence(r, nil)
 			if !doContinue {
 				return false, err
 			}
@@ -233,11 +233,11 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 		}
 
 		t.pendingValueClusterSet = append(t.pendingValueClusterSet, r)
-		t.pendingInputClusterSet = t.pendingInputClusterSet[1:]
+		t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
 		t.printInput(string(r))
 	}
 
-	t.pendingInputClusterSet = nil
+	t.PendingInputClusterSet = nil
 
 	return false, nil
 }
