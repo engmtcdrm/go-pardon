@@ -17,54 +17,61 @@ func ClusterSetFromString(s string) ClusterSet {
 
 	var cs ClusterSet
 
-	for len(pendingSet) > 0 {
-		c := pendingSet[0]
+	_, cs = parseANSIEscape(pendingSet)
+
+	return cs
+}
+
+func parseANSIEscape(in ClusterSet) (ClusterSet, ClusterSet) {
+	var out ClusterSet
+
+	for len(in) > 0 {
+		c := in[0]
 
 		if !Equal(c, Escape) {
-			cs = append(cs, c)
-			pendingSet = pendingSet[1:]
+			out = append(out, c)
+			in = in[1:]
 			continue
 		}
 
 		pendingEscSeqSet := ClusterSet{}
 		pendingEscSeqSet = append(pendingEscSeqSet, c)
-		if len(pendingSet) == 1 {
+		if len(in) == 1 {
 			// We have an escape character but no more input, so we should treat
 			// it as a normal cluster.
-			cs = append(cs, c)
-			pendingSet = pendingSet[1:]
+			out = append(out, c)
+			in = in[1:]
 			continue
 		}
 
-		pendingEscSeqSet = append(pendingEscSeqSet, pendingSet[1])
+		pendingEscSeqSet = append(pendingEscSeqSet, in[1])
 		pendingEscSeqCluster := New(pendingEscSeqSet.Runes()...)
 		switch {
 		case !IsFeEscapeSequence(pendingEscSeqCluster):
 			// We have an escape character and one more input, but it's not a
 			// full escape sequence, so we should treat the escape character as
 			// a normal cluster and continue processing the next cluster.
-			cs = append(cs, c)
-			pendingSet = pendingSet[1:]
+			out = append(out, c)
+			in = in[1:]
 			continue
 		}
 
-		nextCluster := New(pendingSet[2:].Runes()...)
+		nextCluster := New(in[2:].Runes()...)
 		seqEndIdx := IndexOfSequenceEnd(nextCluster)
 		if seqEndIdx == -1 {
 			// We have the start of an escape sequence but we don't have the
 			// full sequence yet, so we should treat the escape character as a
 			// normal cluster and continue processing the next cluster.
-			cs = append(cs, c)
-			pendingSet = pendingSet[1:]
+			out = append(out, c)
+			in = in[1:]
 			continue
 		}
 
-		pendingEscSeqCluster = append(pendingEscSeqCluster, pendingSet[2:3+seqEndIdx].Runes()...)
-		// cs = append(cs, pendingEscSeqCluster)
-		pendingSet = pendingSet[3+seqEndIdx:]
+		pendingEscSeqCluster = append(pendingEscSeqCluster, in[2:3+seqEndIdx].Runes()...)
+		out = append(out, pendingEscSeqCluster)
+		in = in[3+seqEndIdx:]
 	}
-
-	return cs
+	return in, out
 }
 
 // Equal reports whether a and b are the same length and contain the same runes.
@@ -106,7 +113,7 @@ func IndexOfSequenceEnd(gc Cluster) int {
 
 // IsFeEscapeSequence checks if the given Cluster is a Fe Escape Sequence.
 func IsFeEscapeSequence(gc Cluster) bool {
-	if len(gc) != 2 {
+	if len(gc) < 2 {
 		return false
 	}
 

@@ -104,8 +104,9 @@ func (t *Text) ask() error {
 }
 
 func (t *Text) setDefaultValue() {
-	// t.defaultValue = grapheme.ClusterSetFromString(ansi.Strip(*t.value))
-	t.defaultValue = grapheme.ClusterSetFromString(*t.value)
+	if t.value != nil {
+		t.defaultValue = grapheme.ClusterSetFromString(*t.value)
+	}
 }
 
 func (t *Text) getPrompt() string {
@@ -115,10 +116,13 @@ func (t *Text) getPrompt() string {
 
 	if len(t.defaultValue) > 0 {
 		t.promptDefault = fmt.Sprintf("%s%s%s%s ",
-			ansi.Dim,
+			// ansi.Dim,
+			"",
 			t.defaultValue.String(),
-			ansi.Reset,
-			ansi.CursorBackward(len(t.defaultValue)+1),
+			"",
+			// ansi.Reset,
+			ansi.CursorBackward(t.defaultValue.VisualLen()),
+			// strings.Repeat("\b \b", t.defaultValue.VisualLen()),
 		)
 
 		prompt.WriteString(t.promptDefault)
