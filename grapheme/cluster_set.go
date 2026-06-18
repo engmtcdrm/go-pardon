@@ -13,6 +13,10 @@ func (cs ClusterSet) Bytes() []byte {
 	return result
 }
 
+func (cs ClusterSet) Len() int {
+	return len(cs)
+}
+
 // Runes returns the rune representation of the ClusterSet.
 func (cs ClusterSet) Runes() []rune {
 	var result []rune
@@ -26,4 +30,12 @@ func (cs ClusterSet) Runes() []rune {
 // String returns the string representation of the ClusterSet.
 func (cs ClusterSet) String() string {
 	return string(cs.Runes())
+}
+
+func (cs ClusterSet) VisualLen() int {
+	total := 0
+	for _, c := range cs {
+		total += c.VisualLen()
+	}
+	return total
 }

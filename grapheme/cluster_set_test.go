@@ -3,6 +3,7 @@ package grapheme
 import (
 	"testing"
 
+	"github.com/engmtcdrm/go-ansi"
 	"github.com/stretchr/testify/require"
 )
 
@@ -104,6 +105,55 @@ func Test_ClusterSet_String(t *testing.T) {
 		}
 		expected := graphemeClusterString
 		output := cs.String()
+		require.Equal(t, expected, output)
+	})
+}
+
+// Tests for [ClusterSet.VisualLen] function.
+func Test_ClusterSet_VisualLen(t *testing.T) {
+	t.Run("ClusterSet with all visible characters", func(t *testing.T) {
+		cs := ClusterSet{
+			hello,
+			space,
+			world,
+		}
+		expected := len("Hello World")
+		output := cs.VisualLen()
+		require.Equal(t, expected, output)
+	})
+
+	t.Run("ClusterSet with complex grapheme cluster characters", func(t *testing.T) {
+		cs := ClusterSet{
+			graphemeCluster,
+		}
+		expected := 4 // The visual length of a complex grapheme cluster is 1
+		output := cs.VisualLen()
+		require.Equal(t, expected, output)
+	})
+
+	t.Run("ClusterSet with ANSI escape sequence characters", func(t *testing.T) {
+		cs := ClusterSet{
+			New([]rune(ansi.Red)...), // ANSI escape sequence for red text
+			hello,
+			space,
+			world,
+			New([]rune(ansi.Reset)...), // ANSI escape sequence to reset
+		}
+		expected := len("Hello World") // The visual length should ignore ANSI escape sequences
+		output := cs.VisualLen()
+		require.Equal(t, expected, output)
+	})
+
+	t.Run("ClusterSet with complex ANSI escape sequence characters", func(t *testing.T) {
+		cs := ClusterSet{
+			New('\x1b', '[', '1', ';', '3', '1', 'm'), // ANSI escape sequence for red text
+			hello,
+			space,
+			world,
+			New([]rune(ansi.Reset)...), // ANSI escape sequence to reset
+		}
+		expected := len("Hello World") // The visual length should ignore ANSI escape sequences
+		output := cs.VisualLen()
 		require.Equal(t, expected, output)
 	})
 }
