@@ -19,6 +19,8 @@ type Text struct {
 	// input).
 	hide bool
 
+	defaultValue           grapheme.ClusterSet
+	promptDefault          string
 	pendingValueClusterSet grapheme.ClusterSet
 }
 
@@ -41,6 +43,7 @@ func NewQuestion(value *string) *Text {
 		validateFn: func(s string) error { return nil },
 	}
 	t.PromptBase.Self = t
+	t.setDefaultValue()
 	return t
 }
 
@@ -86,7 +89,7 @@ func (t *Text) ask() error {
 	}
 
 	t.Prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
-	fmt.Fprint(t.Out, t.Prompt)
+	fmt.Fprint(t.Out, t.getPrompt())
 
 	for {
 		input, err := t.In.RawRead()
@@ -98,6 +101,30 @@ func (t *Text) ask() error {
 			return err
 		}
 	}
+}
+
+func (t *Text) setDefaultValue() {
+	// t.defaultValue = grapheme.ClusterSetFromString(ansi.Strip(*t.value))
+	t.defaultValue = grapheme.ClusterSetFromString(*t.value)
+}
+
+func (t *Text) getPrompt() string {
+	var prompt strings.Builder
+	prompt.WriteString(ansi.ClearLineReset)
+	prompt.WriteString(t.Prompt)
+
+	if len(t.defaultValue) > 0 {
+		t.promptDefault = fmt.Sprintf("%s%s%s%s ",
+			ansi.Dim,
+			t.defaultValue.String(),
+			ansi.Reset,
+			ansi.CursorBackward(len(t.defaultValue)+1),
+		)
+
+		prompt.WriteString(t.promptDefault)
+	}
+
+	return prompt.String()
 }
 
 func (t *Text) getPromptLines(prompt string) (int, error) {
@@ -181,7 +208,9 @@ func (t *Text) handleEnter(_ grapheme.Cluster) (done bool, err error) {
 		return false, nil
 	}
 
-	*t.value = t.pendingValueClusterSet.String()
+	if len(t.pendingValueClusterSet) > 0 {
+		*t.value = t.pendingValueClusterSet.String()
+	}
 
 	t.printFinalPromptLine()
 	return true, nil
@@ -191,6 +220,10 @@ func (t *Text) handleDelete(_ grapheme.Cluster) (done bool, err error) {
 	if len(t.pendingValueClusterSet) > 0 {
 		t.pendingValueClusterSet = t.pendingValueClusterSet[:len(t.pendingValueClusterSet)-1]
 		t.printInput("\b \b")
+	}
+
+	if len(t.pendingValueClusterSet) == 0 {
+		fmt.Fprint(t.Out, t.getPrompt())
 	}
 
 	t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
@@ -234,7 +267,8 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 
 		t.pendingValueClusterSet = append(t.pendingValueClusterSet, r)
 		t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
-		t.printInput(string(r))
+		fmt.Fprint(t.Out, ansi.ClearLineReset+t.Prompt)
+		t.printInput(t.pendingValueClusterSet.String())
 	}
 
 	t.PendingInputClusterSet = nil
