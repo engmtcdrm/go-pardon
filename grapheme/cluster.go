@@ -15,6 +15,35 @@ func (c Cluster) Bytes() []byte {
 	return []byte(c.String())
 }
 
+func (c Cluster) IsANSIEscapeSequence() bool {
+	if !IsFeEscapeSequence(c) {
+		return false
+	}
+
+	seqEndIdx := IndexOfSequenceEnd(c[2:])
+	if seqEndIdx == -1 {
+		return false
+	}
+
+	if seqEndIdx != len(c[2:])-1 {
+		return false
+	}
+
+	return true
+}
+
+func (c Cluster) Len() int {
+	return len(c)
+}
+
+func (c Cluster) VisualLen() int {
+	if c.IsANSIEscapeSequence() {
+		return 0
+	}
+
+	return len(c)
+}
+
 // String returns the string representation of the Cluster.
 func (c Cluster) String() string {
 	return string(c)

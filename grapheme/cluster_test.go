@@ -56,6 +56,23 @@ func Test_Cluster_Bytes(t *testing.T) {
 	})
 }
 
+// Tests for [Cluster.IsANSIEscapeSequence] functions.
+func Test_Cluster_IsANSIEscapeSequence(t *testing.T) {
+	t.Run("Cluster with a single rune", func(t *testing.T) {
+		c := New('a')
+		expected := false
+		output := c.IsANSIEscapeSequence()
+		require.Equal(t, expected, output)
+	})
+
+	t.Run("Cluster with an ANSI escape sequence", func(t *testing.T) {
+		c := New('\x1b', '[', '0', 'm')
+		expected := true
+		output := c.IsANSIEscapeSequence()
+		require.Equal(t, expected, output)
+	})
+}
+
 // Tests for [Cluster.String] functions.
 func Test_Cluster_String(t *testing.T) {
 	t.Run("Cluster with a single rune", func(t *testing.T) {
