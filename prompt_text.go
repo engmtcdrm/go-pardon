@@ -78,6 +78,13 @@ func (t *Text) ValidateFunc(fn func(string) error) *Text {
 	return t
 }
 
+// Value sets a default value for the prompt.
+func (t *Text) Value(value *string) *Text {
+	t.value = value
+	t.setDefaultValue()
+	return t
+}
+
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
 func (t *Text) ask() error {
