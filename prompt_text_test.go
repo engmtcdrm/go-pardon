@@ -335,6 +335,40 @@ func Test_Text_ask(t *testing.T) {
 	})
 }
 
+// Tests for [Text.getPrompt] function.
+func Test_Text_getPrompt(t *testing.T) {
+	setPrompt := func(t *testing.T, questionPrompt *Text) {
+		t.Helper()
+		questionPrompt.Prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
+	}
+
+	t.Run("Simple prompt", func(t *testing.T) {
+		name := ""
+		questionPrompt := NewQuestion(&name).
+			Title("What is your name?")
+
+		setPrompt(t, questionPrompt)
+
+		s := questionPrompt.getPrompt()
+		expected := fmt.Sprintf("%s%s%s ", ansi.ClearLineReset, Icons.QuestionMark, "What is your name?")
+		assert.Equal(t, expected, s, "getPrompt() did not return expected prompt string")
+	})
+
+	// name := "input ❤️ [31mApple[0m"
+	// questionPrompt := NewQuestion(&name).
+	// 	Title("What is your name?")
+
+	// // questionPrompt.Out = mockTTY
+	// questionPrompt.Prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
+
+	// s := questionPrompt.getPrompt()
+	// _ = s
+
+	// changeDefaultFunc(t, iconFn, func(s string) string {
+	// 	return fmt.Sprintf("%s%s%s", ansi.Green, s, ansi.Reset)
+	// })
+}
+
 // Tests for [Text.processInput] function.
 func Test_Text_processInput(t *testing.T) {
 	t.Run("should return done true and set value on Enter key", func(t *testing.T) {
