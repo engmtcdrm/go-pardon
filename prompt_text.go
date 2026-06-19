@@ -115,14 +115,11 @@ func (t *Text) getPrompt() string {
 	prompt.WriteString(t.Prompt)
 
 	if len(t.defaultValue) > 0 {
-		t.promptDefault = fmt.Sprintf("%s%s%s%s ",
-			// ansi.Dim,
-			"",
+		t.promptDefault = fmt.Sprintf("%s%s%s%s",
+			ansi.Dim,
 			t.defaultValue.String(),
-			"",
-			// ansi.Reset,
+			ansi.Reset,
 			ansi.CursorBackward(t.defaultValue.VisualLen()),
-			// strings.Repeat("\b \b", t.defaultValue.VisualLen()),
 		)
 
 		prompt.WriteString(t.promptDefault)
