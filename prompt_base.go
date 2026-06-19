@@ -1,12 +1,14 @@
 package pardon
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"unicode/utf8"
 
 	"github.com/clipperhouse/uax29/v2/graphemes"
 	"github.com/engmtcdrm/go-pardon/grapheme"
+	"golang.org/x/term"
 )
 
 // ClusterHandler defines a function type that handles a [grapheme.Cluster].
@@ -38,7 +40,7 @@ type PromptBase[T comparable, Self any] struct {
 	//
 	// This should not be modified outside the struct. It is intentionally
 	// exported to allow for easier testing.
-	Prompt string
+	Prompt grapheme.ClusterSet
 
 	// PendingInputBytes holds the raw input bytes that have been read from the
 	// terminal but not yet processed.
@@ -140,6 +142,26 @@ func (bp *PromptBase[T, Self]) ConvertBytesToGraphemeSet() (needMoreInput bool) 
 	return false
 }
 
+// GetTerminalSize returns the width and height of the terminal in columns and
+// rows. If the terminal size cannot be determined, it returns default values of
+// 80 columns and 25 rows.
+func (bp *PromptBase[T, Self]) GetTerminalSize() (width int, height int) {
+	termWidth := 80  // Default width
+	termHeight := 25 // Default height
+
+	f, ok := bp.Out.(*os.File)
+	if !ok {
+		return termWidth, termHeight
+	}
+
+	width, height, err := term.GetSize(int(f.Fd()))
+	if err == nil {
+		return width, height
+	}
+
+	return termWidth, termHeight
+}
+
 func (bp *PromptBase[T, Self]) ProcessEscapeSequence(c grapheme.Cluster, handler ClusterHandler) (done bool, err error) {
 	pendingEscSeqSet := grapheme.ClusterSet{}
 
@@ -184,6 +206,10 @@ func (bp *PromptBase[T, Self]) ProcessEscapeSequence(c grapheme.Cluster, handler
 	bp.PendingInputClusterSet = bp.PendingInputClusterSet[3+seqEndIdx:]
 
 	return true, nil
+}
+
+func (bp *PromptBase[T, Self]) buildAndSetPrompt() {
+	bp.Prompt = grapheme.ClusterSetFromString(fmt.Sprintf("%s%s ", bp.icon.Get(), bp.title.Get()))
 }
 
 // zeroParent returns the zero value for the generic type P. This is used to

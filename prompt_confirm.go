@@ -61,8 +61,8 @@ func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm {
 }
 
 func (c *Confirm) ask() error {
-	c.Prompt = fmt.Sprintf("%s%s ", c.icon.Get(), c.title.Get())
-	c.promptOpts = fmt.Sprintf("%s%s ", c.Prompt, c.getPromptOptions())
+	c.buildAndSetPrompt()
+	c.promptOpts = fmt.Sprintf("%s%s ", c.Prompt.String(), c.getPromptOptions())
 
 	fmt.Fprint(c.Out, c.promptOpts)
 
@@ -130,7 +130,7 @@ func (c *Confirm) printFinalPromptLine() {
 	builder := strings.Builder{}
 	builder.WriteString(ansi.ClearLineReset)
 	c.answer.val = c.getValueAsString()
-	promptAnswer := c.Prompt + c.answer.Get()
+	promptAnswer := c.Prompt.String() + c.answer.Get()
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n" + ansi.ClearLineReset)
 	fmt.Fprint(c.Out, builder.String())

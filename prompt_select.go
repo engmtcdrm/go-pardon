@@ -2,14 +2,12 @@ package pardon
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/grapheme"
 	"github.com/mattn/go-runewidth"
 	"github.com/rivo/uniseg"
-	"golang.org/x/term"
 )
 
 // Select represents a multiple-choice selection prompt.
@@ -64,7 +62,7 @@ func (s *Select[T]) ask() error {
 		fmt.Fprint(s.Out, ansi.ShowCursor)
 	}()
 
-	s.Prompt = fmt.Sprintf("%s%s", s.icon.Get(), s.title.Get())
+	s.buildAndSetPrompt()
 	fmt.Fprintln(s.Out, s.Prompt)
 
 	s.renderOptions(false)
@@ -130,7 +128,8 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 		case grapheme.Equal(r, grapheme.Enter), grapheme.Equal(r, grapheme.Newline):
 			*s.value = s.options[s.cursorPos].Value
 			s.answer.val = s.options[s.cursorPos].Key
-			visibleOptions := min(len(s.options), s.GetTerminalHeight()-3)
+			_, termHeight := s.GetTerminalSize()
+			visibleOptions := min(len(s.options), termHeight-3)
 			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
 			return true, nil
 		case grapheme.Equal(r, grapheme.Escape):
@@ -207,7 +206,8 @@ func (s *Select[T]) updateScrollOffset(termHeight int) {
 
 // renderOptions displays the list of available options to the user.
 func (s *Select[T]) renderOptions(redraw bool) {
-	termHeight := s.GetTerminalHeight() - 3
+	_, termHeight := s.GetTerminalSize()
+	termHeight = termHeight - 3
 	selectSize := len(s.options)
 
 	s.updateScrollOffset(termHeight)
@@ -232,21 +232,4 @@ func (s *Select[T]) renderOptions(redraw bool) {
 			fmt.Fprintf(s.Out, "%s%s\n", selectCursor, s.selectEval.Get())
 		}
 	}
-}
-
-// GetTerminalHeight returns the height of the terminal in rows. If the terminal
-// size cannot be determined, it returns a default height of 25 rows.
-func (s *Select[T]) GetTerminalHeight() int {
-	termHeight := 25 // Default height
-
-	f, ok := s.Out.(*os.File)
-	if !ok {
-		return termHeight
-	}
-
-	if _, height, err := term.GetSize(int(f.Fd())); err == nil {
-		termHeight = height
-	}
-
-	return termHeight
 }

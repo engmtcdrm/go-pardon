@@ -339,7 +339,7 @@ func Test_Text_ask(t *testing.T) {
 func Test_Text_getPrompt(t *testing.T) {
 	setPrompt := func(t *testing.T, questionPrompt *Text) {
 		t.Helper()
-		questionPrompt.Prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
+		questionPrompt.Prompt = grapheme.ClusterSetFromString(fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get()))
 	}
 
 	t.Run("Simple prompt", func(t *testing.T) {
@@ -349,7 +349,7 @@ func Test_Text_getPrompt(t *testing.T) {
 
 		setPrompt(t, questionPrompt)
 
-		s := questionPrompt.getPrompt()
+		s := questionPrompt.getPromptWithDefaultValue()
 		expected := fmt.Sprintf("%s%s%s ", ansi.ClearLineReset, Icons.QuestionMark, "What is your name?")
 		assert.Equal(t, expected, s, "getPrompt() did not return expected prompt string")
 	})
@@ -404,8 +404,7 @@ func Test_Text_getPromptLines(t *testing.T) {
 		questionPrompt := NewQuestion(nil)
 		questionPrompt.Out = mockTTY
 
-		lines, err := questionPrompt.getPromptLines("Short prompt?")
-		assert.NoError(t, err, "getPromptLines should not return an error")
+		lines := questionPrompt.getLines("Short prompt?")
 		assert.Equal(t, 1, lines, "getPromptLines should return 1 for short prompt")
 	})
 
@@ -415,36 +414,8 @@ func Test_Text_getPromptLines(t *testing.T) {
 		questionPrompt := NewQuestion(nil)
 		questionPrompt.Out = mockTTY
 
-		lines, err := questionPrompt.getPromptLines("Short prompt?")
-		assert.NoError(t, err, "getPromptLines should not return an error")
+		lines := questionPrompt.getLines("Short prompt?")
 		assert.Equal(t, 3, lines, "getPromptLines should return 3 for prompt that exceeds terminal width")
-	})
-
-	t.Run("should return an error if output writer is not a file", func(t *testing.T) {
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = &bytes.Buffer{}
-
-		_, err := questionPrompt.getPromptLines("Short prompt?")
-		assert.Error(t, err, "getPromptLines should return an error if output writer is not a file")
-	})
-
-	t.Run("should return an error if terminal width is 0", func(t *testing.T) {
-		_, mockTTY := testutils.CreatePTYWithSize(t, 0, 10)
-
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = mockTTY
-
-		_, err := questionPrompt.getPromptLines("Short prompt?")
-		assert.Error(t, err, "getPromptLines should return an error if terminal width is 0")
-	})
-
-	t.Run("should return an error if terminal size cannot be determined", func(t *testing.T) {
-		// Use a regular file (not a PTY) so term.GetSize will fail with ENOTTY.
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = testutils.CreateValidTestFile(t, "not a pty")
-
-		_, err := questionPrompt.getPromptLines("Short prompt?")
-		assert.Error(t, err, "getPromptLines should return an error if terminal size cannot be determined")
 	})
 }
 
@@ -500,7 +471,7 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 			Title("What is your name?")
 		questionPrompt.Out = &bytes.Buffer{}
 		*questionPrompt.value = "Bobby"
-		questionPrompt.Prompt = fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get())
+		questionPrompt.Prompt = grapheme.ClusterSetFromString(fmt.Sprintf("%s%s ", questionPrompt.icon.Get(), questionPrompt.title.Get()))
 
 		questionPrompt.printFinalPromptLine()
 		require.Equal(t, expectedOutput, questionPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when value is false")
@@ -513,7 +484,7 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 			Title("What is your password?")
 		passwordPrompt.Out = &bytes.Buffer{}
 		*passwordPrompt.value = "MySuperSecretPassword"
-		passwordPrompt.Prompt = fmt.Sprintf("%s%s ", passwordPrompt.icon.Get(), passwordPrompt.title.Get())
+		passwordPrompt.Prompt = grapheme.ClusterSetFromString(fmt.Sprintf("%s%s ", passwordPrompt.icon.Get(), passwordPrompt.title.Get()))
 
 		passwordPrompt.printFinalPromptLine()
 		require.Equal(t, expectedOutput, passwordPrompt.Out.(*bytes.Buffer).String(), "printFinalPromptLine() did not print expected output when hide is true")

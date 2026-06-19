@@ -2,12 +2,10 @@ package pardon
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/grapheme"
-	"golang.org/x/term"
 )
 
 type Text struct {
@@ -95,8 +93,8 @@ func (t *Text) ask() error {
 		}()
 	}
 
-	t.Prompt = fmt.Sprintf("%s%s ", t.icon.Get(), t.title.Get())
-	fmt.Fprint(t.Out, t.getPrompt())
+	t.buildAndSetPrompt()
+	fmt.Fprint(t.Out, t.getPromptWithDefaultValue())
 
 	for {
 		input, err := t.In.RawRead()
@@ -116,10 +114,10 @@ func (t *Text) setDefaultValue() {
 	}
 }
 
-func (t *Text) getPrompt() string {
+func (t *Text) getPromptWithDefaultValue() string {
 	var prompt strings.Builder
 	prompt.WriteString(ansi.ClearLineReset)
-	prompt.WriteString(t.Prompt)
+	prompt.WriteString(t.Prompt.String())
 
 	if len(t.defaultValue) > 0 {
 		t.promptDefault = fmt.Sprintf("%s%s%s%s",
@@ -135,25 +133,11 @@ func (t *Text) getPrompt() string {
 	return prompt.String()
 }
 
-func (t *Text) getPromptLines(prompt string) (int, error) {
+func (t *Text) getLines(text string) int {
 	promptLines := 1
+	width, _ := t.GetTerminalSize()
 
-	writer, ok := t.Out.(*os.File)
-	if !ok {
-		return 0, fmt.Errorf("unable to determine prompt lines: output writer is not a file")
-	}
-
-	fd := int(writer.Fd())
-	width, _, err := term.GetSize(fd)
-	if err != nil {
-		return 0, err
-	}
-
-	if width == 0 {
-		return 0, fmt.Errorf("unable to determine prompt lines: terminal width is 0")
-	}
-
-	promptCharCnt := len(ansi.Strip(prompt))
+	promptCharCnt := len(ansi.Strip(text))
 
 	// If prompt is wider than terminal, calculate number of lines it is so we
 	// know how many lines it occupies.
@@ -161,7 +145,7 @@ func (t *Text) getPromptLines(prompt string) (int, error) {
 		promptLines = (promptCharCnt / width) + 1
 	}
 
-	return promptLines, nil
+	return promptLines
 }
 
 func (t *Text) printErrorMessage(err error) {
@@ -173,18 +157,14 @@ func (t *Text) printErrorMessage(err error) {
 	// Write error message, move/clear the line above, then reprint the prompt.
 	errMsg := validationErrorMessage(err)
 
-	errMsgLines, err := t.getPromptLines(errMsg)
-	if err != nil {
-		panic(err)
-	}
-
+	errMsgLines := t.getLines(errMsg)
 	builder.WriteString(errMsg)
 	for i := 0; i < errMsgLines-1; i++ {
 		builder.WriteString(ansi.CursorUp(1))
 	}
 
 	builder.WriteString(resetLineAbove())
-	builder.WriteString(t.Prompt)
+	builder.WriteString(t.Prompt.String())
 	fmt.Fprint(t.Out, builder.String())
 }
 
@@ -197,7 +177,7 @@ func (t *Text) printFinalPromptLine() {
 	if !t.hide {
 		builder.WriteString(ansi.ClearLineReset)
 		t.answer.val = *t.value
-		promptAnswer := t.Prompt + t.answer.Get()
+		promptAnswer := t.Prompt.String() + t.answer.Get()
 		builder.WriteString(promptAnswer)
 	}
 
@@ -231,7 +211,7 @@ func (t *Text) handleDelete(_ grapheme.Cluster) (done bool, err error) {
 	}
 
 	if len(t.pendingValueClusterSet) == 0 {
-		fmt.Fprint(t.Out, t.getPrompt())
+		fmt.Fprint(t.Out, t.getPromptWithDefaultValue())
 	}
 
 	t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
@@ -275,7 +255,7 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 
 		t.pendingValueClusterSet = append(t.pendingValueClusterSet, r)
 		t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
-		fmt.Fprint(t.Out, ansi.ClearLineReset+t.Prompt)
+		fmt.Fprint(t.Out, ansi.ClearLineReset+t.Prompt.String())
 		t.printInput(t.pendingValueClusterSet.String())
 	}
 
