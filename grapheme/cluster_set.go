@@ -37,5 +37,6 @@ func (cs ClusterSet) VisualLen() int {
 	for _, c := range cs {
 		total += c.VisualLen()
 	}
+
 	return total
 }

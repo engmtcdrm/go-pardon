@@ -1,11 +1,14 @@
 package grapheme
 
+import "github.com/mattn/go-runewidth"
+
 // Cluster represents a grapheme cluster in a sequence of runes that form a
 // single user-perceived character, such as an emoji or a combined character. It
 // is used to handle complex input scenarios where multiple runes may be
 // combined into a single visual unit.
 type Cluster []rune
 
+// New creates a new Cluster from the provided runes.
 func New(r ...rune) Cluster {
 	return Cluster(r)
 }
@@ -15,6 +18,10 @@ func (c Cluster) Bytes() []byte {
 	return []byte(c.String())
 }
 
+// IsANSIEscapeSequence checks if the Cluster represents an ANSI escape
+// sequence. This may not be a valid ANSI escape sequence, but it will validate
+// the start being an FE escape sequence and the end being a valid ANSI sequence
+// terminator.
 func (c Cluster) IsANSIEscapeSequence() bool {
 	if !IsFeEscapeSequence(c) {
 		return false
@@ -32,19 +39,28 @@ func (c Cluster) IsANSIEscapeSequence() bool {
 	return true
 }
 
+// Len returns the visual length of the cluster, including ANSI escape
+// sequences.
 func (c Cluster) Len() int {
-	return len(c)
-}
-
-func (c Cluster) VisualLen() int {
-	if c.IsANSIEscapeSequence() {
-		return 0
+	width := 0
+	for _, r := range c {
+		width += runewidth.RuneWidth(r)
 	}
 
-	return len(c)
+	return width
 }
 
 // String returns the string representation of the Cluster.
 func (c Cluster) String() string {
 	return string(c)
+}
+
+// VisualLen returns the visual length of the cluster, ignorning ANSI escape
+// sequences.
+func (c Cluster) VisualLen() int {
+	if c.IsANSIEscapeSequence() {
+		return 0
+	}
+
+	return c.Len()
 }

@@ -19,7 +19,7 @@ var (
 	graphemeCluster = New('👩', '🏽', '‍', '💻')
 )
 
-// Tests for [ClusterSet.Bytes] functions.
+// Tests for [ClusterSet.Bytes] function.
 func Test_ClusterSet_Bytes(t *testing.T) {
 	t.Run("empty ClusterSet", func(t *testing.T) {
 		cs := ClusterSet{}
@@ -49,7 +49,12 @@ func Test_ClusterSet_Bytes(t *testing.T) {
 	})
 }
 
-// Tests for [ClusterSet.Runes] functions.
+// TODO: Tests for [ClusterSet.Len] function.
+func Test_ClusterSet_Len(t *testing.T) {
+	t.Skip("Need to implement")
+}
+
+// Tests for [ClusterSet.Runes] function.
 func Test_ClusterSet_Runes(t *testing.T) {
 	t.Run("empty ClusterSet", func(t *testing.T) {
 		cs := ClusterSet{}
@@ -79,7 +84,7 @@ func Test_ClusterSet_Runes(t *testing.T) {
 	})
 }
 
-// Tests for [ClusterSet.String] functions.
+// Tests for [ClusterSet.String] function.
 func Test_ClusterSet_String(t *testing.T) {
 	t.Run("empty ClusterSet", func(t *testing.T) {
 		cs := ClusterSet{}

@@ -32,7 +32,7 @@ func Test_New(t *testing.T) {
 	})
 }
 
-// Tests for [Cluster.Bytes] functions.
+// Tests for [Cluster.Bytes] function.
 func Test_Cluster_Bytes(t *testing.T) {
 	t.Run("Cluster with a single rune", func(t *testing.T) {
 		c := New('a')
@@ -56,7 +56,7 @@ func Test_Cluster_Bytes(t *testing.T) {
 	})
 }
 
-// Tests for [Cluster.IsANSIEscapeSequence] functions.
+// Tests for [Cluster.IsANSIEscapeSequence] function.
 func Test_Cluster_IsANSIEscapeSequence(t *testing.T) {
 	t.Run("Cluster with a single rune", func(t *testing.T) {
 		c := New('a')
@@ -73,7 +73,12 @@ func Test_Cluster_IsANSIEscapeSequence(t *testing.T) {
 	})
 }
 
-// Tests for [Cluster.String] functions.
+// TODO: Tests for [Cluster.Len] function.
+func Test_Cluster_Len(t *testing.T) {
+	t.Skip("Need to finish")
+}
+
+// Tests for [Cluster.String] function.
 func Test_Cluster_String(t *testing.T) {
 	t.Run("Cluster with a single rune", func(t *testing.T) {
 		c := New('a')
@@ -95,4 +100,9 @@ func Test_Cluster_String(t *testing.T) {
 		output := c.String()
 		require.Equal(t, expected, output)
 	})
+}
+
+// TODO: Tests for [Cluster.VisualLen] function.
+func Test_Cluster_VisualLen(t *testing.T) {
+	t.Skip("Need to finish")
 }
