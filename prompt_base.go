@@ -82,33 +82,33 @@ func (bp *PromptBase[T, Self]) AnswerFunc(fn func(string) string) Self {
 	return bp.Self
 }
 
-// Icon sets a static icon for the confirmation prompt.
+// Icon sets a static icon for the prompt.
 func (bp *PromptBase[T, Self]) Icon(s string) Self {
 	bp.icon.val = s
 	bp.icon.fn = nil
 	return bp.Self
 }
 
-// IconFunc sets a dynamic icon function for the confirmation prompt.
+// IconFunc sets a dynamic icon function for the prompt.
 func (bp *PromptBase[T, Self]) IconFunc(fn func(string) string) Self {
 	bp.icon.fn = fn
 	return bp.Self
 }
 
-// Title sets a static title for the confirmation prompt.
+// Title sets a static title for the prompt.
 func (bp *PromptBase[T, Self]) Title(title string) Self {
 	bp.title.val = title
 	bp.title.fn = nil
 	return bp.Self
 }
 
-// TitleFunc sets a dynamic title function for the confirmation prompt.
+// TitleFunc sets a dynamic title function for the prompt.
 func (bp *PromptBase[T, Self]) TitleFunc(fn func(string) string) Self {
 	bp.title.fn = fn
 	return bp.Self
 }
 
-// Value sets a default value for the confirmation prompt.
+// Value sets a default value for the prompt.
 func (bp *PromptBase[T, Self]) Value(value *T) Self {
 	bp.value = value
 	return bp.Self
