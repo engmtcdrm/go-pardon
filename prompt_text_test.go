@@ -400,7 +400,7 @@ func Test_Text_processInput(t *testing.T) {
 func Test_Text_printErrorMessage(t *testing.T) {
 	t.Run("should print error message with correct formatting", func(t *testing.T) {
 		expectedErrorMessage := errors.New("Test error")
-		expected := "\r\n" + validationErrorMessage(expectedErrorMessage) + resetLineAbove()
+		expected := restoreCursor + ansi.ClearFromCursorToEndScreen + validationErrorMessage(expectedErrorMessage) + restoreCursor
 
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
 
@@ -425,7 +425,7 @@ func Test_Text_printErrorMessage(t *testing.T) {
 
 	t.Run("should handle error that exceeds terminal width", func(t *testing.T) {
 		longErrorMessage := errors.New("This is a very long error message that should exceed the terminal width and be handled properly")
-		expected := "\r\n" + validationErrorMessage(longErrorMessage) + ansi.CursorUp(1) + resetLineAbove()
+		expected := "\r\n" + validationErrorMessage(longErrorMessage) + ansi.CursorUp(1)
 
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 60, 10)
 

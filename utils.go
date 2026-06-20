@@ -1,7 +1,7 @@
 package pardon
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/engmtcdrm/go-ansi"
 )
@@ -11,12 +11,15 @@ const (
 	restoreCursor = "\x1b8"
 )
 
-func resetLineAbove() string {
-	return ansi.CursorUp(1) + ansi.ClearLineReset
-}
-
 func validationErrorMessage(err error) string {
-	return fmt.Sprintf("%s%s* %v%s", ansi.ClearLineReset, ansi.RedBg, err, ansi.Reset)
+	var builder strings.Builder
+	builder.WriteString(ansi.ClearLineReset)
+	builder.WriteString(ansi.RedBg)
+	builder.WriteString("* ")
+	builder.WriteString(err.Error())
+	builder.WriteString(ansi.Reset)
+
+	return builder.String()
 }
 
 // zeroParent returns the zero value for the generic type P. This is used to
