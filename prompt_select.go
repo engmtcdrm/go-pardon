@@ -191,8 +191,9 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 	output.WriteString("\n")
 
 	selectCursor := s.cursor.Get()
+	minSize := min(s.scrollOffset+termHeight, selectSize)
 
-	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
+	for i := s.scrollOffset; i < minSize; i++ {
 		selectedOption := s.options[i]
 		cwidth := runewidth.StringWidth(ansi.Strip(selectCursor))
 		cursor := strings.Repeat(" ", cwidth)
@@ -200,14 +201,18 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 		if i != s.cursorPos {
 			output.WriteString(cursor)
 			output.WriteString(selectedOption.Key)
-			output.WriteString("\n")
+			if i != minSize-1 {
+				output.WriteString("\n")
+			}
 			continue
 		}
 
 		s.selectEval.val = selectedOption.Key
 		output.WriteString(selectCursor)
 		output.WriteString(s.selectEval.Get())
-		output.WriteString("\n")
+		if i != minSize-1 {
+			output.WriteString("\n")
+		}
 	}
 
 	fmt.Fprint(s.Out, output.String())
