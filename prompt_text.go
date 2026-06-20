@@ -155,13 +155,13 @@ func (t *Text) printErrorMessage(err error) {
 func (t *Text) printFinalPromptLine() {
 	var builder strings.Builder
 	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(t.Prompt.String())
 
 	// If the input is not hidden, We need to clear the line, then print the
 	// prompt with the answer function applied.
 	if !t.hide {
 		t.answer.val = *t.value
-		promptAnswer := t.Prompt.String() + t.answer.Get()
-		builder.WriteString(promptAnswer)
+		builder.WriteString(t.answer.Get())
 	}
 
 	builder.WriteString("\n")
