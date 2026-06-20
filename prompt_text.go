@@ -176,6 +176,8 @@ func (t *Text) handleEnter(_ grapheme.Cluster) (done bool, err error) {
 		return false, nil
 	}
 
+	// Only set value if input is not empty. Otherwise we will use the default
+	// value.
 	if len(t.pendingValueClusterSet) > 0 {
 		*t.value = t.pendingValueClusterSet.String()
 	}
