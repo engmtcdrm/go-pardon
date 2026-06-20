@@ -61,6 +61,10 @@ func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm {
 }
 
 func (c *Confirm) ask() error {
+	// Need to save cursor location so we can easily redraw the prompt after
+	// user input without needing to recalculate cursor movements.
+	fmt.Fprint(c.Out, saveCursor)
+
 	c.buildAndSetPrompt()
 	c.promptOpts = fmt.Sprintf("%s%s ", c.Prompt.String(), c.getPromptOptions())
 
@@ -88,7 +92,7 @@ func (c *Confirm) getPromptOptions() string {
 		denyKey = bytes.ToUpper(c.denyKeyCluster.Bytes())
 	}
 
-	builder := strings.Builder{}
+	var builder strings.Builder
 	builder.WriteString("[")
 
 	if len(confirmKey) > 0 {
@@ -127,12 +131,13 @@ func (c *Confirm) getValueAsString() string {
 }
 
 func (c *Confirm) printFinalPromptLine() {
-	builder := strings.Builder{}
-	builder.WriteString(ansi.ClearLineReset)
 	c.answer.val = c.getValueAsString()
 	promptAnswer := c.Prompt.String() + c.answer.Get()
+
+	var builder strings.Builder
+	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
 	builder.WriteString(promptAnswer)
-	builder.WriteString("\n" + ansi.ClearLineReset)
+	builder.WriteString("\n")
 	fmt.Fprint(c.Out, builder.String())
 }
 

@@ -396,29 +396,6 @@ func Test_Text_processInput(t *testing.T) {
 	})
 }
 
-// Tests for [Text.getPromptLines] function.
-func Test_Text_getPromptLines(t *testing.T) {
-	t.Run("should return 1 when prompt line fits within terminal width", func(t *testing.T) {
-		_, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
-
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = mockTTY
-
-		lines := questionPrompt.getLines("Short prompt?")
-		assert.Equal(t, 1, lines, "getPromptLines should return 1 for short prompt")
-	})
-
-	t.Run("should return correct number of lines for prompt that exceeds terminal width", func(t *testing.T) {
-		_, mockTTY := testutils.CreatePTYWithSize(t, 5, 10)
-
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = mockTTY
-
-		lines := questionPrompt.getLines("Short prompt?")
-		assert.Equal(t, 3, lines, "getPromptLines should return 3 for prompt that exceeds terminal width")
-	})
-}
-
 // Tests for [Text.printErrorMessage] function.
 func Test_Text_printErrorMessage(t *testing.T) {
 	t.Run("should print error message with correct formatting", func(t *testing.T) {

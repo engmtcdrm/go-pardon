@@ -86,6 +86,10 @@ func (t *Text) Value(value *string) *Text {
 // ask handles the core logic of displaying the prompt, reading user input,
 // validating it, and applying the answer transformation.
 func (t *Text) ask() error {
+	// Need to save cursor location so we can easily redraw the prompt after
+	// user input without needing to recalculate cursor movements.
+	fmt.Fprint(t.Out, saveCursor)
+
 	if t.hide {
 		fmt.Fprint(t.Out, ansi.HideCursor)
 		defer func() {
@@ -133,58 +137,34 @@ func (t *Text) getPromptWithDefaultValue() string {
 	return prompt.String()
 }
 
-func (t *Text) getLines(text string) int {
-	promptLines := 1
-	width, _ := t.GetTerminalSize()
-
-	promptCharCnt := len(ansi.Strip(text))
-
-	// If prompt is wider than terminal, calculate number of lines it is so we
-	// know how many lines it occupies.
-	if promptCharCnt > width {
-		promptLines = (promptCharCnt / width) + 1
-	}
-
-	return promptLines
-}
-
 func (t *Text) printErrorMessage(err error) {
-	builder := strings.Builder{}
-	// Have to manually jump to the next line, otherwise the error message will
-	// be printed on the same line as the prompt.
-	builder.WriteByte('\n')
-
-	// Write error message, move/clear the line above, then reprint the prompt.
 	errMsg := validationErrorMessage(err)
 
-	errMsgLines := t.getLines(errMsg)
+	var builder strings.Builder
+	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(t.getPromptWithDefaultValue())
+	builder.WriteString("\n")
 	builder.WriteString(errMsg)
-	for i := 0; i < errMsgLines-1; i++ {
-		builder.WriteString(ansi.CursorUp(1))
-	}
-
-	builder.WriteString(resetLineAbove())
-	builder.WriteString(t.Prompt.String())
+	builder.WriteString(restoreCursor)
+	builder.WriteString(ansi.CursorHorizontalAbsolute(t.Prompt.VisualLen() + 1))
 	fmt.Fprint(t.Out, builder.String())
 }
 
 // printFinalPromptLine handles printing the final prompt line after successful
 // input.
 func (t *Text) printFinalPromptLine() {
-	builder := strings.Builder{}
+	var builder strings.Builder
+	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+
 	// If the input is not hidden, We need to clear the line, then print the
 	// prompt with the answer function applied.
 	if !t.hide {
-		builder.WriteString(ansi.ClearLineReset)
 		t.answer.val = *t.value
 		promptAnswer := t.Prompt.String() + t.answer.Get()
 		builder.WriteString(promptAnswer)
 	}
 
-	// Regardless of being hidden or not we need to move to the next line and
-	// clear it in case there are any validation error messages that are still
-	// visible.
-	builder.WriteString("\n" + ansi.ClearLineReset)
+	builder.WriteString("\n")
 	fmt.Fprint(t.Out, builder.String())
 }
 

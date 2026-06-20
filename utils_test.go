@@ -9,13 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Tests for [resetLineAbove] function.
-func Test_resetLineAbove(t *testing.T) {
-	expected := ansi.CursorUp(1) + ansi.ClearLineReset
-	result := resetLineAbove()
-	assert.Equal(t, expected, result, "resetLineAbove did not return expected string")
-}
-
 // Tests for [validationErrorMessage] function.
 func Test_validationErrorMessage(t *testing.T) {
 	t.Run("should return expected string", func(t *testing.T) {

@@ -7,7 +7,6 @@ import (
 	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/grapheme"
 	"github.com/mattn/go-runewidth"
-	"github.com/rivo/uniseg"
 )
 
 // Select represents a multiple-choice selection prompt.
@@ -57,15 +56,18 @@ func (s *Select[T]) Ask() error {
 }
 
 func (s *Select[T]) ask() error {
+	// Need to save cursor location so we can easily redraw the prompt after
+	// user input without needing to recalculate cursor movements.
+	fmt.Fprint(s.Out, saveCursor)
+
 	fmt.Fprint(s.Out, ansi.HideCursor)
 	defer func() {
 		fmt.Fprint(s.Out, ansi.ShowCursor)
 	}()
 
 	s.buildAndSetPrompt()
-	fmt.Fprintln(s.Out, s.Prompt)
 
-	s.renderOptions(false)
+	s.render()
 
 	for {
 		input, err := s.In.RawRead()
@@ -108,6 +110,47 @@ func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
 	return s
 }
 
+func (s *Select[T]) handleCtrlC(_ grapheme.Cluster) (done bool, err error) {
+	var builder strings.Builder
+	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(s.Prompt.String())
+	fmt.Fprint(s.Out, builder.String())
+
+	return true, ErrUserAborted
+}
+
+// handleEnter stores the selected value and prints the selected option as the
+// final answer.
+func (s *Select[T]) handleEnter(_ grapheme.Cluster) (done bool, err error) {
+	*s.value = s.options[s.cursorPos].Value
+	s.answer.val = s.options[s.cursorPos].Key
+	s.printFinalPromptLine()
+	return true, nil
+}
+
+// handleEscape processes escape sequences for navigating the options list.
+func (s *Select[T]) handleEscape(seq grapheme.Cluster) (done bool, err error) {
+	switch {
+	case grapheme.Equal(seq, grapheme.UpArrow):
+		s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
+		s.render()
+	case grapheme.Equal(seq, grapheme.DownArrow):
+		s.cursorPos = (s.cursorPos + 1) % len(s.options)
+		s.render()
+	}
+	return false, nil
+}
+
+// printFinalPromptLine handles printing the final prompt line.
+func (s *Select[T]) printFinalPromptLine() {
+	var builder strings.Builder
+	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(s.Prompt.String())
+	builder.WriteString(s.answer.Get())
+	builder.WriteString("\n")
+	fmt.Fprint(s.Out, builder.String())
+}
+
 func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 	if len(input) == 0 {
 		return false, nil
@@ -124,16 +167,11 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 
 		switch {
 		case grapheme.Equal(r, grapheme.CtrlC):
-			return true, ErrUserAborted
+			return s.handleCtrlC(r)
 		case grapheme.Equal(r, grapheme.Enter), grapheme.Equal(r, grapheme.Newline):
-			*s.value = s.options[s.cursorPos].Value
-			s.answer.val = s.options[s.cursorPos].Key
-			_, termHeight := s.GetTerminalSize()
-			visibleOptions := min(len(s.options), termHeight-3)
-			renderClearAndReposition(visibleOptions+1, s.icon.Get(), s.title.Get(), s.answer.Get())
-			return true, nil
+			return s.handleEnter(r)
 		case grapheme.Equal(r, grapheme.Escape):
-			doContinue, err := s.ProcessEscapeSequence(r, s.escapeSequenceHandler)
+			doContinue, err := s.ProcessEscapeSequence(r, s.handleEscape)
 			if !doContinue {
 				return false, err
 			}
@@ -146,38 +184,18 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 	return false, nil
 }
 
-func (s *Select[T]) escapeSequenceHandler(seq grapheme.Cluster) (done bool, err error) {
-	switch {
-	case grapheme.Equal(seq, grapheme.UpArrow):
-		s.cursorPos = (s.cursorPos + len(s.options) - 1) % len(s.options)
-		s.renderOptions(true)
-	case grapheme.Equal(seq, grapheme.DownArrow):
-		s.cursorPos = (s.cursorPos + 1) % len(s.options)
-		s.renderOptions(true)
-	}
-	return false, nil
-}
-
 func (s *Select[T]) redraw(selectSize, termHeight int) {
-	selectCursor := s.cursor.Get()
-	visibleLines := min(selectSize, termHeight)
-
-	// For terminal optimization: build entire output first, then write atomically
 	var output strings.Builder
+	output.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	output.WriteString(s.Prompt.String())
+	output.WriteString("\n")
 
-	// Move cursor up to start position
-	output.WriteString(ansi.CursorUp(visibleLines))
+	selectCursor := s.cursor.Get()
 
-	// Build all lines in memory first
 	for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
 		selectedOption := s.options[i]
 		cwidth := runewidth.StringWidth(ansi.Strip(selectCursor))
 		cursor := strings.Repeat(" ", cwidth)
-		uniseg.StringWidth(ansi.Strip(selectCursor))
-
-		// Clear line and build content
-		output.WriteString("\r")
-		output.WriteString(ansi.ClearLine)
 
 		if i != s.cursorPos {
 			output.WriteString(cursor)
@@ -192,10 +210,11 @@ func (s *Select[T]) redraw(selectSize, termHeight int) {
 		output.WriteString("\n")
 	}
 
-	// Write everything at once to minimize flicker
 	fmt.Fprint(s.Out, output.String())
 }
 
+// updateScrollOffset updates the scroll offset to ensure the selected option is
+// visible within the terminal height.
 func (s *Select[T]) updateScrollOffset(termHeight int) {
 	if s.cursorPos < s.scrollOffset {
 		s.scrollOffset = s.cursorPos
@@ -204,32 +223,12 @@ func (s *Select[T]) updateScrollOffset(termHeight int) {
 	}
 }
 
-// renderOptions displays the list of available options to the user.
-func (s *Select[T]) renderOptions(redraw bool) {
+// render displays the list of available options to the user.
+func (s *Select[T]) render() {
 	_, termHeight := s.GetTerminalSize()
-	termHeight = termHeight - 3
+	termHeight = termHeight - 2 // -2 for breathing room for prompt line
 	selectSize := len(s.options)
 
 	s.updateScrollOffset(termHeight)
-
-	if redraw {
-		s.redraw(selectSize, termHeight)
-	} else {
-		selectCursor := s.cursor.Get()
-
-		// Initial render without redraw
-		for i := s.scrollOffset; i < min(s.scrollOffset+termHeight, selectSize); i++ {
-			selectedOption := s.options[i]
-
-			if i != s.cursorPos {
-				cwidth := runewidth.StringWidth(ansi.Strip(selectCursor))
-				cursor := strings.Repeat(" ", cwidth)
-				fmt.Fprintf(s.Out, "%s%s\n", cursor, selectedOption.Key)
-				continue
-			}
-
-			s.selectEval.val = selectedOption.Key
-			fmt.Fprintf(s.Out, "%s%s\n", selectCursor, s.selectEval.Get())
-		}
-	}
+	s.redraw(selectSize, termHeight)
 }

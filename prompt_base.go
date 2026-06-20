@@ -211,11 +211,3 @@ func (bp *PromptBase[T, Self]) ProcessEscapeSequence(c grapheme.Cluster, handler
 func (bp *PromptBase[T, Self]) buildAndSetPrompt() {
 	bp.Prompt = grapheme.ClusterSetFromString(fmt.Sprintf("%s%s ", bp.icon.Get(), bp.title.Get()))
 }
-
-// zeroParent returns the zero value for the generic type P. This is used to
-// initialize the Self field in the BasePrompt struct to a zero value of the
-// concrete parent type.
-func zeroParent[P any]() P {
-	var p P
-	return p
-}
