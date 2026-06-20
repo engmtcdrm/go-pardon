@@ -55,32 +55,6 @@ func (s *Select[T]) Ask() error {
 	return nil
 }
 
-func (s *Select[T]) ask() error {
-	// Need to save cursor location so we can easily redraw the prompt after
-	// user input without needing to recalculate cursor movements.
-	fmt.Fprint(s.Out, saveCursor)
-
-	fmt.Fprint(s.Out, ansi.HideCursor)
-	defer func() {
-		fmt.Fprint(s.Out, ansi.ShowCursor)
-	}()
-
-	s.buildAndSetPrompt()
-
-	s.render()
-
-	for {
-		input, err := s.In.RawRead()
-		if err != nil {
-			return err
-		}
-
-		if done, err := s.processInput(input); done {
-			return err
-		}
-	}
-}
-
 // Cursor sets the cursor symbol displayed next to the selected option.
 func (s *Select[T]) Cursor(cursor string) *Select[T] {
 	s.cursor.val = cursor
@@ -108,6 +82,31 @@ func (s *Select[T]) Options(options ...Option[T]) *Select[T] {
 func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
 	s.selectEval.fn = fn
 	return s
+}
+
+func (s *Select[T]) ask() error {
+	// Need to save cursor location so we can easily redraw the prompt after
+	// user input without needing to recalculate cursor movements.
+	fmt.Fprint(s.Out, saveCursor)
+
+	fmt.Fprint(s.Out, ansi.HideCursor)
+	defer func() {
+		fmt.Fprint(s.Out, ansi.ShowCursor)
+	}()
+
+	s.buildAndSetPrompt()
+	s.render()
+
+	for {
+		input, err := s.In.RawRead()
+		if err != nil {
+			return err
+		}
+
+		if done, err := s.processInput(input); done {
+			return err
+		}
+	}
 }
 
 func (s *Select[T]) handleCtrlC(_ grapheme.Cluster) (done bool, err error) {
