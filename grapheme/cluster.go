@@ -8,9 +8,25 @@ import "github.com/mattn/go-runewidth"
 // combined into a single visual unit.
 type Cluster []rune
 
-// New creates a new Cluster from the provided runes.
+// New creates a new [Cluster] from the provided runes.
 func New(r ...rune) Cluster {
 	return Cluster(r)
+}
+
+// NewFromRunes creates a new [Cluster] by combining multiple slices of runes
+// into a single Cluster.
+func NewFromRunes(runes ...[]rune) Cluster {
+	var combinedRunes []rune
+	for _, r := range runes {
+		combinedRunes = append(combinedRunes, r...)
+	}
+
+	return Cluster(combinedRunes)
+}
+
+// NewFromString creates a new [Cluster] from the provided string.
+func NewFromString(s string) Cluster {
+	return Cluster([]rune(s))
 }
 
 // Bytes returns the byte representation of the Cluster.
