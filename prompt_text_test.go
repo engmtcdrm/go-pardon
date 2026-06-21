@@ -400,7 +400,7 @@ func Test_Text_processInput(t *testing.T) {
 func Test_Text_printErrorMessage(t *testing.T) {
 	t.Run("should print error message with correct formatting", func(t *testing.T) {
 		expectedErrorMessage := errors.New("Test error")
-		expected := restoreCursor + ansi.ClearFromCursorToEndScreen + validationErrorMessage(expectedErrorMessage) + restoreCursor
+		expected := ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen + validationErrorMessage(expectedErrorMessage) + ansi.RestoreCursorPos
 
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
 

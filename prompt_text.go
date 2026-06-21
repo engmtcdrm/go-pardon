@@ -88,7 +88,7 @@ func (t *Text) Value(value *string) *Text {
 func (t *Text) ask() error {
 	// Need to save cursor location so we can easily redraw the prompt after
 	// user input without needing to recalculate cursor movements.
-	fmt.Fprint(t.Out, saveCursor)
+	fmt.Fprint(t.Out, ansi.SaveCursorPos)
 
 	if t.hide {
 		fmt.Fprint(t.Out, ansi.HideCursor)
@@ -141,11 +141,11 @@ func (t *Text) printErrorMessage(err error) {
 	errMsg := validationErrorMessage(err)
 
 	var builder strings.Builder
-	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
 	builder.WriteString(t.getPromptWithDefaultValue())
 	builder.WriteString("\n")
 	builder.WriteString(errMsg)
-	builder.WriteString(restoreCursor)
+	builder.WriteString(ansi.RestoreCursorPos)
 	builder.WriteString(ansi.CursorHorizontalAbsolute(t.Prompt.VisualLen() + 1))
 	fmt.Fprint(t.Out, builder.String())
 }
@@ -154,7 +154,7 @@ func (t *Text) printErrorMessage(err error) {
 // input.
 func (t *Text) printFinalPromptLine() {
 	var builder strings.Builder
-	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
 	builder.WriteString(t.Prompt.String())
 
 	// If the input is not hidden, We need to clear the line, then print the

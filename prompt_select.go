@@ -87,7 +87,7 @@ func (s *Select[T]) SelectFunc(fn func(string) string) *Select[T] {
 func (s *Select[T]) ask() error {
 	// Need to save cursor location so we can easily redraw the prompt after
 	// user input without needing to recalculate cursor movements.
-	fmt.Fprint(s.Out, saveCursor)
+	fmt.Fprint(s.Out, ansi.SaveCursorPos)
 
 	fmt.Fprint(s.Out, ansi.HideCursor)
 	defer func() {
@@ -111,7 +111,7 @@ func (s *Select[T]) ask() error {
 
 func (s *Select[T]) handleCtrlC(_ grapheme.Cluster) (done bool, err error) {
 	var builder strings.Builder
-	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
 	builder.WriteString(s.Prompt.String())
 	fmt.Fprint(s.Out, builder.String())
 
@@ -143,7 +143,7 @@ func (s *Select[T]) handleEscape(seq grapheme.Cluster) (done bool, err error) {
 // printFinalPromptLine handles printing the final prompt line.
 func (s *Select[T]) printFinalPromptLine() {
 	var builder strings.Builder
-	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
 	builder.WriteString(s.Prompt.String())
 	builder.WriteString(s.answer.Get())
 	builder.WriteString("\n")
@@ -185,7 +185,7 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 
 func (s *Select[T]) redraw(selectSize, termHeight int) {
 	var output strings.Builder
-	output.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	output.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
 	output.WriteString(s.Prompt.String())
 	output.WriteString("\n")
 

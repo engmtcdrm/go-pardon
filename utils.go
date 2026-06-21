@@ -6,11 +6,6 @@ import (
 	"github.com/engmtcdrm/go-ansi"
 )
 
-const (
-	saveCursor    = "\x1b7"
-	restoreCursor = "\x1b8"
-)
-
 func validationErrorMessage(err error) string {
 	var builder strings.Builder
 	builder.WriteString(ansi.ClearLineReset)

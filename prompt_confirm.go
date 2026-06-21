@@ -63,7 +63,7 @@ func (c *Confirm) DenyKey(key grapheme.Cluster) *Confirm {
 func (c *Confirm) ask() error {
 	// Need to save cursor location so we can easily redraw the prompt after
 	// user input without needing to recalculate cursor movements.
-	fmt.Fprint(c.Out, saveCursor)
+	fmt.Fprint(c.Out, ansi.SaveCursorPos)
 
 	c.buildAndSetPrompt()
 	c.promptOpts = fmt.Sprintf("%s%s ", c.Prompt.String(), c.getPromptOptions())
@@ -135,7 +135,7 @@ func (c *Confirm) printFinalPromptLine() {
 	promptAnswer := c.Prompt.String() + c.answer.Get()
 
 	var builder strings.Builder
-	builder.WriteString(restoreCursor + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n")
 	fmt.Fprint(c.Out, builder.String())
