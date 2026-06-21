@@ -189,7 +189,7 @@ func (t *Text) handleEnter(_ grapheme.Cluster) (done bool, err error) {
 func (t *Text) handleDelete(_ grapheme.Cluster) (done bool, err error) {
 	if len(t.pendingValueClusterSet) > 0 {
 		t.pendingValueClusterSet = t.pendingValueClusterSet[:len(t.pendingValueClusterSet)-1]
-		t.printInput("\b \b")
+		t.printInput(grapheme.Backspace, " ", grapheme.Backspace)
 	}
 
 	if len(t.pendingValueClusterSet) == 0 {
@@ -238,7 +238,7 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 		t.pendingValueClusterSet = append(t.pendingValueClusterSet, r)
 		t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
 		fmt.Fprint(t.Out, ansi.ClearLineReset+t.Prompt.String())
-		t.printInput(t.pendingValueClusterSet.String())
+		t.printInput(t.pendingValueClusterSet)
 	}
 
 	t.PendingInputClusterSet = nil
