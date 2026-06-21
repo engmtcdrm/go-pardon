@@ -111,7 +111,7 @@ func (s *Select[T]) ask() error {
 
 func (s *Select[T]) handleCtrlC(_ grapheme.Cluster) (done bool, err error) {
 	var builder strings.Builder
-	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(clearPrompt)
 	builder.WriteString(s.Prompt.String())
 	fmt.Fprint(s.Out, builder.String())
 
@@ -143,7 +143,7 @@ func (s *Select[T]) handleEscape(seq grapheme.Cluster) (done bool, err error) {
 // printFinalPromptLine handles printing the final prompt line.
 func (s *Select[T]) printFinalPromptLine() {
 	var builder strings.Builder
-	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(clearPrompt)
 	builder.WriteString(s.Prompt.String())
 	builder.WriteString(s.answer.Get())
 	builder.WriteString("\n")
@@ -185,7 +185,7 @@ func (s *Select[T]) processInput(input []byte) (done bool, err error) {
 
 func (s *Select[T]) redraw(selectSize, termHeight int) {
 	var output strings.Builder
-	output.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
+	output.WriteString(clearPrompt)
 	output.WriteString(s.Prompt.String())
 	output.WriteString("\n")
 

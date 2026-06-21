@@ -141,7 +141,7 @@ func (t *Text) printErrorMessage(err error) {
 	errMsg := validationErrorMessage(err)
 
 	var builder strings.Builder
-	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(clearPrompt)
 	builder.WriteString(t.getPromptWithDefaultValue())
 	builder.WriteString("\n")
 	builder.WriteString(errMsg)
@@ -154,7 +154,7 @@ func (t *Text) printErrorMessage(err error) {
 // input.
 func (t *Text) printFinalPromptLine() {
 	var builder strings.Builder
-	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(clearPrompt)
 	builder.WriteString(t.Prompt.String())
 
 	// If the input is not hidden, We need to clear the line, then print the

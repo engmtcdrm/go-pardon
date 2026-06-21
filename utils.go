@@ -6,6 +6,8 @@ import (
 	"github.com/engmtcdrm/go-ansi"
 )
 
+const clearPrompt = ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen
+
 func validationErrorMessage(err error) string {
 	var builder strings.Builder
 	builder.WriteString(ansi.ClearLineReset)

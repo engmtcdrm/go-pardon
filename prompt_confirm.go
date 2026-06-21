@@ -135,7 +135,7 @@ func (c *Confirm) printFinalPromptLine() {
 	promptAnswer := c.Prompt.String() + c.answer.Get()
 
 	var builder strings.Builder
-	builder.WriteString(ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen)
+	builder.WriteString(clearPrompt)
 	builder.WriteString(promptAnswer)
 	builder.WriteString("\n")
 	fmt.Fprint(c.Out, builder.String())

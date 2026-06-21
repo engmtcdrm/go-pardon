@@ -6,7 +6,6 @@ import (
 	"io"
 	"testing"
 
-	"github.com/engmtcdrm/go-ansi"
 	"github.com/engmtcdrm/go-pardon/grapheme"
 	"github.com/engmtcdrm/go-pardon/internal/testutils"
 	"github.com/stretchr/testify/assert"
@@ -370,7 +369,7 @@ func Test_Confirm_getValueAsString(t *testing.T) {
 // Tests for [Confirm.printFinalPromptLine] function.
 func Test_Confirm_printFinalPromptLine(t *testing.T) {
 	t.Run("should print final prompt line with prompt and answer", func(t *testing.T) {
-		expectedOutput := ansi.ClearLineReset + "[?] Continue? N\n" + ansi.ClearLineReset
+		expectedOutput := clearPrompt + "[?] Continue? N\n"
 		var result bool
 		confirmPrompt := NewConfirm(&result).
 			Title("Continue?")

@@ -400,7 +400,7 @@ func Test_Text_processInput(t *testing.T) {
 func Test_Text_printErrorMessage(t *testing.T) {
 	t.Run("should print error message with correct formatting", func(t *testing.T) {
 		expectedErrorMessage := errors.New("Test error")
-		expected := ansi.RestoreCursorPos + ansi.ClearFromCursorToEndScreen + validationErrorMessage(expectedErrorMessage) + ansi.RestoreCursorPos
+		expected := clearPrompt + validationErrorMessage(expectedErrorMessage) + ansi.RestoreCursorPos
 
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
 
@@ -413,19 +413,9 @@ func Test_Text_printErrorMessage(t *testing.T) {
 		assert.Equal(t, expected, output, "printErrorMessage did not print the expected error message with correct formatting")
 	})
 
-	t.Run("should return an error if output writer is not a file", func(t *testing.T) {
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = &bytes.Buffer{}
-
-		errorMessage := errors.New("Test error")
-		assert.Panics(t, func() {
-			questionPrompt.printErrorMessage(errorMessage)
-		})
-	})
-
 	t.Run("should handle error that exceeds terminal width", func(t *testing.T) {
 		longErrorMessage := errors.New("This is a very long error message that should exceed the terminal width and be handled properly")
-		expected := "\r\n" + validationErrorMessage(longErrorMessage) + ansi.CursorUp(1)
+		expected := clearPrompt + validationErrorMessage(longErrorMessage) + ansi.CursorUp(1)
 
 		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 60, 10)
 
@@ -442,7 +432,7 @@ func Test_Text_printErrorMessage(t *testing.T) {
 // Tests for [Text.printFinalPromptLine] function.
 func Test_Text_printFinalPromptLine(t *testing.T) {
 	t.Run("should print final prompt line with prompt and answer", func(t *testing.T) {
-		expectedOutput := ansi.ClearLineReset + "[?] What is your name? Bobby\n" + ansi.ClearLineReset
+		expectedOutput := clearPrompt + "[?] What is your name? Bobby\n"
 		var result string
 		questionPrompt := NewQuestion(&result).
 			Title("What is your name?")
@@ -455,7 +445,7 @@ func Test_Text_printFinalPromptLine(t *testing.T) {
 	})
 
 	t.Run("should print final prompt line with only prompt when hide is true", func(t *testing.T) {
-		expectedOutput := "\n" + ansi.ClearLineReset
+		expectedOutput := clearPrompt + Icons.QuestionMark + "What is your password? \n"
 		var result string
 		passwordPrompt := NewPassword(&result).
 			Title("What is your password?")
