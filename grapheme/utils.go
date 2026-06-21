@@ -21,62 +21,6 @@ func ClusterSetFromString(s string) ClusterSet {
 	return clusterANSIEscape(pendingSet)
 }
 
-// clusterANSIEscape processes a [ClusterSet] to identify and group ANSI escape
-// sequences into single clusters. It returns a new [ClusterSet] where ANSI escape
-// sequences are treated as single clusters, while non-escape clusters are left
-// unchanged.
-func clusterANSIEscape(in ClusterSet) ClusterSet {
-	var out ClusterSet
-
-	for len(in) > 0 {
-		c := in[0]
-
-		if !Equal(c, Escape) {
-			out = append(out, c)
-			in = in[1:]
-			continue
-		}
-
-		pendingEscSeqSet := ClusterSet{}
-		pendingEscSeqSet = append(pendingEscSeqSet, c)
-		if len(in) == 1 {
-			// We have an escape character but no more input, so we should treat
-			// it as a normal cluster.
-			out = append(out, c)
-			in = in[1:]
-			continue
-		}
-
-		pendingEscSeqSet = append(pendingEscSeqSet, in[1])
-		pendingEscSeqCluster := New(pendingEscSeqSet.Runes()...)
-		switch {
-		case !IsFeEscapeSequence(pendingEscSeqCluster):
-			// We have an escape character and one more input, but it's not a
-			// full escape sequence, so we should treat the escape character as
-			// a normal cluster and continue processing the next cluster.
-			out = append(out, c)
-			in = in[1:]
-			continue
-		}
-
-		nextCluster := New(in[2:].Runes()...)
-		seqEndIdx := IndexOfSequenceEnd(nextCluster)
-		if seqEndIdx == -1 {
-			// We have the start of an escape sequence but we don't have the
-			// full sequence yet, so we should treat the escape character as a
-			// normal cluster and continue processing the next cluster.
-			out = append(out, c)
-			in = in[1:]
-			continue
-		}
-
-		pendingEscSeqCluster = append(pendingEscSeqCluster, in[2:3+seqEndIdx].Runes()...)
-		out = append(out, pendingEscSeqCluster)
-		in = in[3+seqEndIdx:]
-	}
-	return out
-}
-
 // Equal reports whether a and b are the same length and contain the same runes.
 // A nil argument is equivalent to an empty slice.
 func Equal(a Cluster, b Cluster) bool {
@@ -151,4 +95,60 @@ func IsSequenceEnd(gc Cluster) bool {
 	}
 
 	return true
+}
+
+// clusterANSIEscape processes a [ClusterSet] to identify and group ANSI escape
+// sequences into single clusters. It returns a new [ClusterSet] where ANSI escape
+// sequences are treated as single clusters, while non-escape clusters are left
+// unchanged.
+func clusterANSIEscape(in ClusterSet) ClusterSet {
+	var out ClusterSet
+
+	for len(in) > 0 {
+		c := in[0]
+
+		if !Equal(c, Escape) {
+			out = append(out, c)
+			in = in[1:]
+			continue
+		}
+
+		pendingEscSeqSet := ClusterSet{}
+		pendingEscSeqSet = append(pendingEscSeqSet, c)
+		if len(in) == 1 {
+			// We have an escape character but no more input, so we should treat
+			// it as a normal cluster.
+			out = append(out, c)
+			in = in[1:]
+			continue
+		}
+
+		pendingEscSeqSet = append(pendingEscSeqSet, in[1])
+		pendingEscSeqCluster := New(pendingEscSeqSet.Runes()...)
+		switch {
+		case !IsFeEscapeSequence(pendingEscSeqCluster):
+			// We have an escape character and one more input, but it's not a
+			// full escape sequence, so we should treat the escape character as
+			// a normal cluster and continue processing the next cluster.
+			out = append(out, c)
+			in = in[1:]
+			continue
+		}
+
+		nextCluster := New(in[2:].Runes()...)
+		seqEndIdx := IndexOfSequenceEnd(nextCluster)
+		if seqEndIdx == -1 {
+			// We have the start of an escape sequence but we don't have the
+			// full sequence yet, so we should treat the escape character as a
+			// normal cluster and continue processing the next cluster.
+			out = append(out, c)
+			in = in[1:]
+			continue
+		}
+
+		pendingEscSeqCluster = append(pendingEscSeqCluster, in[2:3+seqEndIdx].Runes()...)
+		out = append(out, pendingEscSeqCluster)
+		in = in[3+seqEndIdx:]
+	}
+	return out
 }
