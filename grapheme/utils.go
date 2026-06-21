@@ -80,6 +80,10 @@ func clusterANSIEscape(in ClusterSet) ClusterSet {
 // Equal reports whether a and b are the same length and contain the same runes.
 // A nil argument is equivalent to an empty slice.
 func Equal(a Cluster, b Cluster) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
 	return string(a) == string(b)
 }
 
@@ -87,6 +91,10 @@ func Equal(a Cluster, b Cluster) bool {
 // are equal under simple Unicode case-folding, which is a more general
 // form of case-insensitivity.
 func EqualFold(a Cluster, b Cluster) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
 	return strings.EqualFold(string(a), string(b))
 }
 
