@@ -138,7 +138,8 @@
 			"description": "Enter the directory to run tests in (e.g., ./pkg/service)",
 			"options": [
 				".",
-				"./..."
+				"./...",
+				"./grapheme"
 			],
 			"default": "./..."
 		}

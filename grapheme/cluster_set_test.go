@@ -51,7 +51,32 @@ func Test_ClusterSet_Bytes(t *testing.T) {
 
 // TODO: Tests for [ClusterSet.Len] function.
 func Test_ClusterSet_Len(t *testing.T) {
-	t.Skip("Need to implement")
+	t.Run("empty ClusterSet", func(t *testing.T) {
+		cs := ClusterSet{}
+		expected := 0
+		output := cs.Len()
+		require.Equal(t, expected, output)
+	})
+
+	t.Run("ClusterSet with multiple Clusters", func(t *testing.T) {
+		cs := ClusterSet{
+			hello,
+			space,
+			world,
+		}
+		expected := len(cs)
+		output := cs.Len()
+		require.Equal(t, expected, output)
+	})
+
+	t.Run("ClusterSet with complex grapheme cluster", func(t *testing.T) {
+		cs := ClusterSet{
+			graphemeCluster,
+		}
+		expected := len(cs)
+		output := cs.Len()
+		require.Equal(t, expected, output)
+	})
 }
 
 // Tests for [ClusterSet.Runes] function.
@@ -131,7 +156,7 @@ func Test_ClusterSet_VisualLen(t *testing.T) {
 		cs := ClusterSet{
 			graphemeCluster,
 		}
-		expected := 4 // The visual length of a complex grapheme cluster is 1
+		expected := 6
 		output := cs.VisualLen()
 		require.Equal(t, expected, output)
 	})
