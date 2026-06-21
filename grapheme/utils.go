@@ -6,6 +6,9 @@ import (
 	"github.com/clipperhouse/uax29/v2/graphemes"
 )
 
+// ClusterSetFromString converts a string into a [ClusterSet]. Each [Cluster]
+// represents a character, a grapheme, or an ANSI escape sequence each as a
+// single cluster.
 func ClusterSetFromString(s string) ClusterSet {
 	var pendingSet ClusterSet
 	gr := graphemes.FromString(s)
@@ -15,14 +18,14 @@ func ClusterSetFromString(s string) ClusterSet {
 		pendingSet = append(pendingSet, cluster)
 	}
 
-	var cs ClusterSet
-
-	_, cs = parseANSIEscape(pendingSet)
-
-	return cs
+	return clusterANSIEscape(pendingSet)
 }
 
-func parseANSIEscape(in ClusterSet) (ClusterSet, ClusterSet) {
+// clusterANSIEscape processes a [ClusterSet] to identify and group ANSI escape
+// sequences into single clusters. It returns a new [ClusterSet] where ANSI escape
+// sequences are treated as single clusters, while non-escape clusters are left
+// unchanged.
+func clusterANSIEscape(in ClusterSet) ClusterSet {
 	var out ClusterSet
 
 	for len(in) > 0 {
@@ -71,7 +74,7 @@ func parseANSIEscape(in ClusterSet) (ClusterSet, ClusterSet) {
 		out = append(out, pendingEscSeqCluster)
 		in = in[3+seqEndIdx:]
 	}
-	return in, out
+	return out
 }
 
 // Equal reports whether a and b are the same length and contain the same runes.
