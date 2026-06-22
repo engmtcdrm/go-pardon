@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/engmtcdrm/go-ansi"
@@ -349,8 +350,8 @@ func Test_Text_getPrompt(t *testing.T) {
 
 		setPrompt(t, questionPrompt)
 
-		s := questionPrompt.getPromptWithDefaultValue()
-		expected := fmt.Sprintf("%s%s%s ", ansi.ClearLineReset, Icons.QuestionMark, "What is your name?")
+		s := questionPrompt.getPrompt()
+		expected := fmt.Sprintf("%s%s ", Icons.QuestionMark, "What is your name?")
 		assert.Equal(t, expected, s, "getPrompt() did not return expected prompt string")
 	})
 
@@ -399,33 +400,22 @@ func Test_Text_processInput(t *testing.T) {
 // Tests for [Text.printErrorMessage] function.
 func Test_Text_printErrorMessage(t *testing.T) {
 	t.Run("should print error message with correct formatting", func(t *testing.T) {
+		title := "What is your name?"
 		expectedErrorMessage := errors.New("Test error")
-		expected := clearPrompt + validationErrorMessage(expectedErrorMessage) + ansi.RestoreCursorPos
 
-		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 20, 10)
+		var expected strings.Builder
+		expected.WriteString(clearPrompt)
+		expected.WriteString(fmt.Sprintf("%s%s \n", Icons.QuestionMark, title))
+		expected.WriteString(validationErrorMessage(expectedErrorMessage))
+		expected.WriteString(ansi.RestoreCursorPos)
+		expected.WriteString(ansi.CursorHorizontalAbsolute(len(Icons.QuestionMark) + len(title) + 2))
 
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = mockTTY
-		questionPrompt.printErrorMessage(expectedErrorMessage)
-		_ = mockTTY.Close() // Close the TTY to signal we're done reading output
+		questionPrompt := NewQuestion(nil).
+			Title(title)
+		questionPrompt.buildAndSetPrompt()
+		output := questionPrompt.getPromptWithError(expectedErrorMessage)
 
-		output := testutils.ReadPTYOutput(t, mockPTY, 128)
-		assert.Equal(t, expected, output, "printErrorMessage did not print the expected error message with correct formatting")
-	})
-
-	t.Run("should handle error that exceeds terminal width", func(t *testing.T) {
-		longErrorMessage := errors.New("This is a very long error message that should exceed the terminal width and be handled properly")
-		expected := clearPrompt + validationErrorMessage(longErrorMessage) + ansi.CursorUp(1)
-
-		mockPTY, mockTTY := testutils.CreatePTYWithSize(t, 60, 10)
-
-		questionPrompt := NewQuestion(nil)
-		questionPrompt.Out = mockTTY
-		questionPrompt.printErrorMessage(longErrorMessage)
-		_ = mockTTY.Close() // Close the TTY to signal we're done reading output
-
-		output := testutils.ReadPTYOutput(t, mockPTY, 128)
-		assert.Equal(t, expected, output, "printErrorMessage did not handle long error message correctly")
+		assert.Equal(t, expected.String(), output, "printErrorMessage did not print the expected error message with correct formatting")
 	})
 }
 
