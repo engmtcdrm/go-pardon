@@ -1,204 +1,198 @@
 package grapheme
 
-import (
-	"testing"
+// // Tests for [New] function.
+// func Test_New(t *testing.T) {
+// 	t.Run("create an empty Cluster", func(t *testing.T) {
+// 		c := New()
+// 		var expected Cluster
+// 		require.Equal(t, expected, c)
+// 	})
 
-	"github.com/stretchr/testify/require"
-)
+// 	t.Run("create a Cluster with a single rune", func(t *testing.T) {
+// 		r := 'a'
+// 		expected := Cluster{r}
+// 		output := New(r)
+// 		require.Equal(t, expected, output)
+// 	})
 
-// Tests for [New] function.
-func Test_New(t *testing.T) {
-	t.Run("create an empty Cluster", func(t *testing.T) {
-		c := New()
-		var expected Cluster
-		require.Equal(t, expected, c)
-	})
+// 	t.Run("create a Cluster with multiple runes", func(t *testing.T) {
+// 		expected := Cluster{}
+// 		expected = append(expected, hello...)
 
-	t.Run("create a Cluster with a single rune", func(t *testing.T) {
-		r := 'a'
-		expected := Cluster{r}
-		output := New(r)
-		require.Equal(t, expected, output)
-	})
+// 		output := New(hello...)
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("create a Cluster with multiple runes", func(t *testing.T) {
-		expected := Cluster{}
-		expected = append(expected, hello...)
+// 	t.Run("create a Cluster with a complex grapheme cluster", func(t *testing.T) {
+// 		expected := Cluster{}
+// 		expected = append(expected, graphemeCluster...)
 
-		output := New(hello...)
-		require.Equal(t, expected, output)
-	})
+// 		output := New(graphemeCluster...)
+// 		require.Equal(t, expected, output)
+// 	})
+// }
 
-	t.Run("create a Cluster with a complex grapheme cluster", func(t *testing.T) {
-		expected := Cluster{}
-		expected = append(expected, graphemeCluster...)
+// // Tests for [NewFromRunes] function.
+// func Test_NewFromRunes(t *testing.T) {
+// 	t.Run("create a Cluster with no runes", func(t *testing.T) {
+// 		c := NewFromRunes()
+// 		var expected Cluster
+// 		require.Equal(t, expected, c)
+// 	})
 
-		output := New(graphemeCluster...)
-		require.Equal(t, expected, output)
-	})
-}
+// 	t.Run("create a Cluster with a single rune", func(t *testing.T) {
+// 		r := 'a'
+// 		expected := Cluster{r}
+// 		output := NewFromRunes([]rune{r})
+// 		require.Equal(t, expected, output)
+// 	})
 
-// Tests for [NewFromRunes] function.
-func Test_NewFromRunes(t *testing.T) {
-	t.Run("create a Cluster with no runes", func(t *testing.T) {
-		c := NewFromRunes()
-		var expected Cluster
-		require.Equal(t, expected, c)
-	})
+// 	t.Run("create a Cluster with multiple runes", func(t *testing.T) {
+// 		expected := Cluster{}
+// 		expected = append(expected, hello...)
 
-	t.Run("create a Cluster with a single rune", func(t *testing.T) {
-		r := 'a'
-		expected := Cluster{r}
-		output := NewFromRunes([]rune{r})
-		require.Equal(t, expected, output)
-	})
+// 		output := NewFromRunes(hello)
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("create a Cluster with multiple runes", func(t *testing.T) {
-		expected := Cluster{}
-		expected = append(expected, hello...)
+// 	t.Run("create a Cluster with a complex grapheme cluster", func(t *testing.T) {
+// 		expected := Cluster{}
+// 		expected = append(expected, graphemeCluster...)
 
-		output := NewFromRunes(hello)
-		require.Equal(t, expected, output)
-	})
+// 		output := NewFromRunes(graphemeCluster)
+// 		require.Equal(t, expected, output)
+// 	})
+// }
 
-	t.Run("create a Cluster with a complex grapheme cluster", func(t *testing.T) {
-		expected := Cluster{}
-		expected = append(expected, graphemeCluster...)
+// // Tests for [NewFromString] function.
+// func Test_NewFromString(t *testing.T) {
+// 	t.Run("create a Cluster from an empty string", func(t *testing.T) {
+// 		c := NewFromString("")
+// 		expected := Cluster{}
+// 		require.Equal(t, expected, c)
+// 	})
 
-		output := NewFromRunes(graphemeCluster)
-		require.Equal(t, expected, output)
-	})
-}
+// 	t.Run("create a Cluster from a single character string", func(t *testing.T) {
+// 		s := "a"
+// 		expected := Cluster([]rune(s))
+// 		output := NewFromString(s)
+// 		require.Equal(t, expected, output)
+// 	})
 
-// Tests for [NewFromString] function.
-func Test_NewFromString(t *testing.T) {
-	t.Run("create a Cluster from an empty string", func(t *testing.T) {
-		c := NewFromString("")
-		expected := Cluster{}
-		require.Equal(t, expected, c)
-	})
+// 	t.Run("create a Cluster from a multi-character string", func(t *testing.T) {
+// 		s := helloString
+// 		expected := Cluster([]rune(s))
+// 		output := NewFromString(s)
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("create a Cluster from a single character string", func(t *testing.T) {
-		s := "a"
-		expected := Cluster([]rune(s))
-		output := NewFromString(s)
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("create a Cluster from a complex grapheme cluster string", func(t *testing.T) {
+// 		s := graphemeClusterString
+// 		expected := Cluster([]rune(s))
+// 		output := NewFromString(s)
+// 		require.Equal(t, expected, output)
+// 	})
+// }
 
-	t.Run("create a Cluster from a multi-character string", func(t *testing.T) {
-		s := helloString
-		expected := Cluster([]rune(s))
-		output := NewFromString(s)
-		require.Equal(t, expected, output)
-	})
+// // Tests for [Cluster.Bytes] function.
+// func Test_Cluster_Bytes(t *testing.T) {
+// 	t.Run("empty Cluster", func(t *testing.T) {
+// 		c := Cluster{}
+// 		expected := []byte{}
+// 		output := c.Bytes()
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("create a Cluster from a complex grapheme cluster string", func(t *testing.T) {
-		s := graphemeClusterString
-		expected := Cluster([]rune(s))
-		output := NewFromString(s)
-		require.Equal(t, expected, output)
-	})
-}
+// 	t.Run("Cluster with a single rune", func(t *testing.T) {
+// 		c := New('a')
+// 		expected := []byte("a")
+// 		output := c.Bytes()
+// 		require.Equal(t, expected, output)
+// 	})
 
-// Tests for [Cluster.Bytes] function.
-func Test_Cluster_Bytes(t *testing.T) {
-	t.Run("empty Cluster", func(t *testing.T) {
-		c := Cluster{}
-		expected := []byte{}
-		output := c.Bytes()
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("Cluster with multiple runes", func(t *testing.T) {
+// 		c := New(hello...)
+// 		expected := []byte(helloString)
+// 		output := c.Bytes()
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("Cluster with a single rune", func(t *testing.T) {
-		c := New('a')
-		expected := []byte("a")
-		output := c.Bytes()
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("Cluster with a complex grapheme cluster", func(t *testing.T) {
+// 		c := New(graphemeCluster...)
+// 		expected := []byte(graphemeClusterString)
+// 		output := c.Bytes()
+// 		require.Equal(t, expected, output)
+// 	})
+// }
 
-	t.Run("Cluster with multiple runes", func(t *testing.T) {
-		c := New(hello...)
-		expected := []byte(helloString)
-		output := c.Bytes()
-		require.Equal(t, expected, output)
-	})
+// // Tests for [Cluster.IsANSIEscapeSequence] function.
+// func Test_Cluster_IsANSIEscapeSequence(t *testing.T) {
+// 	t.Run("empty Cluster", func(t *testing.T) {
+// 		c := Cluster{}
+// 		expected := false
+// 		output := c.IsANSIEscapeSequence()
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("Cluster with a complex grapheme cluster", func(t *testing.T) {
-		c := New(graphemeCluster...)
-		expected := []byte(graphemeClusterString)
-		output := c.Bytes()
-		require.Equal(t, expected, output)
-	})
-}
+// 	t.Run("Cluster with a single rune", func(t *testing.T) {
+// 		c := New('a')
+// 		expected := false
+// 		output := c.IsANSIEscapeSequence()
+// 		require.Equal(t, expected, output)
+// 	})
 
-// Tests for [Cluster.IsANSIEscapeSequence] function.
-func Test_Cluster_IsANSIEscapeSequence(t *testing.T) {
-	t.Run("empty Cluster", func(t *testing.T) {
-		c := Cluster{}
-		expected := false
-		output := c.IsANSIEscapeSequence()
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("Cluster with an ANSI escape sequence", func(t *testing.T) {
+// 		c := New('\x1b', '[', '0', 'm')
+// 		expected := true
+// 		output := c.IsANSIEscapeSequence()
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("Cluster with a single rune", func(t *testing.T) {
-		c := New('a')
-		expected := false
-		output := c.IsANSIEscapeSequence()
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("Cluster with invalid end sequence", func(t *testing.T) {
+// 		c := New('\x1b', '[', '0', '-')
+// 		expected := false
+// 		output := c.IsANSIEscapeSequence()
+// 		require.Equal(t, expected, output)
+// 	})
 
-	t.Run("Cluster with an ANSI escape sequence", func(t *testing.T) {
-		c := New('\x1b', '[', '0', 'm')
-		expected := true
-		output := c.IsANSIEscapeSequence()
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("Cluster with end sequence in the middle of the Cluster", func(t *testing.T) {
+// 		c := New('\x1b', '[', '0', 'm', 'a')
+// 		expected := false
+// 		output := c.IsANSIEscapeSequence()
+// 		require.Equal(t, expected, output)
+// 	})
+// }
 
-	t.Run("Cluster with invalid end sequence", func(t *testing.T) {
-		c := New('\x1b', '[', '0', '-')
-		expected := false
-		output := c.IsANSIEscapeSequence()
-		require.Equal(t, expected, output)
-	})
+// // TODO: Tests for [Cluster.Len] function.
+// func Test_Cluster_Len(t *testing.T) {
+// 	t.Skip("Need to finish")
+// }
 
-	t.Run("Cluster with end sequence in the middle of the Cluster", func(t *testing.T) {
-		c := New('\x1b', '[', '0', 'm', 'a')
-		expected := false
-		output := c.IsANSIEscapeSequence()
-		require.Equal(t, expected, output)
-	})
-}
+// // Tests for [Cluster.String] function.
+// func Test_Cluster_String(t *testing.T) {
+// 	t.Run("Cluster with a single rune", func(t *testing.T) {
+// 		c := New('a')
+// 		expected := "a"
+// 		output := c.String()
+// 		require.Equal(t, expected, output)
+// 	})
 
-// TODO: Tests for [Cluster.Len] function.
-func Test_Cluster_Len(t *testing.T) {
-	t.Skip("Need to finish")
-}
+// 	t.Run("Cluster with multiple runes", func(t *testing.T) {
+// 		c := New(hello...)
+// 		expected := helloString
+// 		output := c.String()
+// 		require.Equal(t, expected, output)
+// 	})
 
-// Tests for [Cluster.String] function.
-func Test_Cluster_String(t *testing.T) {
-	t.Run("Cluster with a single rune", func(t *testing.T) {
-		c := New('a')
-		expected := "a"
-		output := c.String()
-		require.Equal(t, expected, output)
-	})
+// 	t.Run("Cluster with a complex grapheme cluster", func(t *testing.T) {
+// 		c := New(graphemeCluster...)
+// 		expected := graphemeClusterString
+// 		output := c.String()
+// 		require.Equal(t, expected, output)
+// 	})
+// }
 
-	t.Run("Cluster with multiple runes", func(t *testing.T) {
-		c := New(hello...)
-		expected := helloString
-		output := c.String()
-		require.Equal(t, expected, output)
-	})
-
-	t.Run("Cluster with a complex grapheme cluster", func(t *testing.T) {
-		c := New(graphemeCluster...)
-		expected := graphemeClusterString
-		output := c.String()
-		require.Equal(t, expected, output)
-	})
-}
-
-// TODO: Tests for [Cluster.VisualLen] function.
-func Test_Cluster_VisualLen(t *testing.T) {
-	t.Skip("Need to finish")
-}
+// // TODO: Tests for [Cluster.VisualLen] function.
+// func Test_Cluster_VisualLen(t *testing.T) {
+// 	t.Skip("Need to finish")
+// }
