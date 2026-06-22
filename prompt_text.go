@@ -98,7 +98,7 @@ func (t *Text) ask() error {
 	}
 
 	t.buildAndSetPrompt()
-	fmt.Fprint(t.Out, t.getPromptWithDefaultValue())
+	fmt.Fprint(t.Out, t.getPrompt())
 
 	for {
 		input, err := t.In.RawRead()
@@ -118,9 +118,9 @@ func (t *Text) setDefaultValue() {
 	}
 }
 
-func (t *Text) getPromptWithDefaultValue() string {
+// getPrompt builds the prompt string including the default value if it exists.
+func (t *Text) getPrompt() string {
 	var prompt strings.Builder
-	prompt.WriteString(ansi.ClearLineReset)
 	prompt.WriteString(t.Prompt.String())
 
 	if len(t.defaultValue) > 0 {
@@ -137,17 +137,20 @@ func (t *Text) getPromptWithDefaultValue() string {
 	return prompt.String()
 }
 
-func (t *Text) printErrorMessage(err error) {
+// getPromptWithError builds the prompt string along with a formatted error
+// message.
+func (t *Text) getPromptWithError(err error) string {
 	errMsg := validationErrorMessage(err)
 
 	var builder strings.Builder
 	builder.WriteString(clearPrompt)
-	builder.WriteString(t.getPromptWithDefaultValue())
+	builder.WriteString(t.getPrompt())
 	builder.WriteString("\n")
 	builder.WriteString(errMsg)
 	builder.WriteString(ansi.RestoreCursorPos)
 	builder.WriteString(ansi.CursorHorizontalAbsolute(t.Prompt.VisualLen() + 1))
-	fmt.Fprint(t.Out, builder.String())
+
+	return builder.String()
 }
 
 // printFinalPromptLine handles printing the final prompt line after successful
@@ -170,7 +173,7 @@ func (t *Text) printFinalPromptLine() {
 
 func (t *Text) handleEnter(_ grapheme.Cluster) (done bool, err error) {
 	if err := t.validateFn(t.pendingValueClusterSet.String()); err != nil {
-		t.printErrorMessage(err)
+		fmt.Fprint(t.Out, t.getPromptWithError(err))
 		t.PendingInputClusterSet = nil
 		t.pendingValueClusterSet = nil
 		return false, nil
@@ -193,7 +196,7 @@ func (t *Text) handleDelete(_ grapheme.Cluster) (done bool, err error) {
 	}
 
 	if len(t.pendingValueClusterSet) == 0 {
-		fmt.Fprint(t.Out, t.getPromptWithDefaultValue())
+		fmt.Fprint(t.Out, t.getPrompt())
 	}
 
 	t.PendingInputClusterSet = t.PendingInputClusterSet[1:]
@@ -246,6 +249,7 @@ func (t *Text) processInput(input []byte) (done bool, err error) {
 	return false, nil
 }
 
+// printInput will print to [Text.Out] based on the value of [Text.hide].
 func (t *Text) printInput(a ...any) {
 	if !t.hide {
 		fmt.Fprint(t.Out, a...)
