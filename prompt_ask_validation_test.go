@@ -4,9 +4,9 @@ import (
 	"testing"
 )
 
-// TestAskValidation tests the Ask() method validation logic
+// Test_AskValidation tests the Ask() method validation logic
 // without requiring user interaction
-func TestAskValidation(t *testing.T) {
+func Test_AskValidation(t *testing.T) {
 	t.Run("question with no title should return error", func(t *testing.T) {
 		var result string
 		question := NewQuestion(&result)
@@ -54,8 +54,8 @@ func TestAskValidation(t *testing.T) {
 	})
 }
 
-// TestEvalFunctionality tests the eval type behavior in prompts
-func TestEvalFunctionality(t *testing.T) {
+// Test_EvalFunctionality tests the eval type behavior in prompts
+func Test_EvalFunctionality(t *testing.T) {
 	t.Run("question with title function", func(t *testing.T) {
 		var result string
 		question := NewQuestion(&result).
@@ -104,8 +104,8 @@ func TestEvalFunctionality(t *testing.T) {
 	})
 }
 
-// TestMethodChaining ensures all methods return proper instances for chaining
-func TestMethodChaining(t *testing.T) {
+// Test_MethodChaining ensures all methods return proper instances for chaining
+func Test_MethodChaining(t *testing.T) {
 	t.Run("question method chaining", func(t *testing.T) {
 		var result string
 		question := NewQuestion(&result).

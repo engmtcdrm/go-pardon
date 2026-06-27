@@ -204,7 +204,8 @@ func Test_clusterANSIEscape(t *testing.T) {
 	})
 }
 
-// Test helper function to create a ClusterSet from a string, splitting it into grapheme clusters.
+// testClusterSetFromString is a helper function to create a ClusterSet from a
+// string, splitting it into grapheme clusters.
 func testClusterSetFromString(t *testing.T, s string) ClusterSet {
 	t.Helper()
 	var pendingSet ClusterSet
