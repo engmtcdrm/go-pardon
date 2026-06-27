@@ -180,7 +180,7 @@ func Test_clusterANSIEscape(t *testing.T) {
 	})
 
 	t.Run("Has escape, but not ANSI escape sequence", func(t *testing.T) {
-		clusterSet := testClusterSetFromString("This \x1b is an escape a test")
+		clusterSet := testClusterSetFromString(t, "This \x1b is an escape a test")
 		result := clusterANSIEscape(clusterSet)
 		require.Equal(t, clusterSet, result)
 	})
@@ -205,7 +205,8 @@ func Test_clusterANSIEscape(t *testing.T) {
 }
 
 // Test helper function to create a ClusterSet from a string, splitting it into grapheme clusters.
-func testClusterSetFromString(s string) ClusterSet {
+func testClusterSetFromString(t *testing.T, s string) ClusterSet {
+	t.Helper()
 	var pendingSet ClusterSet
 	gr := graphemes.FromString(s)
 

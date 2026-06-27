@@ -116,6 +116,7 @@ func Test_Select_IconFunc(t *testing.T) {
 	}
 }
 
+// Tests for [Select.Options] function.
 func Test_Select_Options(t *testing.T) {
 	t.Run("string type", func(t *testing.T) {
 		options := []Option[string]{

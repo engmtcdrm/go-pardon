@@ -17,6 +17,8 @@ const (
 // replaces it with the new function, and restores the original function after
 // the test completes using t.Cleanup.
 func changeDefaultFunc(t *testing.T, fnType funcType, newFn func(string) string) {
+	t.Helper()
+
 	var originalFn func(string) string
 
 	switch fnType {
