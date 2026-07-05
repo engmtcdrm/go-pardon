@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/clipperhouse/uax29/v2 v2.7.0
 	github.com/creack/pty v1.1.24
-	github.com/engmtcdrm/go-ansi v1.0.4
+	github.com/engmtcdrm/go-ansi v1.1.0
 	github.com/mattn/go-runewidth v0.0.24
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/term v0.44.0

@@ -5,7 +5,7 @@ go 1.26.4
 replace github.com/engmtcdrm/go-pardon => ../
 
 require (
-	github.com/engmtcdrm/go-ansi v1.0.4
+	github.com/engmtcdrm/go-ansi v1.1.0
 	github.com/engmtcdrm/go-eggy v0.0.0-20260607204837-4a212e4609b4
 	github.com/engmtcdrm/go-pardon v0.0.0-20251015210019-f3dbc0f5b83a
 	github.com/engmtcdrm/go-prettyprint v1.2.1
