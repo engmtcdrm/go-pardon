@@ -1,16 +1,14 @@
 module github.com/engmtcdrm/go-pardon
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.26.4
 
 require (
-	github.com/engmtcdrm/go-ansi v1.0.1
-	github.com/mattn/go-runewidth v0.0.16
-	golang.org/x/term v0.34.0
+	github.com/engmtcdrm/go-ansi v1.1.0
+	github.com/mattn/go-runewidth v0.0.24
+	golang.org/x/term v0.44.0
 )
 
 require (
-	github.com/rivo/uniseg v0.2.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
 )
