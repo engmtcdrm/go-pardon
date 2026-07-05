@@ -6,8 +6,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/engmtcdrm/go-ansi v1.1.0 h1:7gispbFxi/f2Ooc3+iANxNZ+/p4WyoThq0BilcP1twc=
 github.com/engmtcdrm/go-ansi v1.1.0/go.mod h1:IreLDztoCaS2/ABvnqrGtxKZYzAA1NRHO03o6o2ycEw=
-github.com/engmtcdrm/go-eggy v0.0.0-20260607204837-4a212e4609b4 h1:tjjaG1d5tOI2WKIT/o9C/fNdbe0VwAMYgxAGuyBC7Ps=
-github.com/engmtcdrm/go-eggy v0.0.0-20260607204837-4a212e4609b4/go.mod h1:sBh+OPKnbLGVe6qw+lOOIOIbV+n5uVSvNvoK5ADJs3A=
+github.com/engmtcdrm/go-eggy v0.0.0-20260705193708-225931c7c1a1 h1:F3J4IA0BHdw1bk1Fde9ECyxVXTK/G99O2M0AMM3lybo=
+github.com/engmtcdrm/go-eggy v0.0.0-20260705193708-225931c7c1a1/go.mod h1:8QFdJgD5Uhi0HilVE3aquIOkqO4O4m4Xv4WjWliginY=
 github.com/engmtcdrm/go-prettyprint v1.2.1 h1:/3r7yow9PtFPjO2hIczOMW0x+oWIoZBNGwPPSeDy/sQ=
 github.com/engmtcdrm/go-prettyprint v1.2.1/go.mod h1:6FWJEE8L9rLHSvJGLPLkFJ1gEIHCO+8c4zI6fhLdnzA=
 github.com/mattn/go-runewidth v0.0.24 h1:cpokDiIn0MGnhdHwuWnJBITySJ20QyNGnY2kR/ay2DU=
