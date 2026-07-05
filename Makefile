@@ -29,4 +29,4 @@ testv:
 	@go test -v ./...
 
 testcover:
-	@go test -coverprofile=coverage.out && go tool cover -html=coverage.out -o coverage.html
+	@go test -coverprofile=coverage.out && go tool cover -html=coverage.out -o coverage.html && rm -f coverage.out
